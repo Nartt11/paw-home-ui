@@ -1,0 +1,132 @@
+"use client";
+
+import * as React from "react";
+
+import { NavDocuments } from "@/components/nav-documents";
+import { NavMain } from "@/components/nav-main";
+import { NavSecondary } from "@/components/nav-secondary";
+import { NavUser } from "@/components/nav-user";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+} from "@/components/ui/sidebar";
+import {
+  LayoutDashboardIcon,
+  ListIcon,
+  ChartBarIcon,
+  FolderIcon,
+  UsersIcon,
+  CameraIcon,
+  FileTextIcon,
+  Settings2Icon,
+  CircleHelpIcon,
+  SearchIcon,
+  DatabaseIcon,
+  FileChartColumnIcon,
+  FileIcon,
+  CommandIcon,
+} from "lucide-react";
+
+const data = {
+  user: {
+    name: "shadcn",
+    email: "m@example.com",
+    avatar: "/avatars/shadcn.jpg",
+  },
+  navSystem: [
+    {
+      title: "Dashboard",
+      url: "/dashboard",
+      icon: <LayoutDashboardIcon />,
+    },
+    {
+      title: "Quản lý vật nuôi",
+      url: "/pet-management",
+      icon: <ListIcon />,
+    },
+    {
+      title: "Quản lý trung tâm",
+      url: "/center-management",
+      icon: <ChartBarIcon />,
+    },
+    {
+      title: "Quản lý người dùng",
+      url: "/user-management",
+      icon: <FolderIcon />,
+    },
+  ],
+  navContent: [
+    {
+      title: "Quản lý bài viết",
+      url: "/post-management",
+      icon: <LayoutDashboardIcon />,
+    },
+  ],
+
+  navOperation: [
+    {
+      title: "Quản lý cứu trợ",
+      url: "/rescue-management",
+      icon: <LayoutDashboardIcon />,
+    },
+    {
+      title: "Quản lý nhận nuôi",
+      url: "/adoption-management",
+      icon: <ListIcon />,
+    },
+  ],
+
+  navSecondary: [
+    {
+      title: "Settings",
+      url: "#",
+      icon: <Settings2Icon />,
+    },
+    {
+      title: "Get Help",
+      url: "#",
+      icon: <CircleHelpIcon />,
+    },
+    {
+      title: "Search",
+      url: "#",
+      icon: <SearchIcon />,
+    },
+  ],
+};
+
+export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  return (
+    <Sidebar collapsible="offcanvas" {...props}>
+      <SidebarHeader>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
+              className="data-[slot=sidebar-menu-button]:p-1.5!"
+            >
+              <a href="#">
+                <CommandIcon className="size-5!" />
+                <span className="text-base font-semibold">Paw Home</span>
+              </a>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarHeader>
+      <SidebarContent>
+        <NavMain label="Quản lý hệ thống" items={data.navSystem} />
+        <NavMain label="Hoạt động cứu trợ" items={data.navOperation} />
+        <NavMain label="Quản lý nội dung" items={data.navContent} />
+        <NavSecondary items={data.navSecondary} className="mt-auto" />
+      </SidebarContent>
+      <SidebarFooter>
+        <NavUser user={data.user} />
+      </SidebarFooter>
+    </Sidebar>
+  );
+}
