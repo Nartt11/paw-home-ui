@@ -1,7 +1,7 @@
 import { baseEntity } from "./core.type";
 
 export interface RescueCase extends baseEntity {
-  case_id: string;
+  id: string;
 
   reported_by?: string;
   organization_id?: string;

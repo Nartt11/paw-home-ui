@@ -71,12 +71,12 @@ const data = {
   navOperation: [
     {
       title: "Quản lý cứu trợ",
-      url: "/rescue-management",
+      url: "/quan-ly-cuu-tro",
       icon: <LayoutDashboardIcon />,
     },
     {
       title: "Quản lý nhận nuôi",
-      url: "/adoption-management",
+      url: "/quan-ly-nhan-nuoi",
       icon: <ListIcon />,
     },
   ],

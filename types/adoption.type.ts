@@ -1,7 +1,7 @@
 import { baseEntity } from "./core.type";
 
 export interface AdoptionApplication extends baseEntity {
-  application_id: string;
+  id: string;
 
   pet_id?: string;
   applicant_id?: string;
