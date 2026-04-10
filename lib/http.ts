@@ -10,7 +10,7 @@ class Http {
   constructor() {
     this.instance = axios.create({
       baseURL: "https://pet-rescue-api-0uhx.onrender.com/api/v1",
-      timeout: 1000,
+      timeout: 10000,
       headers: { "Content-Type": "application/json" },
     });
     //   add response interceptor
