@@ -25,6 +25,7 @@ export interface Pet extends baseEntity {
 
   shelter_id?: string;
   rescue_case_id?: string;
+  image: string;
 }
 
 export interface PetMedia {

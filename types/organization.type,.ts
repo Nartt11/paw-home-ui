@@ -11,7 +11,7 @@ export interface Organization extends baseEntity {
   ward_code?: string;
   ward_name?: string;
 
-  location?: any;
+  location?: string;
 
   phone?: string;
   email?: string;
@@ -21,4 +21,12 @@ export interface Organization extends baseEntity {
   description?: string;
 
   requested_by_user_id?: string;
+}
+
+export interface OrganizationMember extends baseEntity {
+  organization_id: string;
+  user_id: string;
+  role?: string;
+  joined_at?: Date;
+  status?: string;
 }
