@@ -60,3 +60,11 @@ export interface PetCurrentOwner {
   owner_type?: string;
   owner_id?: string;
 }
+
+export interface PetListConfig {
+  page?: number;
+  size?: number;
+  search?: string;
+  species?: string;
+  breed?: string;
+}
