@@ -46,12 +46,12 @@ const data = {
     },
     {
       title: "Quản lý vật nuôi",
-      url: "/pet-management",
+      url: "/quan-ly-vat-nuoi",
       icon: <ListIcon />,
     },
     {
       title: "Quản lý trung tâm",
-      url: "/center-management",
+      url: "/quan-ly-trung-tam",
       icon: <ChartBarIcon />,
     },
     {

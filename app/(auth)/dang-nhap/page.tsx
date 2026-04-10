@@ -48,7 +48,7 @@ export default function LoginForm() {
     loginMutation.mutate(data, {
       onSuccess: (res) => {
         console.log(res);
-        const accessToken = res.data.accessToken;
+        const accessToken = res.data.data.accessToken;
         localStorage.setItem("accessToken", accessToken);
         router.push("/dashboard");
       },
