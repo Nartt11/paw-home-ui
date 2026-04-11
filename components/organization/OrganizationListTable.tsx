@@ -8,13 +8,16 @@ import {
   type ColumnDef,
 } from "@tanstack/react-table";
 
-import type { Organization } from "@/types/organization.type,";
+import type {
+  Organization,
+  OrganizationCoreInfo,
+} from "@/types/organization.type,";
 
 export interface OrganizationListTableProps {
-  data: Organization[];
+  data: OrganizationCoreInfo[];
 }
 
-const columns: ColumnDef<Organization>[] = [
+const columns: ColumnDef<OrganizationCoreInfo>[] = [
   {
     accessorKey: "name",
     header: "Tên tổ chức",
@@ -51,9 +54,7 @@ const columns: ColumnDef<Organization>[] = [
     accessorKey: "province_name",
     header: "Tỉnh / Thành phố",
     cell: ({ row }) => (
-      <span className="text-slate-700">
-        {row.original.province_name ?? row.original.location ?? "-"}
-      </span>
+      <span className="text-slate-700">{row.original.provinceName ?? "-"}</span>
     ),
   },
   {
