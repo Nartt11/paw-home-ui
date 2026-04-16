@@ -46,7 +46,7 @@ const data = {
     },
     {
       title: "Quản lý vật nuôi",
-      url: "/quan-ly-vat-nuoi",
+      url: "/quan-ly-thu-cung",
       icon: <ListIcon />,
     },
     {
