@@ -27,7 +27,7 @@ export default function HeroSection({
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.1),transparent_55%),linear-gradient(135deg,rgba(2,23,31,0.88)_0%,rgba(3,53,79,0.78)_50%,rgba(2,23,31,0.7)_100%)]" />
       </div>
 
-      <div className="relative z-10 mx-auto w-full max-w-7xl px-6 pb-20 pt-28 md:pt-32">
+      <div className="relative z-10 mx-auto w-full max-w-7xl px-6 pb-20 ">
         <div className="max-w-xl">
           <div className="mb-7 inline-flex items-center gap-2 rounded-full border border-orange-400/50 bg-orange-400/15 px-4 py-1.5 text-[12px] font-semibold text-orange-300">
             <span className="inline-flex h-2 w-2 animate-pulse rounded-full bg-orange-400" />

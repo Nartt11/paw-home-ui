@@ -1,11 +1,16 @@
+"use client";
 import Link from "next/link";
 import { ChevronRight, MapPin, Phone, Mail, Smartphone } from "lucide-react";
+import { usePathname } from "next/navigation";
 
 const SOCIAL_ICONS = ["📘", "▶️", "📷"];
 
 export default function Footer() {
+  const path = usePathname();
+  console.log("Footer params:", path);
+
   return (
-    <footer className="bg-[#02171F] text-white pt-14">
+    <footer className={`bg-[#02171F] text-white pt-14 `}>
       <div className="max-w-7xl mx-auto px-6 ">
         {/* GRID */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 pb-11">

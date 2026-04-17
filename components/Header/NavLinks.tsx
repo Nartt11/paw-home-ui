@@ -10,7 +10,7 @@ type NavItem = {
 const NAV_LINKS: NavItem[] = [
   { href: "/", vi: "Trang chủ", en: "Home" },
   { href: "/adoption", vi: "Nhận nuôi", en: "Adopt" },
-  { href: "/map", vi: "Bản đồ cứu hộ", en: "Rescue Map" },
+  { href: "/ban-do", vi: "Bản đồ cứu hộ", en: "Rescue Map" },
   { href: "/news", vi: "Tin tức", en: "News" },
   { href: "/donate", vi: "Ủng hộ", en: "Donate" },
   { href: "/about", vi: "Về chúng tôi", en: "About" },

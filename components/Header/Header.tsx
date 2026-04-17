@@ -35,14 +35,14 @@ export default function Header() {
   }, [pathname]);
 
   const isHome = pathname === "/";
-  const isTransparent = !scrolled && isHome;
+  const isTransparent = !scrolled;
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-[1000] transition-all duration-300 border-b
+      className={`sticky transition-all duration-300 border-b
       ${
         isTransparent
-          ? "bg-transparent border-transparent"
+          ? "bg-primary border-transparent"
           : "border-white/10 backdrop-blur-md bg-[#02171F]/80"
       }`}
     >
