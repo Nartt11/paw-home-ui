@@ -10,6 +10,17 @@ import {
 
 import type { Pet } from "@/types/pet.type";
 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "../ui/dropdown-menu";
+import { Button } from "../ui/button";
+import { EllipsisVerticalIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
+
 export interface PetListTableProps {
   data: Pet[];
 }
@@ -77,9 +88,35 @@ const columns: ColumnDef<Pet>[] = [
     accessorKey: "location",
     header: "Khu vực",
   },
+  {
+    id: "action",
+    cell: () => (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            className="flex size-8 text-muted-foreground data-[state=open]:bg-muted"
+            size="icon"
+          >
+            <EllipsisVerticalIcon />
+            <span className="sr-only">Open menu</span>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-32">
+          <DropdownMenuItem>Edit</DropdownMenuItem>
+          {/* <DropdownMenuItem>Make a copy</DropdownMenuItem>
+          <DropdownMenuItem>Favorite</DropdownMenuItem> */}
+          <DropdownMenuSeparator />
+          <DropdownMenuItem variant="destructive">Delete</DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    ),
+  },
 ];
 
 export function PetListTable({ data }: PetListTableProps) {
+  const router = useRouter();
+
   const table = useReactTable({
     data,
     columns,
@@ -122,6 +159,9 @@ export function PetListTable({ data }: PetListTableProps) {
             table.getRowModel().rows.map((row) => (
               <tr
                 key={row.id}
+                onClick={() =>
+                  router.push(`/quan-ly-thu-cung/${row.original.petId}`)
+                }
                 className="border-b border-slate-100 last:border-0 hover:bg-slate-50/60"
               >
                 {row.getVisibleCells().map((cell) => (

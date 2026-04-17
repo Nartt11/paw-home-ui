@@ -23,7 +23,7 @@ export default function AdminLayout({
       <AppSidebar variant="inset" />
       <SidebarInset>
         <SiteHeader />
-        {children}
+        <div className="mx-6 my-3 md:mx-12 md:my-6">{children}</div>
       </SidebarInset>
     </SidebarProvider>
   );
