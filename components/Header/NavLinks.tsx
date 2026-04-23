@@ -9,11 +9,11 @@ type NavItem = {
 
 const NAV_LINKS: NavItem[] = [
   { href: "/", vi: "Trang chủ", en: "Home" },
-  { href: "/adoption", vi: "Nhận nuôi", en: "Adopt" },
+  { href: "/nhan-nuoi", vi: "Nhận nuôi", en: "Adopt" },
   { href: "/ban-do", vi: "Bản đồ cứu hộ", en: "Rescue Map" },
-  { href: "/news", vi: "Tin tức", en: "News" },
-  { href: "/donate", vi: "Ủng hộ", en: "Donate" },
-  { href: "/about", vi: "Về chúng tôi", en: "About" },
+  { href: "/tin-tuc", vi: "Tin tức", en: "News" },
+  { href: "/ung-ho", vi: "Ủng hộ", en: "Donate" },
+  { href: "/ve-chung-toi", vi: "Về chúng tôi", en: "About" },
 ];
 
 export default function NavLinks({ lang }: { lang: "vi" | "en" }) {

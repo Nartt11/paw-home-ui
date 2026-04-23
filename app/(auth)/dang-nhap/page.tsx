@@ -21,8 +21,9 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useForm } from "react-hook-form";
 import { useMutation } from "@tanstack/react-query";
-import { login } from "@/services/auth";
+
 import axios from "axios";
+import authService from "@/services/auth";
 
 interface LoginFormData {
   emailOrUsername: string;
@@ -41,7 +42,7 @@ export default function LoginForm() {
   } = useForm<LoginFormData>();
 
   const loginMutation = useMutation({
-    mutationFn: async (data: LoginFormData) => login(data),
+    mutationFn: async (data: LoginFormData) => authService.login(data),
   });
   const onSubmit = handleSubmit((data) => {
     console.log(data);
@@ -76,7 +77,7 @@ export default function LoginForm() {
         </CardHeader>
         <CardContent>
           {/* error tu sever */}
-          {errors.root && <p>{errors.root.message}</p>}
+          {errors.root && < >{errors.root.message}</>}
           <form onSubmit={onSubmit}>
             <FieldGroup>
               <Field>
