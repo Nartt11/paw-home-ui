@@ -1,10 +1,28 @@
-import { baseEntity } from "./core.type";
+export interface OrganizationPageModel {
+  content: OrganizationSummary[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  last: boolean;
+}
+export interface OrganizationSummary {
+  organizationId: string;
+  name: string;
+  type: "SHELTER" | "VET_CENTER";
+  status: string;
+  streetAddress: string;
+  wardName: string;
+  provinceName: string;
+  phone: string;
+  email: string;
+}
 
-export interface Organization extends baseEntity {
+export interface Organization {
   organizationId: string;
   name: string;
   description: string;
-  type: string;
+  type: "SHELTER" | "VET_CENTER";
   streetAddress: string;
   wardName: string;
   provinceName: string;
@@ -14,23 +32,10 @@ export interface Organization extends baseEntity {
   latitude: number;
   longitude: number;
   status: string;
-  requestedByUserId: string;
+  createdBy: string;
 }
 
-export type OrganizationCoreInfo = Pick<
-  Organization,
-  | "organizationId"
-  | "name"
-  | "type"
-  | "wardName"
-  | "provinceName"
-  | "status"
-  | "streetAddress"
-  | "phone"
-  | "email"
->;
-
-export interface OrganizationMember extends baseEntity {
+export interface OrganizationMember {
   organization_id: string;
   user_id: string;
   role?: string;

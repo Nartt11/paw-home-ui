@@ -1,4 +1,6 @@
 import http from "@/lib/http";
+import { mapAuth } from "@/mappers/auth";
+import { Auth } from "@/types/auth.type";
 
 export interface LoginPayload {
   emailOrUsername: string;
@@ -29,10 +31,31 @@ export interface VerifyEmailParams {
   token: string;
 }
 
+// res dto
+export interface AuthResponseDto {
+  accessToken: string;
+  refreshToken: string;
+  tokenType: string;
+  expiresIn: number;
+  user: UserDto;
+}
+
+export interface UserDto {
+  userId: string;
+  username: string;
+  email: string;
+  status: string;
+  emailVerified: boolean;
+  roles: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
 export const authService = {
-  // POST /api/v1/auth/login - Login with email & password
-  login(data: LoginPayload) {
-    return http.post("/auth/login", data);
+  // done
+  async login(data: LoginPayload): Promise<Auth> {
+    const res = await http.post<AuthResponseDto>("/auth/login", data);
+    return mapAuth(res);
   },
 
   // POST /api/v1/auth/logout - Logout — revoke all refresh tokens

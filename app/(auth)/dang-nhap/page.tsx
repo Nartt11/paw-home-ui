@@ -48,10 +48,10 @@ export default function LoginForm() {
     console.log(data);
     loginMutation.mutate(data, {
       onSuccess: (res) => {
-        console.log(res);
-        const accessToken = res.data.data.accessToken;
+        const accessToken = res.accessToken;
         localStorage.setItem("accessToken", accessToken);
         router.push("/dashboard");
+        debugger;
       },
       onError: (error) => {
         if (axios.isAxiosError(error)) {
@@ -77,7 +77,7 @@ export default function LoginForm() {
         </CardHeader>
         <CardContent>
           {/* error tu sever */}
-          {errors.root && < >{errors.root.message}</>}
+          {errors.root && <>{errors.root.message}</>}
           <form onSubmit={onSubmit}>
             <FieldGroup>
               <Field>

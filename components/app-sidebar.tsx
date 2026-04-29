@@ -56,14 +56,14 @@ const data = {
     },
     {
       title: "Quản lý người dùng",
-      url: "/user-management",
+      url: "/quan-li-nguoi-dung",
       icon: <FolderIcon />,
     },
   ],
   navContent: [
     {
       title: "Quản lý bài viết",
-      url: "/post-management",
+      url: "/quan-li-bai-viet",
       icon: <LayoutDashboardIcon />,
     },
   ],

@@ -1,5 +1,11 @@
 import { baseEntity } from "./core.type";
 
+export interface Auth {
+  accessToken: string;
+  refreshToken: string;
+  tokenType: string;
+  expiresIn: number;
+}
 export interface EmailVerificationToken extends baseEntity {
   id: string;
   user_id: string;
