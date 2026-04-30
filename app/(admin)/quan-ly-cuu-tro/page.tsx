@@ -16,7 +16,7 @@ export default function CenterManagementPage() {
   return (
     <div>
       {data && data.data.data?.content && (
-        <RescueCaseListTable data={data.data.data?.content} />
+        <RescueCaseListTable data={data.content} />
       )}
     </div>
   );

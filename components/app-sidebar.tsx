@@ -59,11 +59,21 @@ const data = {
       url: "/quan-li-nguoi-dung",
       icon: <FolderIcon />,
     },
+    {
+      title: "Quản lý bài đăng",
+      url: "/quan-li-bai-dang",
+      icon: <LayoutDashboardIcon />,
+    },
   ],
   navContent: [
     {
-      title: "Quản lý bài viết",
-      url: "/quan-li-bai-viet",
+      title: "Quản lý bài tin tức",
+      url: "/quan-li-tin-tuc",
+      icon: <LayoutDashboardIcon />,
+    },
+    {
+      title: "Quản lý banner",
+      url: "/quan-li-banner",
       icon: <LayoutDashboardIcon />,
     },
   ],

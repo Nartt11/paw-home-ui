@@ -1,18 +1,22 @@
-import { baseEntity } from "./core.type";
+export interface AdoptionSummary {
+  applicationId: string;
+  petName: string;
+  applicantUsername: string;
+  status: string;
+  experience: string;
+  liveCondition: string;
+  createdAt: string;
+}
 
-export interface AdoptionApplication extends baseEntity {
-  id: string;
-
-  pet_id?: string;
-  applicant_id?: string;
-  organization_id?: string;
-
-  status?: "PENDING" | "APPROVED" | "REJECTED";
-
-  note?: string;
-  experience?: string;
-  live_condition?: string;
-
-  decided_at?: Date;
-  decided_by?: string;
+export interface Adoption extends AdoptionSummary {
+  petId: string;
+  petName: string;
+  applicantId: string;
+  organizationId: string;
+  status: string;
+  experience: string;
+  liveCondition: string;
+  createdAt: string;
+  decidedAt: string;
+  decidedBy: string;
 }
