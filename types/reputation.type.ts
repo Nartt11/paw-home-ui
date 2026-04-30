@@ -1,6 +1,6 @@
 export interface UserReputation {
-  user_id: string;
+  userId: string;
   score: number;
-  level?: string;
-  updated_at?: Date;
+  level: string;
+  updatedAt: string;
 }

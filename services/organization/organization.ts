@@ -1,5 +1,4 @@
 import http from "@/lib/http";
-
 import { mapOrganization, mapOrganizationSummary } from "@/mappers/organition";
 import type {
   Organization,
@@ -19,6 +18,7 @@ import {
   PageDto,
   UpdateOrganizationPayload,
 } from "./organization-dto";
+import { mapPage } from "@/mappers/common";
 
 const organizationService = {
   // GET /api/v1/organizations - List all organizations (paginated)
@@ -31,8 +31,8 @@ const organizationService = {
         params,
       },
     );
-
-    return mapPage(dto, mapOrganizationSummary) as OrganizationPageModel;
+    return mapPage(dto, mapOrganizationSummary);
+    // return mapPage(dto, mapOrganizationSummary) as OrganizationPageModel;
   },
 
   // GET /api/v1/organizations/{id} - Get organization by ID
@@ -163,9 +163,3 @@ const organizationService = {
 };
 
 export default organizationService;
-function mapPage(
-  dto: PageDto<OrganizationSummaryDto>,
-  mapOrganizationSummary: (dto: OrganizationSummaryDto) => OrganizationSummary,
-): OrganizationPageModel {
-  throw new Error("Function not implemented.");
-}

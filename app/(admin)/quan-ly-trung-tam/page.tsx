@@ -172,6 +172,14 @@ export default function CenterManagementPage() {
     setOpenDelete(true);
   };
 
+  const organizationTableData = {
+    data: data?.content ?? [],
+    page,
+    size,
+    totalElements: data?.totalElements ?? 0,
+    totalPages: data?.totalPages ?? 0,
+  };
+
   return (
     <div className="space-y-6">
       <TitlePerPage
@@ -187,14 +195,14 @@ export default function CenterManagementPage() {
 
       {data?.content && (
         <OrganizationListTable
-          data={data.content}
+          data={organizationTableData.data}
           onViewDetail={handleOpenViewDetail}
           onEdit={handleOpenUpdate}
           onDelete={handleOpenDelete}
           page={page}
           size={size}
-          totalElements={data.totalElements}
-          totalPages={data.totalPages}
+          totalElements={organizationTableData.totalElements}
+          totalPages={organizationTableData.totalPages}
           onPageChange={(nextPage) => setQueryParams({ page: nextPage })}
           onSizeChange={(nextSize) =>
             setQueryParams({ size: nextSize, page: 1 })

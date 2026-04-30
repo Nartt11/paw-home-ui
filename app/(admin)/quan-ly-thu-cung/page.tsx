@@ -22,17 +22,13 @@ export default function PetManagementPage() {
   });
   console.log(data);
 
-  const handleOpenModal = () => {
-    alert("Chức năng này đang được phát triển. Vui lòng quay lại sau!");
-  };
-
   return (
     <div className="@container/main flex flex-col gap-4 py-4 px-4 md:px-6 md:gap-6 md:py-6">
       {/* Top Header */}
       <TitlePerPage
         title="Quản lý thú cưng"
         description="Quản trị toàn bộ dữ liệu thú cưng trong hệ thống"
-        handleOpenModal={handleOpenModal}
+        buttonText="Thêm thú cưng"
       />
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">

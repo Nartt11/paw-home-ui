@@ -72,7 +72,9 @@ export interface OrganizationMemberDto {
   updatedAt?: string;
 }
 
-export function mapOrganizationMember(dto: OrganizationMemberDto): OrganizationMember {
+export function mapOrganizationMember(
+  dto: OrganizationMemberDto,
+): OrganizationMember {
   // map tối thiểu, tránh leak DTO ra ngoài service
   return {
     userId: dto.userId,

@@ -14,9 +14,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import dynamic from "next/dynamic";
 
-import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
-import "leaflet/dist/leaflet.css";
+const MapPicker = dynamic(() => import("../map/MapPicker"), {
+  ssr: false,
+});
 
 function FieldRow({
   label,
@@ -50,7 +52,7 @@ export function OrganizationViewDetail({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-full sm:max-w-4xl p-0">
         <DialogHeader className="px-6 pt-6">
-          <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <DialogTitle className="text-base sm:text-lg">
               {organization.name}
             </DialogTitle>
@@ -115,22 +117,11 @@ export function OrganizationViewDetail({
                   Map
                 </div>
                 <div className="overflow-hidden rounded-2xl border border-border">
-                  <MapContainer
-                    center={[organization.latitude, organization.longitude]}
-                    zoom={15}
-                    scrollWheelZoom={false}
-                    className="h-64 w-full"
-                  >
-                    <TileLayer
-                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                    />
-                    <Marker
-                      position={[organization.latitude, organization.longitude]}
-                    >
-                      <Popup>{organization.name}</Popup>
-                    </Marker>
-                  </MapContainer>
+                  <MapPicker
+                    title={organization.name}
+                    latitude={organization.latitude}
+                    longitude={organization.longitude}
+                  />
                 </div>
               </div>
             </CardContent>

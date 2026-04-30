@@ -16,7 +16,7 @@ export default function CenterManagementPage() {
   return (
     <div>
       {data && data.data.data?.content && (
-        <AdoptionListTable data={data.data.data?.content} />
+        <AdoptionListTable data={data.content} />
       )}
     </div>
   );

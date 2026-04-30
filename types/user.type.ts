@@ -1,20 +1,22 @@
-import { baseEntity } from "./core.type";
-
-export interface User extends baseEntity {
-  user_id: string;
+export type UserStatus = "PENDING_VERIFICATION" | "ACTIVE" | "DISABLED";
+export interface UserSummary {
+  userId: string;
   username: string;
   email: string;
-  full_name?: string;
-  avatar_url?: string;
-  phone?: string;
-  gender?: string;
+  status: UserStatus;
+}
 
-  street_address?: string;
-  ward_code?: string;
-  ward_name?: string;
-  province_code?: string;
-  province_name?: string;
+export interface User extends UserSummary {
+  emailVerified: boolean;
+  roles: string[];
+  organizationId: string;
+  organizationName: string;
+  organizationRole: string;
+  fullName: string;
+  phone: string;
+  gender: string;
+  streetAddress: string;
+  wardName: string;
+  provinceName: string;
 
-  status: "PENDING_VERIFICATION" | "ACTIVE" | "DISABLED";
-  email_verified: boolean;
 }
