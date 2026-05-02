@@ -1,10 +1,16 @@
 "use client";
 
+import * as React from "react";
+
 import TitlePerPage from "@/components/common/admin/TitlePerPage";
 import KPICardPet from "@/components/pet/KPICardPet";
 import { PetListTable } from "@/components/pet/PetListTable";
-import petService from "@/services/pet";
-import { useQuery } from "@tanstack/react-query";
+import { PetCreateNew } from "@/components/pet/PetCreateNew";
+import type { CreateNewPetValues } from "@/components/pet/PetCreateNew";
+
+import petService from "@/services/pet/pet";
+
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   AlertTriangle,
   CheckCircle2,
@@ -16,22 +22,37 @@ import { useSearchParams } from "next/navigation";
 
 export default function PetManagementPage() {
   const queryParams = useSearchParams();
-  const { data, isPending, isError } = useQuery({
+  const queryClient = useQueryClient();
+
+  const [createOpen, setCreateOpen] = React.useState(false);
+
+  const listQuery = useQuery({
     queryKey: ["pets", queryParams],
     queryFn: () => petService.getAllPets(queryParams),
   });
-  console.log(data);
+
+  const createMutation = useMutation({
+    mutationFn: (payload: CreateNewPetValues) => petService.createPet(payload),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["pets"] });
+      setCreateOpen(false);
+    },
+  });
+
+  const data = listQuery.data;
 
   return (
-    <div className="@container/main flex flex-col gap-4 py-4 px-4 md:px-6 md:gap-6 md:py-6">
+    <div className="@container/main flex flex-col gap-4 px-4 py-4 md:gap-6 md:px-6 md:py-6">
       {/* Top Header */}
       <TitlePerPage
         title="Quản lý thú cưng"
         description="Quản trị toàn bộ dữ liệu thú cưng trong hệ thống"
         buttonText="Thêm thú cưng"
+        handleOpenModal={() => setCreateOpen(true)}
       />
+
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-5">
         <KPICardPet
           title="Tổng số thú cưng"
           value={15}
@@ -63,9 +84,15 @@ export default function PetManagementPage() {
           color="text-red-600 bg-red-50"
         />
       </div>
-      {data && data.data.data?.content && (
-        <PetListTable data={data.data.data?.content} />
-      )}
+
+      {data && data.content && <PetListTable data={data.content} />}
+
+      <PetCreateNew
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        submitting={createMutation.isPending}
+        onSubmit={(values: CreateNewPetValues) => createMutation.mutate(values)}
+      />
     </div>
   );
 }

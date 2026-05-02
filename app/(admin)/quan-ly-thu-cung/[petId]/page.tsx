@@ -1,159 +1,176 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
+
 import * as React from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
-  ArrowLeft,
-  Edit2,
-  Trash2,
-  MapPin,
-  ShieldAlert,
-  Calendar,
-  Plus,
-  Eye,
-  Building2,
-  ArrowRightLeft,
-  Upload,
-  ChevronRight,
   Activity,
-  Stethoscope,
-  Image as ImageIcon,
+  ArrowLeft,
+  ArrowRightLeft,
+  Building2,
+  Calendar,
+  ChevronRight,
+  Edit2,
+  Eye,
   History,
+  Image as ImageIcon,
+  MapPin,
+  Plus,
+  ShieldAlert,
+  Stethoscope,
+  Trash2,
+  Upload,
 } from "lucide-react";
 import { toast } from "sonner";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { useParams, useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { useQuery } from "@tanstack/react-query";
+
+import petService from "@/services/pet/pet";
+import type { Pet } from "@/types/pet.type";
+
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
+import Image from "next/image";
 
-export interface MedicalRecord {
-  recordId: string;
-  petId: string;
-  description: string;
-  vaccine: string;
-  diagnosis: string;
-  recordDate: string;
-  createdBy: string;
+// -------- helpers --------
+function formatDateVi(value?: string) {
+  if (!value) return "—";
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return "—";
+  return d.toLocaleDateString("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
 }
 
-export interface Ownership {
-  petId: string;
-  ownerType: "USER" | "ORGANIZATION";
-  ownerId: string;
-  ownerName: string;
-  fromTime: string;
-  toTime?: string;
+function formatDateTimeVi(value?: string) {
+  if (!value) return "—";
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return "—";
+  return d.toLocaleString("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
-export interface Media {
-  mediaId: string;
-  uploaderId: string;
-  url: string;
-  type: "IMAGE" | "VIDEO";
-  createdAt: string;
-}
-
-export interface Pet {
-  id: string;
-  name: string;
-  species: string;
-  breed: string;
-  age: number; // months
-  ageDisplay: string;
-  vaccinated: boolean;
-  gender: "MALE" | "FEMALE";
-  status:
-    | "UNOWNED"
-    | "OWNED"
-    | "ADOPTING"
-    | "RESCUING"
-    | "ARCHIVED"
-    | "AVAILABLE";
-  healthStatus: "HEALTHY" | "TREATING" | "CRITICAL" | "RECOVERING";
-  organization: {
-    id: string;
-    name: string;
+function genderLabel(g?: Pet["gender"]) {
+  if (!g) return "—";
+  const map: Record<string, string> = {
+    MALE: "Đực",
+    FEMALE: "Cái",
+    UNKNOWN: "Không rõ",
   };
-  province: string;
-  provinceCode: string;
-  ward: string;
-  wardCode: string;
-  imageUrl: string;
-  lastUpdate: string;
-  internalNotes?: string;
-  medicalRecords?: MedicalRecord[];
-  ownershipHistory?: Ownership[];
-  mediaGallery?: Media[];
+  return map[g] ?? String(g);
 }
-const data: Pet = {
-  id: "PET-001",
-  name: "Luna",
-  species: "Cat",
-  breed: "British Shorthair",
-  age: 24,
-  ageDisplay: "2 years",
-  vaccinated: true,
-  gender: "FEMALE",
-  status: "AVAILABLE",
-  healthStatus: "HEALTHY",
-  organization: { id: "C001", name: "HCM Rescue Center" },
-  province: "TP. Hồ Chí Minh",
-  provinceCode: "79",
-  ward: "Phường Tân Phong",
-  wardCode: "27501",
-  imageUrl:
-    "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&q=80&w=400",
-  lastUpdate: "2024-04-15",
-  internalNotes: "Luna is very friendly and loves playing with laser pointers.",
-  medicalRecords: [
-    {
-      recordId: "MR-001",
-      petId: "PET-001",
-      description: "Annual checkup",
-      vaccine: "Rabies",
-      diagnosis: "Healthy",
-      recordDate: "2024-01-10",
-      createdBy: "Dr. Minh",
-    },
-  ],
-  ownershipHistory: [
-    {
-      petId: "PET-001",
-      ownerType: "ORGANIZATION",
-      ownerId: "C001",
-      ownerName: "HCM Rescue Center",
-      fromTime: "2023-05-20",
-    },
-  ],
-  mediaGallery: [
-    {
-      mediaId: "M-001",
-      uploaderId: "A001",
-      url: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&q=80&w=800",
-      type: "IMAGE",
-      createdAt: "2023-05-20",
-    },
-  ],
-};
 
+function petStatusLabel(s?: Pet["status"]) {
+  if (!s) return "—";
+  const map: Record<string, string> = {
+    UNOWNED: "Chưa có chủ",
+    PENDING: "Đang chờ",
+    ADOPTED: "Đã nhận nuôi",
+    FOSTERED: "Đang foster",
+    UNAVAILABLE: "Không khả dụng",
+  };
+  return map[s] ?? String(s);
+}
+
+function healthStatusLabel(s?: Pet["healthStatus"]) {
+  if (!s) return "—";
+  const map: Record<string, string> = {
+    HEALTHY: "Khoẻ mạnh",
+    UNDER_TREATMENT: "Đang điều trị",
+    RECOVERING: "Đang hồi phục",
+    SPECIAL_NEEDS: "Cần chăm sóc đặc biệt",
+  };
+  return map[s] ?? String(s);
+}
+
+function pillVariantForPetStatus(status?: Pet["status"]) {
+  const s = status ?? "PENDING";
+  if (s === "UNOWNED") return { className: "bg-emerald-50 text-emerald-700" };
+  if (s === "PENDING") return { className: "bg-amber-50 text-amber-700" };
+  if (s === "ADOPTED") return { className: "bg-sky-50 text-sky-700" };
+  if (s === "FOSTERED") return { className: "bg-violet-50 text-violet-700" };
+  return { className: "bg-muted text-muted-foreground" };
+}
+
+function pillVariantForHealth(status?: Pet["healthStatus"]) {
+  const s = status ?? "HEALTHY";
+  if (s === "HEALTHY") return { className: "bg-emerald-50 text-emerald-700" };
+  if (s === "UNDER_TREATMENT")
+    return { className: "bg-amber-50 text-amber-700" };
+  if (s === "RECOVERING") return { className: "bg-sky-50 text-sky-700" };
+  if (s === "SPECIAL_NEEDS") return { className: "bg-rose-50 text-rose-700" };
+  return { className: "bg-muted text-muted-foreground" };
+}
+
+// -------- page --------
 export default function PetDetailPage() {
-  const { petid } = useParams();
+  const params = useParams<{ petId: string }>();
+  const petId = params?.petId;
   const router = useRouter();
-  const [pet, setPet] = React.useState<Pet | null>(data);
-  const [loading, setLoading] = React.useState(false);
+
+  const petQuery = useQuery({
+    queryKey: ["pet", petId],
+    queryFn: () => petService.getPetById(petId as string),
+    enabled: Boolean(petId),
+  });
+
+  const pet = (petQuery.data ?? null) as Pet | null;
+
   const [activeTab, setActiveTab] = React.useState<
     "medical" | "media" | "logs"
   >("medical");
 
-  if (loading) return <PetDetailSkeleton />;
+  if (petQuery.isPending) return <PetDetailSkeleton />;
+  if (petQuery.isError) {
+    return (
+      <div className="space-y-3">
+        <Button
+          variant="outline"
+          size="icon"
+          className="h-10 w-10 rounded-xl"
+          onClick={() => router.back()}
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
+
+        <div className="rounded-lg border border-border bg-card p-4 text-sm">
+          Không tải được dữ liệu thú cưng.
+        </div>
+      </div>
+    );
+  }
+
   if (!pet) return <div>Pet not found</div>;
+
+  const coverUrl =
+    pet.imageUrls ||
+    (Array.isArray((pet as any).imageUrls)
+      ? (pet as any).imageUrls?.[0]
+      : null);
+
+  const orgName =
+    (pet as any).organizationName ??
+    (pet as any).organization?.name ??
+    (pet as any).shelterName ??
+    "—";
+  const orgId =
+    (pet as any).organizationId ?? (pet as any).organization?.id ?? "—";
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
       {/* Top Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="flex flex-col justify-between gap-6 md:flex-row md:items-center">
         <div className="flex items-center gap-4">
           <Button
             variant="outline"
@@ -161,61 +178,91 @@ export default function PetDetailPage() {
             className="h-10 w-10 rounded-xl"
             onClick={() => router.back()}
           >
-            <ArrowLeft className="w-5 h-5" />
+            <ArrowLeft className="h-5 w-5" />
           </Button>
+
           <div>
             <div className="flex items-center gap-3">
               <h1 className="text-3xl font-serif font-bold text-foreground">
-                {pet.name}
+                {pet.name ?? "—"}
               </h1>
               <Badge
                 variant="outline"
-                className="text-[10px] font-bold uppercase tracking-widest px-3 h-6"
+                className="h-6 px-3 text-[10px] font-bold uppercase tracking-widest"
               >
-                {pet.id}
+                {pet.petCode ?? pet.petId ?? petId}
               </Badge>
             </div>
-            <p className="text-muted-foreground font-medium flex items-center gap-2 mt-1">
-              {pet.species} • {pet.breed} • {pet.ageDisplay}
+
+            <p className="mt-1 flex items-center gap-2 font-medium text-muted-foreground">
+              {pet.species ?? "—"} • {pet.breed ?? "—"} •{" "}
+              {pet.ageDisplay ?? "—"}
             </p>
           </div>
         </div>
+
         <div className="flex items-center gap-3">
           <Button
             variant="outline"
-            className="border-border text-muted-foreground font-bold h-11 px-6 rounded-xl"
+            className="h-11 rounded-xl border-border px-6 font-bold text-muted-foreground"
+            onClick={() => {
+              toast("Chức năng chia sẻ đang được phát triển");
+            }}
           >
             Chia sẻ hồ sơ
           </Button>
-          <Button className="shadow-lg shadow-primary/20 font-bold h-11 px-8 rounded-xl">
-            <Edit2 className="w-4 h-4 mr-2" /> Chỉnh sửa
+
+          <Button
+            className="h-11 rounded-xl px-8 font-bold shadow-lg shadow-primary/20"
+            onClick={() => {
+              toast("Chức năng chỉnh sửa đang được phát triển");
+            }}
+          >
+            <Edit2 className="mr-2 h-4 w-4" /> Chỉnh sửa
           </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
         {/* Left Column */}
-        <div className="lg:col-span-2 space-y-8">
+        <div className="space-y-8 lg:col-span-2">
           {/* Hero Card */}
-          <Card className="border-none shadow-xl shadow-primary/5 overflow-hidden group">
-            <CardContent className="p-0 relative aspect-[21/9]">
-              <img
-                src={pet.imageUrl}
-                alt={pet.name}
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+          <Card className="group overflow-hidden border-none shadow-xl shadow-primary/5">
+            <CardContent className="relative aspect-[21/9] p-0">
+              <Image
+                src={pet.imageUrls[0]}
+                alt={pet.name ?? "pet"}
+                width={1200}
+                height={514}
+                className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+
               <div className="absolute bottom-6 left-6 right-6 flex items-end justify-between">
                 <div className="flex gap-2">
-                  <Badge className="bg-white/20 backdrop-blur-md text-white border-white/20 px-4 py-1.5 rounded-full font-bold">
-                    {pet.status}
+                  <Badge
+                    className={cn(
+                      "rounded-full border-white/20 bg-white/20 px-4 py-1.5 font-bold text-white backdrop-blur-md hover:bg-white/20",
+                      "uppercase",
+                    )}
+                  >
+                    {petStatusLabel(pet.status)}
                   </Badge>
-                  <Badge className="bg-white/20 backdrop-blur-md text-white border-white/20 px-4 py-1.5 rounded-full font-bold">
-                    {pet.healthStatus}
+                  <Badge
+                    className={cn(
+                      "rounded-full border-white/20 bg-white/20 px-4 py-1.5 font-bold text-white backdrop-blur-md hover:bg-white/20",
+                      "uppercase",
+                    )}
+                  >
+                    {healthStatusLabel(pet.healthStatus)}
                   </Badge>
                 </div>
-                <Button className="bg-white hover:bg-white/90 text-primary font-bold rounded-xl shadow-xl">
-                  <Upload className="w-4 h-4 mr-2" /> Đổi ảnh bìa
+
+                <Button
+                  className="rounded-xl bg-white font-bold text-primary shadow-xl hover:bg-white/90"
+                  onClick={() => toast("Upload ảnh đang được phát triển")}
+                >
+                  <Upload className="mr-2 h-4 w-4" /> Đổi ảnh bìa
                 </Button>
               </div>
             </CardContent>
@@ -224,59 +271,80 @@ export default function PetDetailPage() {
           {/* Basic Info Card */}
           <Card className="border-none shadow-xl shadow-primary/5">
             <CardHeader className="p-8 pb-0">
-              <CardTitle className="text-xl font-serif font-bold flex items-center gap-2">
-                <Activity className="w-5 h-5 text-primary" /> Thông tin cơ bản
+              <CardTitle className="flex items-center gap-2 text-xl font-serif font-bold">
+                <Activity className="h-5 w-5 text-primary" /> Thông tin cơ bản
               </CardTitle>
             </CardHeader>
+
             <CardContent className="p-8">
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-y-8 gap-x-12">
-                <InfoItem label="Tên gọi" value={pet.name} />
-                <InfoItem label="Pet ID" value={pet.id} />
-                <InfoItem label="Loài" value={pet.species} />
-                <InfoItem label="Giống" value={pet.breed} />
-                <InfoItem label="Tuổi" value={pet.ageDisplay} />
-                <InfoItem label="Giới tính" value={pet.gender} />
+              <div className="grid grid-cols-2 gap-x-12 gap-y-8 md:grid-cols-3">
+                <InfoItem label="Tên gọi" value={pet.name ?? "—"} />
+                <InfoItem label="Pet code" value={pet.petCode ?? "—"} />
+                <InfoItem label="Pet ID" value={pet.petId ?? petId ?? "—"} />
+
+                <InfoItem label="Loài" value={pet.species ?? "—"} />
+                <InfoItem label="Giống" value={pet.breed ?? "—"} />
+                <InfoItem label="Tuổi" value={pet.ageDisplay ?? "—"} />
+
+                <InfoItem label="Giới tính" value={genderLabel(pet.gender)} />
+
                 <InfoItem
                   label="Tiêm phòng"
                   value={pet.vaccinated ? "Đã tiêm" : "Chưa tiêm"}
-                  isBadge={true}
-                  badgeVariant={pet.vaccinated ? "success" : "warning"}
+                  isBadge
+                  badgeClassName={
+                    pet.vaccinated
+                      ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-50"
+                      : "bg-muted text-muted-foreground hover:bg-muted"
+                  }
                 />
+
                 <InfoItem
                   label="Trạng thái"
-                  value={pet.status}
-                  isBadge={true}
-                  badgeVariant="primary"
+                  value={petStatusLabel(pet.status)}
+                  isBadge
+                  badgeClassName={pillVariantForPetStatus(pet.status).className}
                 />
+
                 <InfoItem
                   label="Sức khỏe"
-                  value={pet.healthStatus}
-                  isBadge={true}
-                  badgeVariant={
-                    pet.healthStatus === "HEALTHY" ? "success" : "error"
+                  value={healthStatusLabel(pet.healthStatus)}
+                  isBadge
+                  badgeClassName={
+                    pillVariantForHealth(pet.healthStatus).className
                   }
+                />
+
+                <InfoItem
+                  label="Ngày tạo"
+                  value={formatDateTimeVi((pet as any).createdAt)}
+                />
+                <InfoItem
+                  label="Cập nhật"
+                  value={formatDateTimeVi((pet as any).updatedAt)}
                 />
               </div>
             </CardContent>
           </Card>
 
           {/* Internal Notes Card */}
-          <Card className="border-none shadow-xl shadow-primary/5 bg-primary/5 border-l-4 border-primary">
+          <Card className="border-l-4 border-primary bg-primary/5 shadow-xl shadow-primary/5">
             <CardHeader className="p-8 pb-4">
-              <CardTitle className="text-xl font-serif font-bold flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-primary" /> Ghi chú nội bộ
+              <CardTitle className="flex items-center gap-2 text-xl font-serif font-bold">
+                <Calendar className="h-5 w-5 text-primary" /> Ghi chú nội bộ
               </CardTitle>
             </CardHeader>
             <CardContent className="p-8 pt-0">
-              <p className="text-sm text-muted-foreground leading-relaxed italic">
-                {pet.internalNotes || "Chưa có ghi chú nào cho thú cưng này."}
+              <p className="text-sm italic leading-relaxed text-muted-foreground">
+                {(pet as any).internalNotes ||
+                  "Chưa có ghi chú nào cho thú cưng này."}
               </p>
             </CardContent>
           </Card>
 
           {/* Bottom Tabs */}
           <div className="space-y-6">
-            <div className="flex items-center gap-1 p-1 bg-muted/30 border border-border rounded-2xl w-fit">
+            <div className="flex w-fit items-center gap-1 rounded-2xl border border-border bg-muted/30 p-1">
               <TabButton
                 active={activeTab === "medical"}
                 onClick={() => setActiveTab("medical")}
@@ -309,21 +377,25 @@ export default function PetDetailPage() {
                   transition={{ duration: 0.2 }}
                 >
                   <Card className="border-none shadow-xl shadow-primary/5">
-                    <CardHeader className="p-8 flex flex-row items-center justify-between">
+                    <CardHeader className="flex flex-row items-center justify-between p-8">
                       <CardTitle className="text-lg font-bold">
                         Lịch sử khám & tiêm phòng
                       </CardTitle>
                       <Button
                         variant="outline"
-                        className="border-primary/20 text-primary font-bold h-10 px-4 rounded-xl"
+                        className="h-10 rounded-xl border-primary/20 px-4 font-bold text-primary"
+                        onClick={() =>
+                          toast("Thêm hồ sơ y tế đang được phát triển")
+                        }
                       >
-                        <Plus className="w-4 h-4 mr-2" /> Thêm hồ sơ
+                        <Plus className="mr-2 h-4 w-4" /> Thêm hồ sơ
                       </Button>
                     </CardHeader>
+
                     <CardContent className="p-0 overflow-x-auto">
-                      <table className="w-full text-left border-collapse">
+                      <table className="w-full border-collapse text-left">
                         <thead>
-                          <tr className="bg-muted/30 border-y border-border">
+                          <tr className="border-y border-border bg-muted/30">
                             <th className="px-8 py-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                               Ngày
                             </th>
@@ -341,31 +413,46 @@ export default function PetDetailPage() {
                             </th>
                           </tr>
                         </thead>
+
                         <tbody className="divide-y divide-border">
-                          {pet.medicalRecords?.map((record) => (
-                            <tr key={record.recordId}>
-                              <td className="px-8 py-5 text-sm font-medium">
-                                {record.recordDate}
-                              </td>
-                              <td className="px-8 py-5">
-                                <Badge
-                                  variant="outline"
-                                  className="bg-primary/5 text-primary border-primary/10"
-                                >
-                                  {record.vaccine}
-                                </Badge>
-                              </td>
-                              <td className="px-8 py-5 text-sm font-bold text-foreground">
-                                {record.diagnosis}
-                              </td>
-                              <td className="px-8 py-5 text-xs text-muted-foreground max-w-[200px] truncate">
-                                {record.description}
-                              </td>
-                              <td className="px-8 py-5 text-sm font-medium">
-                                {record.createdBy}
+                          {Array.isArray((pet as any).medicalRecords) &&
+                          (pet as any).medicalRecords.length > 0 ? (
+                            (pet as any).medicalRecords.map((record: any) => (
+                              <tr
+                                key={record.recordId ?? `${record.recordDate}`}
+                              >
+                                <td className="px-8 py-5 text-sm font-medium">
+                                  {formatDateVi(record.recordDate)}
+                                </td>
+                                <td className="px-8 py-5">
+                                  <Badge
+                                    variant="outline"
+                                    className="border-primary/10 bg-primary/5 text-primary"
+                                  >
+                                    {record.vaccine ?? "—"}
+                                  </Badge>
+                                </td>
+                                <td className="px-8 py-5 text-sm font-bold text-foreground">
+                                  {record.diagnosis ?? "—"}
+                                </td>
+                                <td className="max-w-[200px] truncate px-8 py-5 text-xs text-muted-foreground">
+                                  {record.description ?? "—"}
+                                </td>
+                                <td className="px-8 py-5 text-sm font-medium">
+                                  {record.createdBy ?? "—"}
+                                </td>
+                              </tr>
+                            ))
+                          ) : (
+                            <tr>
+                              <td
+                                colSpan={5}
+                                className="px-8 py-6 text-sm text-muted-foreground"
+                              >
+                                Chưa có hồ sơ y tế.
                               </td>
                             </tr>
-                          ))}
+                          )}
                         </tbody>
                       </table>
                     </CardContent>
@@ -381,47 +468,80 @@ export default function PetDetailPage() {
                   transition={{ duration: 0.2 }}
                 >
                   <Card className="border-none shadow-xl shadow-primary/5">
-                    <CardHeader className="p-8 flex flex-row items-center justify-between">
+                    <CardHeader className="flex flex-row items-center justify-between p-8">
                       <CardTitle className="text-lg font-bold">
                         Thư viện phương tiện
                       </CardTitle>
                       <Button
                         variant="default"
-                        className="h-10 px-6 rounded-xl shadow-lg shadow-primary/20"
+                        className="h-10 rounded-xl px-6 shadow-lg shadow-primary/20"
+                        onClick={() =>
+                          toast("Upload media đang được phát triển")
+                        }
                       >
-                        <Upload className="w-4 h-4 mr-2" /> Tải lên media
+                        <Upload className="mr-2 h-4 w-4" /> Tải lên media
                       </Button>
                     </CardHeader>
+
                     <CardContent className="p-8 pt-0">
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        {pet.mediaGallery?.map((media) => (
-                          <div
-                            key={media.mediaId}
-                            className="aspect-square rounded-2xl bg-muted overflow-hidden border border-border group relative"
-                          >
-                            <img
-                              src={media.url}
-                              className="w-full h-full object-cover transition-transform group-hover:scale-110"
-                            />
-                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 rounded-lg bg-white/20 text-white backdrop-blur-sm"
-                              >
-                                <Eye className="w-4 h-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 rounded-lg bg-white/20 text-white backdrop-blur-sm"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
+                      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+                        {Array.isArray((pet as any).mediaGallery) &&
+                        (pet as any).mediaGallery.length > 0 ? (
+                          (pet as any).mediaGallery.map((media: any) => (
+                            <div
+                              key={media.mediaId ?? media.url}
+                              className="group relative aspect-square overflow-hidden rounded-2xl border border-border bg-muted"
+                            >
+                              <img
+                                src={media.url || "/file.svg"}
+                                className="h-full w-full object-cover transition-transform group-hover:scale-110"
+                              />
+                              <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 rounded-lg bg-white/20 text-white backdrop-blur-sm"
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 rounded-lg bg-white/20 text-white backdrop-blur-sm"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
                             </div>
+                          ))
+                        ) : (
+                          <div className="col-span-full text-sm text-muted-foreground">
+                            Chưa có media.
                           </div>
-                        ))}
+                        )}
                       </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              )}
+
+              {activeTab === "logs" && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <Card className="border-none shadow-xl shadow-primary/5">
+                    <CardHeader className="p-8">
+                      <CardTitle className="text-lg font-bold">
+                        Nhật ký hoạt động
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-8 pt-0 text-sm text-muted-foreground">
+                      {(pet as any).activityLogs?.length
+                        ? "Hiển thị nhật ký tại đây"
+                        : "Chưa có nhật ký."}
                     </CardContent>
                   </Card>
                 </motion.div>
@@ -433,32 +553,36 @@ export default function PetDetailPage() {
         {/* Right Column */}
         <div className="space-y-8">
           {/* Organization Card */}
-          <Card className="border-none shadow-xl shadow-primary/5 overflow-hidden">
+          <Card className="overflow-hidden border-none shadow-xl shadow-primary/5">
             <div className="h-2 bg-primary" />
             <CardHeader className="p-8 pb-4">
               <CardTitle className="text-lg font-bold">
                 Trung tâm quản lý
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-8 pt-0 space-y-6">
+            <CardContent className="space-y-6 p-8 pt-0">
               <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-2xl bg-muted border border-border flex items-center justify-center text-primary">
-                  <Building2 className="w-7 h-7" />
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-border bg-muted text-primary">
+                  <Building2 className="h-7 w-7" />
                 </div>
                 <div>
                   <p className="text-base font-bold text-foreground">
-                    {pet.organization.name}
+                    {orgName}
                   </p>
-                  <p className="text-xs text-muted-foreground font-medium uppercase tracking-widest">
-                    {pet.organization.id}
+                  <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
+                    {orgId}
                   </p>
                 </div>
               </div>
+
               <Button
                 variant="outline"
-                className="w-full border-primary/20 text-primary font-bold h-11 rounded-xl"
+                className="h-11 w-full rounded-xl border-primary/20 font-bold text-primary"
+                onClick={() => {
+                  if (orgId && orgId !== "—") router.push(`/quan-ly-trung-tam`);
+                }}
               >
-                Xem hồ sơ trung tâm <ChevronRight className="w-4 h-4 ml-1" />
+                Xem hồ sơ trung tâm <ChevronRight className="ml-1 h-4 w-4" />
               </Button>
             </CardContent>
           </Card>
@@ -470,24 +594,25 @@ export default function PetDetailPage() {
                 Vị trí hiện tại
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-8 pt-0 space-y-6">
+            <CardContent className="space-y-6 p-8 pt-0">
               <div className="space-y-4">
                 <div className="flex items-start gap-3">
-                  <MapPin className="w-5 h-5 text-primary mt-0.5" />
+                  <MapPin className="mt-0.5 h-5 w-5 text-primary" />
                   <div>
-                    <p className="text-sm font-bold">{pet.province}</p>
-                    <p className="text-xs text-muted-foreground font-medium">
-                      {pet.ward}
+                    <p className="text-sm font-bold">{pet.province ?? "—"}</p>
+                    <p className="text-xs font-medium text-muted-foreground">
+                      {pet.ward ?? "—"}
                     </p>
                   </div>
                 </div>
-                <div className="aspect-video rounded-2xl bg-muted overflow-hidden border border-border relative">
+
+                <div className="relative aspect-video overflow-hidden rounded-2xl border border-border bg-muted">
                   <img
                     src="https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&q=80&w=400"
-                    className="w-full h-full object-cover opacity-50 grayscale"
+                    className="h-full w-full object-cover opacity-50 grayscale"
                   />
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <MapPin className="w-8 h-8 text-primary fill-primary/20 animate-bounce" />
+                    <MapPin className="h-8 w-8 animate-bounce fill-primary/20 text-primary" />
                   </div>
                 </div>
               </div>
@@ -502,40 +627,59 @@ export default function PetDetailPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="p-8 pt-0">
-              <div className="space-y-6 relative before:absolute before:left-2 before:top-2 before:bottom-2 before:w-px before:bg-border">
-                {pet.ownershipHistory?.map((owner, idx) => (
-                  <div key={idx} className="relative pl-8">
-                    <div
-                      className={cn(
-                        "absolute left-0 top-1.5 w-4 h-4 rounded-full border-2 border-white shadow-sm ring-4 ring-white z-10",
-                        idx === 0 ? "bg-primary" : "bg-muted-foreground",
-                      )}
-                    />
-                    <div>
-                      <p className="text-sm font-bold text-foreground flex items-center gap-2">
-                        {owner.ownerName}
-                        {idx === 0 && (
-                          <Badge
-                            variant="default"
-                            className="text-[8px] h-3.5 px-1.5"
-                          >
-                            Hiện tại
-                          </Badge>
-                        )}
-                      </p>
-                      <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mt-0.5">
-                        {owner.ownerType} • Từ {owner.fromTime}{" "}
-                        {owner.toTime ? `đến ${owner.toTime}` : ""}
-                      </p>
-                    </div>
+              <div className="relative space-y-6 before:absolute before:bottom-2 before:left-2 before:top-2 before:w-px before:bg-border">
+                {Array.isArray((pet as any).ownershipHistory) &&
+                (pet as any).ownershipHistory.length > 0 ? (
+                  (pet as any).ownershipHistory.map(
+                    (owner: any, idx: number) => (
+                      <div
+                        key={`${idx}-${owner.ownerId ?? "x"}`}
+                        className="relative pl-8"
+                      >
+                        <div
+                          className={cn(
+                            "absolute left-0 top-1.5 z-10 h-4 w-4 rounded-full border-2 border-white shadow-sm ring-4 ring-white",
+                            idx === 0 ? "bg-primary" : "bg-muted-foreground",
+                          )}
+                        />
+                        <div>
+                          <p className="flex items-center gap-2 text-sm font-bold text-foreground">
+                            {owner.ownerName ?? "—"}
+                            {idx === 0 && (
+                              <Badge
+                                variant="default"
+                                className="h-3.5 px-1.5 text-[8px]"
+                              >
+                                Hiện tại
+                              </Badge>
+                            )}
+                          </p>
+                          <p className="mt-0.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                            {owner.ownerType ?? "—"} • Từ{" "}
+                            {formatDateVi(owner.fromTime)}{" "}
+                            {owner.toTime
+                              ? `đến ${formatDateVi(owner.toTime)}`
+                              : ""}
+                          </p>
+                        </div>
+                      </div>
+                    ),
+                  )
+                ) : (
+                  <div className="text-sm text-muted-foreground">
+                    Chưa có lịch sử sở hữu.
                   </div>
-                ))}
+                )}
               </div>
+
               <Button
                 variant="ghost"
-                className="w-full mt-6 text-primary text-xs font-bold hover:bg-primary/5"
+                className="mt-6 w-full text-xs font-bold text-primary hover:bg-primary/5"
+                onClick={() =>
+                  toast("Chuyển quyền sở hữu đang được phát triển")
+                }
               >
-                <ArrowRightLeft className="w-3.5 h-3.5 mr-2" /> Chuyển quyền sở
+                <ArrowRightLeft className="mr-2 h-3.5 w-3.5" /> Chuyển quyền sở
                 hữu
               </Button>
             </CardContent>
@@ -565,27 +709,29 @@ export default function PetDetailPage() {
   );
 }
 
-// Subcomponents
+// -------- Subcomponents --------
 function InfoItem({
   label,
   value,
   isBadge = false,
-  badgeVariant = "default",
+  badgeClassName,
 }: {
   label: string;
   value: string;
   isBadge?: boolean;
-  badgeVariant?: any;
+  badgeClassName?: string;
 }) {
   return (
     <div className="space-y-1.5">
-      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+      <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
         {label}
       </p>
       {isBadge ? (
         <Badge
-          variant={badgeVariant}
-          className="px-3 h-6 text-[11px] font-bold uppercase tracking-wider"
+          className={cn(
+            "h-6 px-3 text-[11px] font-bold uppercase tracking-wider",
+            badgeClassName,
+          )}
         >
           {value}
         </Badge>
@@ -611,13 +757,13 @@ function TabButton({
     <button
       onClick={onClick}
       className={cn(
-        "flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold transition-all duration-300",
+        "flex items-center gap-2 rounded-xl px-5 py-2.5 text-xs font-bold transition-all duration-300",
         active
           ? "bg-white text-primary shadow-sm"
           : "text-muted-foreground hover:bg-white/50",
       )}
     >
-      <Icon className="w-4 h-4" />
+      <Icon className="h-4 w-4" />
       {children}
     </button>
   );
@@ -636,11 +782,12 @@ function ActionButton({
     <Button
       variant="outline"
       className={cn(
-        "h-auto py-4 flex flex-col items-center justify-center gap-2 rounded-2xl border-border hover:border-primary/30 transition-all",
+        "h-auto flex flex-col items-center justify-center gap-2 rounded-2xl border-border py-4 transition-all hover:border-primary/30",
         color,
       )}
+      onClick={() => toast("Chức năng đang được phát triển")}
     >
-      <Icon className="w-5 h-5" />
+      <Icon className="h-5 w-5" />
       <span className="text-[10px] font-bold uppercase tracking-widest">
         {label}
       </span>
@@ -651,12 +798,12 @@ function ActionButton({
 function PetDetailSkeleton() {
   return (
     <div className="space-y-8 animate-pulse">
-      <div className="flex justify-between items-center">
+      <div className="flex items-center justify-between">
         <Skeleton className="h-10 w-48 rounded-xl" />
         <Skeleton className="h-10 w-64 rounded-xl" />
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-8">
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+        <div className="space-y-8 lg:col-span-2">
           <Skeleton className="aspect-[21/9] w-full rounded-3xl" />
           <Skeleton className="h-[300px] w-full rounded-3xl" />
         </div>

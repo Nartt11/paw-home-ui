@@ -68,5 +68,4 @@ export interface PublicPageData {
   rescueMapStats: RescueMapStat[];
   stories: StoryItem[];
   events: EventItem[];
-  pets: Pet[];
 }

@@ -13,7 +13,7 @@ export default function FeaturedPetsSection({
   pets,
   loading,
 }: FeaturedPetsSectionProps) {
-  const availableCount = pets.filter((p) => p.status === "AVAILABLE").length;
+  const availableCount = pets.filter((p) => p.status === "UNOWNED").length;
 
   console.log("Available pets:", pets);
 
@@ -47,7 +47,7 @@ export default function FeaturedPetsSection({
         ) : (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {pets.map((pet) => (
-              <PetCard key={pet.pet_id} pet={pet} />
+              <PetCard key={pet.petId} pet={pet} />
             ))}
           </div>
         )}

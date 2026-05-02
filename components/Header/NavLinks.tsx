@@ -16,7 +16,7 @@ const NAV_LINKS: NavItem[] = [
   { href: "/ve-chung-toi", vi: "Về chúng tôi", en: "About" },
 ];
 
-export default function NavLinks({ lang }: { lang: "vi" | "en" }) {
+export default function NavLinks() {
   const pathname = usePathname();
 
   return (
@@ -34,9 +34,7 @@ export default function NavLinks({ lang }: { lang: "vi" | "en" }) {
                   ? "text-ph-orange bg-ph-orange/10"
                   : "text-white/80 hover:text-white hover:bg-white/10"
               }`}
-          >
-            {lang === "en" ? link.en : link.vi}
-          </Link>
+          ></Link>
         );
       })}
     </nav>

@@ -7,7 +7,7 @@ import { Menu, X, Smartphone, Users } from "lucide-react";
 
 import NavLinks from "./NavLinks";
 import NotifBell from "./NotifBell";
-import { DarkToggle, LangToggle } from "./Toggles";
+import { DarkToggle } from "./Toggles";
 
 export default function Header() {
   const pathname = usePathname();
@@ -18,11 +18,9 @@ export default function Header() {
   // giả lập state (bạn thay bằng context thật)
   const isLoggedIn = false;
   const unread = 2;
-  const lang: "vi" | "en" = "vi";
   const isDark = false;
 
   const toggleDark = () => {};
-  const setLang = (l: "vi" | "en") => {};
 
   useEffect(() => {
     const fn = () => setScrolled(window.scrollY > 40);
@@ -30,9 +28,9 @@ export default function Header() {
     return () => window.removeEventListener("scroll", fn);
   }, []);
 
-  useEffect(() => {
-    setMenuOpen(false);
-  }, [pathname]);
+  // useEffect(() => {
+  //   setMenuOpen(false);
+  // }, [pathname]);
 
   const isHome = pathname === "/";
   const isTransparent = !scrolled;
@@ -61,22 +59,11 @@ export default function Header() {
         </Link>
 
         {/* Nav */}
-        <NavLinks lang={lang} />
+        <NavLinks />
 
         {/* Right */}
         <div className="hidden lg:flex items-center gap-2">
-          <DarkToggle
-            isDark={isDark}
-            toggleDark={toggleDark}
-            lang={lang}
-            setLang={setLang}
-          />
-          <LangToggle
-            lang={lang}
-            setLang={setLang}
-            isDark={isDark}
-            toggleDark={toggleDark}
-          />
+          <DarkToggle isDark={isDark} toggleDark={toggleDark} />
 
           <Link
             href="/"
@@ -109,7 +96,7 @@ export default function Header() {
       {/* Mobile menu */}
       {menuOpen && (
         <div className="lg:hidden border-t border-white/10 bg-[#02171F]">
-          <NavLinks lang={lang} />
+          <NavLinks />
         </div>
       )}
     </header>

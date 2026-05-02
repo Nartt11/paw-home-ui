@@ -1,5 +1,6 @@
 import { Pet } from "@/types/pet.type";
-import { Heart, MapPin } from "lucide-react";
+import { MapPin } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -15,20 +16,22 @@ export default function PetCard({ pet }: PetCardProps) {
       <article className="group flex cursor-pointer flex-col overflow-hidden rounded-2xl bg-white shadow-md transition duration-200 hover:-translate-y-1 hover:shadow-2xl">
         <div className="relative h-56 overflow-hidden">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={pet.image}
+          <Image
+            src={pet.imageUrls[0]}
             alt={pet.name}
+            width={400}
+            height={400}
             className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
           />
           <div className="absolute inset-0 bg-linear-to-t from-slate-950/60 to-transparent" />
 
           <div className="absolute bottom-2 left-3 flex gap-1.5 text-[9px] font-bold">
-            {pet.is_vaccinated && (
+            {pet.vaccinated && (
               <span className="rounded-full bg-[#2AC789] px-2 py-0.5 text-white">
                 ✓ Vaccine
               </span>
             )}
-            {pet.is_neutered && (
+            {pet.neutered && (
               <span className="rounded-full bg-[#06A7E7] px-2 py-0.5 text-white">
                 ✓ Triệt sản
               </span>
@@ -43,24 +46,24 @@ export default function PetCard({ pet }: PetCardProps) {
                 {pet.name}
               </h3>
               <p className="mt-0.5 text-[12px] text-slate-500">
-                {pet.breed === "dog" ? "🐕 Chó" : "🐈 Mèo"} ·{" "}
-                {pet.gender === "male" ? "♂" : "♀"} · {pet.age}
+                {pet.breed === "dog" ? "🐕 Chó" : "🐈 Mèo"} · {pet.gender} ·{" "}
+                {pet.age}
               </p>
             </div>
             <span
               className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${
-                pet.status === "available"
+                pet.status === "UNOWNED"
                   ? "bg-emerald-50 text-emerald-500"
                   : "bg-amber-50 text-amber-500"
               }`}
             >
-              {pet.status === "available" ? "✓ Sẵn sàng" : "⏳ Đang xét"}
+              {pet.status === "UNOWNED" ? "✓ Sẵn sàng" : "⏳ Đang xét"}
             </span>
           </div>
 
           <div className="mb-3 flex items-center gap-1 text-[11px] text-slate-400">
             <MapPin size={11} className="shrink-0" />
-            <span>{pet.rescue_location || "Không xác định"}</span>
+            <span>{pet.rescueLocation || "Không xác định"}</span>
           </div>
 
           <div className="grid grid-cols-2 gap-2 text-center text-xs">

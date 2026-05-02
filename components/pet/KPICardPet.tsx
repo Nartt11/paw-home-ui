@@ -10,6 +10,7 @@ export default function KPICardPet({
 }: {
   title: string;
   value?: number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   icon: any;
   color: string;
 }) {
