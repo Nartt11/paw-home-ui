@@ -1,0 +1,116 @@
+{
+  "hero": {
+    "emergencyCases": 3,
+    "titleHighlight": "xứng đáng được yêu thương",
+    "description": "PawHome kết nối hàng trăm thú cưng cần được cứu hộ với những gia đình yêu thương tại Hà Nội. Cùng chúng tôi tạo nên sự thay đổi.",
+    "searchPlaceholder": "Tìm chó, mèo, tên thú cưng..."
+  },
+  "stats": [
+    {
+      "value": 1240,
+      "suffix": "+",
+      "label": "Thú cưng được cứu",
+      "color": "#F7DB47"
+    },
+    {
+      "value": 860,
+      "suffix": "+",
+      "label": "Ca nhận nuôi thành công",
+      "color": "#2AC789"
+    },
+    {
+      "value": 3,
+      "suffix": "",
+      "label": "Trạm cứu hộ tại Hà Nội",
+      "color": "#06A7E7"
+    },
+    {
+      "value": 180,
+      "suffix": "+",
+      "label": "Tình nguyện viên",
+      "color": "#FF9132"
+    },
+    {
+      "value": 92,
+      "suffix": "%",
+      "label": "Tỉ lệ nhận nuôi thành công",
+      "color": "#FF584F"
+    }
+  ],
+  "howItWorksSteps": [
+    {
+      "step": "01",
+      "icon": "🔍",
+      "title": "Tìm kiếm",
+      "desc": "Duyệt hồ sơ thú cưng, lọc theo loài, tuổi, giới tính. Yêu thích và so sánh các bé.",
+      "color": "#06A7E7"
+    },
+    {
+      "step": "02",
+      "icon": "📋",
+      "title": "Đăng ký",
+      "desc": "Điền form đăng ký nhận nuôi online. HPA xét duyệt trong 1-3 ngày làm việc.",
+      "color": "#FF9132"
+    },
+    {
+      "step": "03",
+      "icon": "🤝",
+      "title": "Gặp gỡ",
+      "desc": "Thăm trạm cứu hộ và gặp trực tiếp bé thú cưng. Tư vấn chăm sóc 1-1 với TNV.",
+      "color": "#2AC789"
+    },
+    {
+      "step": "04",
+      "icon": "🏠",
+      "title": "Về nhà",
+      "desc": "Ký hợp đồng nhận nuôi có trách nhiệm. HPA theo dõi định kỳ 3-6 tháng đầu.",
+      "color": "#FF584F"
+    }
+  ],
+  "rescueMapStats": [
+    { "val": "3", "label": "Ca khẩn cấp", "color": "#FF584F" },
+    { "val": "3", "label": "Trung tâm", "color": "#06A7E7" },
+    { "val": "2", "label": "Sự kiện", "color": "#F7DB47" }
+  ],
+  "stories": [
+    {
+      "name": "Gia đình Hương – Cam",
+      "img": "CAT_IMG",
+      "text": "Sau 3 tháng cứu hộ, bé Cam đã tìm được mái ấm mới. Gia đình tôi cảm ơn HPA đã giúp chúng tôi kết nối!",
+      "stars": 5,
+      "loc": "Tây Hồ, Hà Nội"
+    },
+    {
+      "name": "Anh Minh – Rex",
+      "img": "PUPPY_IMG",
+      "text": "Rex đến với tôi gầy trơ xương, giờ béo tốt, vui vẻ và là thành viên không thể thiếu của gia đình.",
+      "stars": 5,
+      "loc": "Cầu Giấy, Hà Nội"
+    },
+    {
+      "name": "Chị Lan – Luna & Mochi",
+      "img": "WALK_IMG",
+      "text": "HPA đã tư vấn rất tận tình. App rất tiện lợi để theo dõi sức khỏe và nhận thông báo cứu hộ gần nhà!",
+      "stars": 5,
+      "loc": "Hoàng Mai, Hà Nội"
+    }
+  ],
+  "events": [
+    {
+      "date": "15/04",
+      "month": "APR",
+      "name": "Ngày hội nhận nuôi tháng 4",
+      "location": "Công viên Hồ Tây, Tây Hồ",
+      "desc": "Hơn 30 bé thú cưng đang chờ tìm chủ. Tư vấn nhận nuôi miễn phí, quà tặng cho 100 khách đầu tiên.",
+      "img": "EVENT_IMG"
+    },
+    {
+      "date": "20/04",
+      "month": "APR",
+      "name": "Triển lãm ảnh \"Nhận nuôi – Yêu thương\"",
+      "location": "Vườn hoa Lý Thái Tổ, Hoàn Kiếm",
+      "desc": "Triển lãm ảnh nghệ thuật kết hợp ngày hội nhận nuôi tại trung tâm Hà Nội.",
+      "img": "VOL_IMG"
+    }
+  ]
+}

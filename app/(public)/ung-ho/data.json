@@ -1,0 +1,149 @@
+{
+  "hero": {
+    "title": "Mỗi đồng ủng hộ\ncứu một sinh mệnh",
+    "description": "100% khoản ủng hộ được dùng trực tiếp cho thức ăn, thuốc men và phẫu thuật cứu hộ. Không chi phí quản lý.",
+    "stats": [
+      { "value": "1.240+", "label": "Thú cưng được cứu", "tone": "sun" },
+      { "value": "860+", "label": "Ca nhận nuôi", "tone": "emerald" },
+      { "value": "180+", "label": "Nhà hảo tâm", "tone": "orange" }
+    ]
+  },
+  "tiers": [
+    {
+      "id": "a",
+      "amount": 50000,
+      "label": "50.000₫",
+      "description": "Thức ăn 1 ngày",
+      "emoji": "🍚",
+      "tone": "sky"
+    },
+    {
+      "id": "b",
+      "amount": 100000,
+      "label": "100.000₫",
+      "description": "Khay vệ sinh",
+      "emoji": "🧹",
+      "tone": "emerald"
+    },
+    {
+      "id": "c",
+      "amount": 200000,
+      "label": "200.000₫",
+      "description": "Tiêm vaccine",
+      "emoji": "💉",
+      "tone": "orange",
+      "popular": true
+    },
+    {
+      "id": "d",
+      "amount": 500000,
+      "label": "500.000₫",
+      "description": "Khám sức khỏe",
+      "emoji": "🏥",
+      "tone": "rose"
+    },
+    {
+      "id": "e",
+      "amount": 1000000,
+      "label": "1.000.000₫",
+      "description": "Phẫu thuật cứu hộ",
+      "emoji": "🦮",
+      "tone": "slate"
+    }
+  ],
+  "impactBars": [
+    { "label": "🍗 Thức ăn & dinh dưỡng", "percent": 40, "tone": "orange" },
+    { "label": "💉 Thuốc & vaccine", "percent": 30, "tone": "emerald" },
+    { "label": "🏥 Chi phí thú y", "percent": 20, "tone": "sky" },
+    { "label": "🏠 Cơ sở vật chất", "percent": 10, "tone": "sun" }
+  ],
+  "impacts": [
+    {
+      "emoji": "🍗",
+      "amount": "50k",
+      "description": "1 ngày thức ăn cho 2 bé"
+    },
+    {
+      "emoji": "💉",
+      "amount": "200k",
+      "description": "Tiêm phòng 1 loại vaccine"
+    },
+    {
+      "emoji": "🏥",
+      "amount": "500k",
+      "description": "Khám tổng quát + thuốc"
+    },
+    {
+      "emoji": "✂️",
+      "amount": "800k",
+      "description": "Triệt sản (phòng bệnh)"
+    },
+    {
+      "emoji": "🦮",
+      "amount": "1.5M",
+      "description": "Phẫu thuật cứu hộ khẩn cấp"
+    },
+    {
+      "emoji": "🏠",
+      "amount": "3M",
+      "description": "Trang thiết bị chuồng trại 1 tháng"
+    }
+  ],
+  "trustBadges": [
+    {
+      "icon": "shield",
+      "title": "An toàn 100%",
+      "description": "Thanh toán được mã hóa SSL",
+      "tone": "emerald"
+    },
+    {
+      "icon": "check",
+      "title": "Minh bạch tài chính",
+      "description": "Báo cáo tài chính công khai hàng quý",
+      "tone": "sky"
+    },
+    {
+      "icon": "users",
+      "title": "Cộng đồng tin tưởng",
+      "description": "180+ nhà hảo tâm đã ủng hộ",
+      "tone": "orange"
+    }
+  ],
+  "donors": [
+    {
+      "name": "Nguyễn H. Linh",
+      "amount": "500.000₫",
+      "time": "2 giờ trước",
+      "avatar": "🙋‍♀️"
+    },
+    {
+      "name": "Trần Minh K.",
+      "amount": "200.000₫",
+      "time": "5 giờ trước",
+      "avatar": "🙋‍♂️"
+    },
+    {
+      "name": "Phạm Thị M.",
+      "amount": "1.000.000₫",
+      "time": "1 ngày trước",
+      "avatar": "🙋‍♀️"
+    },
+    {
+      "name": "Vũ V. Đức",
+      "amount": "100.000₫",
+      "time": "1 ngày trước",
+      "avatar": "🙋‍♂️"
+    },
+    {
+      "name": "Lê Thu H.",
+      "amount": "50.000₫",
+      "time": "2 ngày trước",
+      "avatar": "🙋‍♀️"
+    }
+  ],
+  "bankInfo": {
+    "bank": "Vietcombank",
+    "account_number": "1234567890",
+    "account_name": "PAWHOME"
+  }
+}

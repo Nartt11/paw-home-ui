@@ -1,0 +1,149 @@
+{
+  "hero": {
+    "badge": "VỀ CHÚNG TÔI",
+    "title": "Chúng tôi sống vì\nnhững chú thú cưng",
+    "description": "Từ năm 2018, PawHome hoạt động với một sứ mệnh đơn giản: không một chú thú cưng nào phải sống ngoài đường ở Hà Nội.",
+    "image_url": "https://images.unsplash.com/photo-1770355519733-cbdd0389c9d9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=1600"
+  },
+  "stats": [
+    { "value": "2018", "label": "Năm thành lập", "tone": "sun" },
+    { "value": "1.240+", "label": "Bé được cứu", "tone": "emerald" },
+    { "value": "860+", "label": "Ca nhận nuôi", "tone": "orange" },
+    { "value": "180+", "label": "Tình nguyện viên", "tone": "sky" },
+    { "value": "3", "label": "Trạm cứu hộ", "tone": "rose" }
+  ],
+  "tabs": [
+    { "key": "story", "label": "📖 Câu chuyện" },
+    { "key": "team", "label": "👥 Đội ngũ" },
+    { "key": "timeline", "label": "📅 Hành trình" }
+  ],
+  "story": {
+    "heading": "Từ 3 TNV đến\ncộng đồng 180+ người",
+    "paragraphs": [
+      "PawHome ra đời năm 2018 từ một nhóm nhỏ 3 người yêu thú cưng tại Cầu Giấy, Hà Nội. Chúng tôi bắt đầu chỉ với một căn phòng nhỏ, 10 bé chó mèo và rất nhiều tình yêu.",
+      "Hành trình 8 năm, chúng tôi đã cứu hộ hơn 1.240 bé thú cưng, kết nối 860+ ca nhận nuôi thành công, mở rộng lên 3 trạm và xây dựng đội ngũ 180+ tình nguyện viên nhiệt huyết trên toàn Hà Nội."
+    ],
+    "values": [
+      {
+        "emoji": "❤️",
+        "title": "Yêu thương vô điều kiện",
+        "description": "Mỗi thú cưng đều xứng đáng được yêu thương, bất kể giống loài, tuổi tác hay tình trạng sức khỏe."
+      },
+      {
+        "emoji": "🔍",
+        "title": "Minh bạch tuyệt đối",
+        "description": "Công bố báo cáo tài chính hàng quý, mọi hoạt động đều được ghi chép và chia sẻ công khai."
+      },
+      {
+        "emoji": "🤝",
+        "title": "Cộng đồng là sức mạnh",
+        "description": "Xây dựng mạng lưới tình nguyện viên, nhà tài trợ và gia đình nhận nuôi cùng chung tay."
+      },
+      {
+        "emoji": "🌱",
+        "title": "Bền vững lâu dài",
+        "description": "Không chỉ cứu hộ trước mắt, HPA hướng đến giáo dục cộng đồng về trách nhiệm với thú cưng."
+      }
+    ],
+    "cta": {
+      "label": "Ủng hộ PawHome",
+      "href": "/donate"
+    },
+    "gallery": {
+      "primary_image_url": "https://images.unsplash.com/photo-1603726574566-85a319ef2f52?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=1200",
+      "secondary_image_url": "https://images.unsplash.com/photo-1769634847839-64142e1dd4c0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=1200",
+      "highlights": [
+        { "emoji": "🌱", "text": "Phi lợi nhuận" },
+        { "emoji": "🔍", "text": "Minh bạch tài chính" },
+        { "emoji": "🤝", "text": "Cộng đồng mở" },
+        { "emoji": "🏅", "text": "Được công nhận" }
+      ]
+    }
+  },
+  "team": {
+    "title": "Đội ngũ nòng cốt PawHome",
+    "description": "Mỗi thành viên đều có chung một tình yêu với thú cưng và cam kết với sứ mệnh của PawHome.",
+    "members": [
+      {
+        "name": "Nguyễn Hà Linh",
+        "role": "Sáng lập & Giám đốc",
+        "avatar_emoji": "👩‍💼",
+        "tone": "emerald",
+        "years": "8 năm",
+        "badge": "🏆 TNV Xuất sắc"
+      },
+      {
+        "name": "Lê Thu Hương",
+        "role": "Trưởng nhóm Cứu hộ",
+        "avatar_emoji": "👩‍⚕️",
+        "tone": "orange",
+        "years": "5 năm",
+        "badge": "🆘 Người cứu hộ"
+      },
+      {
+        "name": "Trần Minh Khoa",
+        "role": "Quản lý Trạm Cầu Giấy",
+        "avatar_emoji": "👨‍🔧",
+        "tone": "sky",
+        "years": "4 năm",
+        "badge": "⭐ Uy tín"
+      },
+      {
+        "name": "Phạm Thị Mai",
+        "role": "Điều phối Nhận nuôi",
+        "avatar_emoji": "👩‍💻",
+        "tone": "rose",
+        "years": "3 năm",
+        "badge": "🤝 TNV"
+      }
+    ],
+    "volunteerCta": {
+      "title": "Gia nhập đội ngũ PawHome",
+      "description": "Chúng tôi luôn tìm kiếm những người yêu thú cưng, nhiệt huyết và sẵn sàng dành thời gian cho cộng đồng.",
+      "chips": [
+        "🆘 Cứu hộ khẩn cấp",
+        "🚗 Vận chuyển",
+        "📸 Nhiếp ảnh",
+        "💊 Chăm sóc y tế",
+        "🏠 Nhà chăm sóc tạm"
+      ],
+      "href": "/dang-ky-tinh-nguyen",
+      "label": "Đăng ký ngay"
+    }
+  },
+  "timeline": {
+    "title": "Hành trình 8 năm của PawHome",
+    "events": [
+      {
+        "year": "2018",
+        "title": "Thành lập PawHome",
+        "description": "Bắt đầu với 3 tình nguyện viên và 10 bé thú cưng đầu tiên tại một căn nhà nhỏ ở Cầu Giấy.",
+        "tone": "orange"
+      },
+      {
+        "year": "2019",
+        "title": "Trạm Cầu Giấy chính thức",
+        "description": "Mở trạm cứu hộ đầu tiên, công suất 50 bé. Kết nối 150 ca nhận nuôi thành công.",
+        "tone": "emerald"
+      },
+      {
+        "year": "2021",
+        "title": "Mở rộng ra toàn TP",
+        "description": "Khai trương thêm trạm, đội ngũ TNV tăng mạnh và quy trình cứu hộ được chuẩn hóa.",
+        "tone": "sky"
+      },
+      {
+        "year": "2023",
+        "title": "Ra mắt ứng dụng PawHome",
+        "description": "Ứng dụng iOS/Android giúp kết nối cộng đồng và theo dõi cứu hộ thời gian thực.",
+        "tone": "slate"
+      },
+      {
+        "year": "2026",
+        "title": "Hơn 1.200 bé được cứu",
+        "description": "Cột mốc 1.240 thú cưng được cứu hộ. 180+ TNV, 3 trạm, 860+ ca nhận nuôi.",
+        "tone": "rose"
+      }
+    ]
+  }
+}
