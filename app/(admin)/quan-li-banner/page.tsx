@@ -61,7 +61,7 @@ export default function BannerManagementPage() {
     enabled: Boolean(selectedId) && (viewOpen || editOpen),
   });
 
-  const selectedBanner: Banner | null = detailQuery.data ?? null;
+  const selectedBanner: Banner = detailQuery.data as Banner;
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => bannerService.deleteBanner(id),
@@ -107,6 +107,9 @@ export default function BannerManagementPage() {
 
   const data = listQuery.data;
 
+  if (data === undefined) {
+    return <div className="space-y-6">rỗng</div>;
+  }
   return (
     <div className="space-y-6">
       <TitlePerPage
