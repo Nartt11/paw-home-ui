@@ -1,7 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import Link from "next/link";
+import * as React from "react";
 import { useRouter } from "next/navigation";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Eye, EyeOff } from "lucide-react";
 
 import {
   Card,
@@ -20,132 +24,166 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useForm } from "react-hook-form";
-import { useMutation } from "@tanstack/react-query";
 
-import axios from "axios";
 import authService from "@/services/auth";
+import userService from "@/services/user/user";
+import { HttpError, tokenStorage } from "@/lib/http";
+import { loginSchema, type LoginSchema } from "@/lib/schemas/auth";
+import { queryKeys } from "@/lib/query-keys";
 
-interface LoginFormData {
-  emailOrUsername: string;
-  password: string;
+function getErrorMessage(error: unknown, fallback: string) {
+  if (error instanceof HttpError) {
+    return error.message;
+  }
+
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+
+  return fallback;
 }
 
 export default function LoginForm() {
-  const [showPw, setShowPw] = useState(false);
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const [showPassword, setShowPassword] = React.useState(false);
 
   const {
     register,
     handleSubmit,
+    clearErrors,
     setError,
     formState: { errors },
-  } = useForm<LoginFormData>();
+  } = useForm<LoginSchema>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      emailOrUsername: "",
+      password: "",
+    },
+  });
 
   const loginMutation = useMutation({
-    mutationFn: async (data: LoginFormData) => authService.login(data),
+    mutationFn: authService.login,
   });
-  const onSubmit = handleSubmit((data) => {
-    console.log(data);
-    loginMutation.mutate(data, {
-      onSuccess: (res) => {
-        const accessToken = res.accessToken;
-        localStorage.setItem("accessToken", accessToken);
-        router.push("/dashboard");
-        debugger;
-      },
-      onError: (error) => {
-        if (axios.isAxiosError(error)) {
-          const message = error.response?.data?.message || "Login failed";
 
-          setError("root", {
-            type: "server",
-            message,
-          });
-        }
-      },
-    });
+  const onSubmit = handleSubmit(async (data) => {
+    clearErrors("root");
+
+    try {
+      const auth = await loginMutation.mutateAsync(data);
+
+      tokenStorage.setAccessToken(auth.accessToken);
+      tokenStorage.setRefreshToken(auth.refreshToken);
+
+      try {
+        await queryClient.fetchQuery({
+          queryKey: queryKeys.auth.currentUser,
+          queryFn: () => userService.getCurrentUser(),
+          staleTime: 5 * 60 * 1000,
+        });
+
+        router.replace("/dashboard");
+      } catch (error) {
+        tokenStorage.clear();
+        queryClient.removeQueries({ queryKey: queryKeys.auth.currentUser });
+
+        setError("root", {
+          type: "server",
+          message: getErrorMessage(error, "Unable to load the current user."),
+        });
+      }
+    } catch (error) {
+      setError("root", {
+        type: "server",
+        message: getErrorMessage(error, "Login failed."),
+      });
+    }
   });
 
   return (
-    <div className="flex flex-col gap-6 m-10">
-      <Card>
-        <CardHeader>
-          <CardTitle>Login to your account</CardTitle>
-          <CardDescription>
-            Enter your email below to login to your account
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {/* error tu sever */}
-          {errors.root && <>{errors.root.message}</>}
-          <form onSubmit={onSubmit}>
-            <FieldGroup>
-              <Field>
-                <FieldLabel htmlFor="email">Email</FieldLabel>
-                <Input
-                  id="email"
-                  type="text"
-                  placeholder="m@example.com"
-                  {...register("emailOrUsername", {
-                    required: {
-                      value: true,
-                      message: "Email or username is required",
-                    },
-                  })}
-                />
-                {errors.emailOrUsername && (
-                  <FieldError className="text-red-500">
-                    {errors.emailOrUsername.message}
-                  </FieldError>
-                )}
-              </Field>
-              <Field>
-                <div className="flex items-center">
-                  <FieldLabel htmlFor="password">Password</FieldLabel>
-                  <a
-                    href="#"
-                    className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
-                  >
-                    Forgot your password?
-                  </a>
-                </div>
+    <Card>
+      <CardHeader>
+        <CardTitle>Login to your account</CardTitle>
+        <CardDescription>
+          Enter your email below to login to your account
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {errors.root?.message ? (
+          <FieldError className="mb-4 text-red-500">
+            {errors.root.message}
+          </FieldError>
+        ) : null}
+        <form onSubmit={onSubmit}>
+          <FieldGroup>
+            <Field>
+              <FieldLabel htmlFor="email">Email</FieldLabel>
+              <Input
+                id="email"
+                type="text"
+                placeholder="m@example.com"
+                {...register("emailOrUsername")}
+              />
+              {errors.emailOrUsername && (
+                <FieldError className="text-red-500">
+                  {errors.emailOrUsername.message}
+                </FieldError>
+              )}
+            </Field>
+
+            <Field>
+              <div className="flex items-center">
+                <FieldLabel htmlFor="password">Password</FieldLabel>
+                <a
+                  href="#"
+                  className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
+                >
+                  Forgot your password?
+                </a>
+              </div>
+
+              <div className="relative">
                 <Input
                   id="password"
-                  type="password"
-                  {...register("password", {
-                    required: {
-                      value: true,
-                      message: "Password is required",
-                    },
-                    minLength: {
-                      value: 8,
-                      message: "Password must be at least 6 characters",
-                    },
-                    maxLength: {
-                      value: 100,
-                      message: "Password must be at most 100 characters",
-                    },
-                  })}
+                  type={showPassword ? "text" : "password"}
+                  className="pr-10"
+                  {...register("password")}
                 />
-                {errors.password && (
-                  <FieldError className="text-red-500">
-                    {errors.password.message}
-                  </FieldError>
-                )}
-              </Field>
-              <Field>
-                <Button type="submit">Login</Button>
-                <Button variant="outline" type="button">
-                  Login with Google
-                </Button>
-                <FieldDescription className="text-center">
-                  Don&apos;t have an account? <a href="/dang-ki">Sign up</a>
-                </FieldDescription>
-              </Field>
-            </FieldGroup>
-          </form>
-        </CardContent>
-      </Card>
-    </div>
+                <button
+                  type="button"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground hover:text-foreground"
+                  onClick={() => setShowPassword((v) => !v)}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
+
+              {errors.password && (
+                <FieldError className="text-red-500">
+                  {errors.password.message}
+                </FieldError>
+              )}
+            </Field>
+
+            <Field>
+              <Button type="submit" disabled={loginMutation.isPending}>
+                {loginMutation.isPending ? "Logging in..." : "Login"}
+              </Button>
+              <Button variant="outline" type="button">
+                Login with Google
+              </Button>
+              <FieldDescription className="text-center">
+                Don&apos;t have an account? <Link href="/dang-ki">Sign up</Link>
+              </FieldDescription>
+            </Field>
+          </FieldGroup>
+        </form>
+      </CardContent>
+    </Card>
   );
 }
