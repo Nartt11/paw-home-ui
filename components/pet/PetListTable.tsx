@@ -11,6 +11,10 @@ import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import type { PetSummary } from "@/types/pet.type";
+import {
+  AdminTableEmptyRow,
+  AdminTableSkeletonRows,
+} from "@/components/common/admin/AdminTableState";
 
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
@@ -121,10 +125,7 @@ const columns: ColumnDef<PetSummary>[] = [
         <div className="min-w-0">
           <div className="truncate font-medium text-slate-900">
             {row.original.name || "—"}
-          </div>
-          <div className="truncate font-mono text-xs text-slate-500">
-            ID: {row.original.petId}
-          </div>
+          </div>         
         </div>
       </div>
     ),
@@ -298,23 +299,19 @@ export function PetListTable({
             </thead>
             <tbody>
               {loading ? (
-                <tr>
-                  <td
-                    colSpan={columns.length}
-                    className="px-3 py-4 text-center text-sm text-slate-500"
-                  >
-                    Đang tải dữ liệu...
-                  </td>
-                </tr>
+                <AdminTableSkeletonRows
+                  columnCount={columns.length}
+                  rowCount={5}
+                  cellClassName="px-3 py-2 align-middle"
+                  rowClassName="border-b border-slate-100 last:border-0"
+                />
               ) : table.getRowModel().rows.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={columns.length}
-                    className="px-3 py-4 text-center text-sm text-slate-500"
-                  >
-                    Không có thú cưng nào.
-                  </td>
-                </tr>
+                <AdminTableEmptyRow
+                  colSpan={columns.length}
+                  title="Chưa có thú cưng"
+                  description="Danh sách thú cưng sẽ xuất hiện tại đây khi có dữ liệu."
+                  cellClassName="px-3 py-12"
+                />
               ) : (
                 table.getRowModel().rows.map((row) => (
                   <tr

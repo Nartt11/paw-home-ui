@@ -14,6 +14,10 @@ import {
   SearchIcon,
 } from "lucide-react";
 
+import {
+  AdminTableEmptyRow,
+  AdminTableSkeletonRows,
+} from "@/components/common/admin/AdminTableState";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -307,23 +311,19 @@ export function OrganizationListTable({
 
             <tbody>
               {loading ? (
-                <tr>
-                  <td
-                    colSpan={columns.length}
-                    className="px-4 py-8 text-center text-slate-500"
-                  >
-                    Đang tải dữ liệu...
-                  </td>
-                </tr>
+                <AdminTableSkeletonRows
+                  columnCount={columns.length}
+                  rowCount={5}
+                  cellClassName="whitespace-nowrap px-4 py-3 text-slate-700"
+                  rowClassName="border-t border-slate-100"
+                />
               ) : table.getRowModel().rows.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={columns.length}
-                    className="px-4 py-8 text-center text-slate-500"
-                  >
-                    Không có dữ liệu.
-                  </td>
-                </tr>
+                <AdminTableEmptyRow
+                  colSpan={columns.length}
+                  title="Chưa có tổ chức"
+                  description="Danh sách tổ chức sẽ hiển thị tại đây khi có dữ liệu."
+                  cellClassName="px-4 py-12"
+                />
               ) : (
                 table.getRowModel().rows.map((row) => (
                   <tr

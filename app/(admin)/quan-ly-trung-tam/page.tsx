@@ -182,7 +182,7 @@ export default function CenterManagementPage() {
 
       {/* card danh sách trung tâm đang hoạt động */}
 
-      {data?.content && (
+      
         <OrganizationListTable
           data={organizationTableData.data}
           onViewDetail={handleOpenViewDetail}
@@ -199,7 +199,7 @@ export default function CenterManagementPage() {
             setParams({ keyword: nextKeyword.trim(), page: 1 })
           }
         />
-      )}
+      
 
       {organization && (
         <OrganizationViewDetail

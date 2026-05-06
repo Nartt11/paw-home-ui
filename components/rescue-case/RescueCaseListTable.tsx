@@ -11,6 +11,10 @@ import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 
 import type { RescueCaseSummary } from "@/types/rescue-case.type";
 
+import {
+  AdminTableEmptyRow,
+  AdminTableSkeletonRows,
+} from "@/components/common/admin/AdminTableState";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -233,23 +237,19 @@ export function RescueCaseListTable({
           </thead>
           <tbody>
             {loading ? (
-              <tr>
-                <td
-                  colSpan={columns.length}
-                  className="px-3 py-10 text-center text-sm text-slate-500"
-                >
-                  Đang tải...
-                </td>
-              </tr>
+              <AdminTableSkeletonRows
+                columnCount={columns.length}
+                rowCount={5}
+                cellClassName="px-3 py-2 align-middle"
+                rowClassName="border-b border-slate-100 last:border-0"
+              />
             ) : table.getRowModel().rows.length === 0 ? (
-              <tr>
-                <td
-                  colSpan={columns.length}
-                  className="px-3 py-4 text-center text-sm text-slate-500"
-                >
-                  Không có ca cứu hộ nào.
-                </td>
-              </tr>
+              <AdminTableEmptyRow
+                colSpan={columns.length}
+                title="Chưa có ca cứu hộ"
+                description="Các ca cứu hộ mới sẽ được hiển thị tại đây."
+                cellClassName="px-3 py-12"
+              />
             ) : (
               table.getRowModel().rows.map((row) => (
                 <tr
