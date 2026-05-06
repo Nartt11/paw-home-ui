@@ -400,11 +400,11 @@ export function PetCreateNew({
                     onChange={handleImageChange}
                   />
                   <FieldError errors={[errors.imageUrls]} />
-                  {uploadMutation.isPending ? (
+                  {uploadMutation.isPending && (
                     <p className="text-sm text-muted-foreground">
                       Đang tải ảnh lên Cloudinary...
                     </p>
-                  ) : null}
+                  ) }
                   {imageUrls.length > 0 ? (
                     <div className="space-y-3">
                       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
