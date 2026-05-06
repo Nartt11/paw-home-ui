@@ -62,9 +62,20 @@ const tokenStorage = {
     localStorage.setItem("accessToken", token);
   },
 
+  getRefreshToken() {
+    if (typeof window === "undefined") return null;
+    return localStorage.getItem("refreshToken");
+  },
+
+  setRefreshToken(token: string) {
+    if (typeof window === "undefined") return;
+    localStorage.setItem("refreshToken", token);
+  },
+
   clear() {
     if (typeof window === "undefined") return;
     localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
   },
 };
 

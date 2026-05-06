@@ -46,12 +46,10 @@ export default function CenterManagementPage() {
         onViewDetail={handleViewDetail}
       />
 
-      {data?.content ? (
-        <AdoptionListTable
-          data={data.content}
-          onViewDetail={handleViewDetail}
-        />
-      ) : null}
+      <AdoptionListTable
+        data={data?.content ?? []}
+        onViewDetail={handleViewDetail}
+      />
 
       <AdoptionViewDetail
         open={openDetail}

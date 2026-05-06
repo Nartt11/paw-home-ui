@@ -15,6 +15,10 @@ import {
 
 import type { Banner } from "@/types/banner.type";
 
+import {
+  AdminTableEmptyRow,
+  AdminTableSkeletonRows,
+} from "@/components/common/admin/AdminTableState";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -272,23 +276,19 @@ export function BannerListTable({
 
           <tbody>
             {loading ? (
-              <tr>
-                <td
-                  colSpan={columnsWithActions.length}
-                  className="px-3 py-10 text-center text-sm text-muted-foreground"
-                >
-                  Đang tải...
-                </td>
-              </tr>
+              <AdminTableSkeletonRows
+                columnCount={columnsWithActions.length}
+                rowCount={5}
+                cellClassName="px-3 py-2 align-top"
+                rowClassName="border-b border-border last:border-0"
+              />
             ) : table.getRowModel().rows.length === 0 ? (
-              <tr>
-                <td
-                  colSpan={columnsWithActions.length}
-                  className="px-3 py-10 text-center text-sm text-muted-foreground"
-                >
-                  Không có banner nào.
-                </td>
-              </tr>
+              <AdminTableEmptyRow
+                colSpan={columnsWithActions.length}
+                title="Chưa có banner"
+                description="Banner mới sẽ xuất hiện tại đây sau khi được tạo."
+                cellClassName="px-3 py-12"
+              />
             ) : (
               table.getRowModel().rows.map((row) => (
                 <tr

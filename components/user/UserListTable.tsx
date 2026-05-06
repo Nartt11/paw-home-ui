@@ -16,6 +16,10 @@ import {
 
 import type { UserSummary, UserStatus } from "@/types/user.type";
 
+import {
+  AdminTableEmptyRow,
+  AdminTableSkeletonRows,
+} from "@/components/common/admin/AdminTableState";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -36,6 +40,7 @@ import {
 export interface UserListTableProps {
   data: UserSummary[];
   loading?: boolean;
+  keyword?: string;
 
   // pagination (server-side)
   page?: number;
@@ -44,6 +49,7 @@ export interface UserListTableProps {
   totalPages?: number;
   onPageChange?: (page: number) => void;
   onSizeChange?: (size: number) => void;
+  onKeywordChange?: (keyword: string) => void;
 
   onViewDetail?: (userId: string) => void;
   onEdit?: (userId: string) => void;
@@ -183,18 +189,18 @@ function getColumns(
 export function UserListTable({
   data,
   loading = false,
+  keyword = "",
   page = 1,
   size = 10,
   totalElements,
   totalPages,
   onPageChange,
   onSizeChange,
+  onKeywordChange,
   onViewDetail,
   onEdit,
   onDisable,
 }: UserListTableProps) {
-  const [keyword, setKeyword] = React.useState("");
-
   const filteredData = React.useMemo(() => {
     const q = keyword.trim().toLowerCase();
     if (!q) return data;
@@ -236,7 +242,7 @@ export function UserListTable({
           <Input
             placeholder="Tìm người dùng..."
             value={keyword}
-            onChange={(e) => setKeyword(e.target.value)}
+            onChange={(e) => onKeywordChange?.(e.target.value)}
             className="pl-9"
           />
         </div>
@@ -244,7 +250,7 @@ export function UserListTable({
         <div className="flex flex-wrap items-center gap-3 text-sm text-slate-500">
           <div>
             Tổng:{" "}
-            {typeof totalElements === "number"
+            {typeof totalElements === "number" && !keyword.trim()
               ? totalElements
               : filteredData.length}{" "}
             người dùng
@@ -277,23 +283,19 @@ export function UserListTable({
 
             <tbody>
               {loading ? (
-                <tr>
-                  <td
-                    colSpan={columns.length}
-                    className="px-4 py-8 text-center text-slate-500"
-                  >
-                    Đang tải dữ liệu...
-                  </td>
-                </tr>
+                <AdminTableSkeletonRows
+                  columnCount={columns.length}
+                  rowCount={5}
+                  cellClassName="whitespace-nowrap px-4 py-3 text-slate-700"
+                  rowClassName="border-t border-slate-100"
+                />
               ) : table.getRowModel().rows.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={columns.length}
-                    className="px-4 py-8 text-center text-slate-500"
-                  >
-                    Không có dữ liệu.
-                  </td>
-                </tr>
+                <AdminTableEmptyRow
+                  colSpan={columns.length}
+                  title="Chưa có người dùng"
+                  description="Danh sách người dùng sẽ hiển thị tại đây khi có dữ liệu."
+                  cellClassName="px-4 py-12"
+                />
               ) : (
                 table.getRowModel().rows.map((row) => (
                   <tr

@@ -1,41 +1,29 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 
 import TitlePerPage from "@/components/common/admin/TitlePerPage";
 import { UserListTable } from "@/components/user/UserListTable";
 import { UserViewDetail } from "@/components/user/UserViewDetail";
+import {
+  getOptionalSearchParam,
+  useListUrlState,
+} from "@/hooks/use-list-url-state";
 import userService from "@/services/user/user";
 
 export default function UsersManagementPage() {
-  const queryParams = useSearchParams();
-  const router = useRouter();
-  const pathname = usePathname();
+  const { searchParams, page, size, setParams, setPage, setSize } =
+    useListUrlState();
 
   const [openDetail, setOpenDetail] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  const page = Number(queryParams.get("page") || 1);
-  const size = Number(queryParams.get("size") || 10);
-
-  const setQueryParams = (
-    patch: Record<string, string | number | undefined | null>,
-  ) => {
-    const next = new URLSearchParams(queryParams.toString());
-
-    Object.entries(patch).forEach(([k, v]) => {
-      if (v === undefined || v === null || v === "") next.delete(k);
-      else next.set(k, String(v));
-    });
-
-    router.replace(`${pathname}?${next.toString()}`);
-  };
+  const keyword = getOptionalSearchParam(searchParams.get("keyword")) ?? "";
 
   const queryKey = useMemo(
-    () => ["users", queryParams.toString()],
-    [queryParams],
+    () => ["users", { page, size }],
+    [page, size],
   );
 
   const { data, isPending, isError, error } = useQuery({
@@ -73,8 +61,12 @@ export default function UsersManagementPage() {
         size={size}
         totalElements={data?.totalElements}
         totalPages={data?.totalPages}
-        onPageChange={(nextPage) => setQueryParams({ page: nextPage })}
-        onSizeChange={(nextSize) => setQueryParams({ size: nextSize, page: 1 })}
+        keyword={keyword}
+        onPageChange={setPage}
+        onSizeChange={setSize}
+        onKeywordChange={(nextKeyword) =>
+          setParams({ keyword: nextKeyword.trim(), page: 1 })
+        }
         onViewDetail={(userId) => {
           setSelectedId(userId);
           setOpenDetail(true);

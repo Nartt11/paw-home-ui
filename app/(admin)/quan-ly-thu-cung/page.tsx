@@ -7,6 +7,7 @@ import KPICardPet from "@/components/pet/KPICardPet";
 import { PetListTable } from "@/components/pet/PetListTable";
 import { PetCreateNew } from "@/components/pet/PetCreateNew";
 import type { CreateNewPetValues } from "@/components/pet/PetCreateNew";
+import { useListUrlState } from "@/hooks/use-list-url-state";
 
 import petService from "@/services/pet/pet";
 
@@ -18,17 +19,16 @@ import {
   PawPrint,
   ShieldAlert,
 } from "lucide-react";
-import { useSearchParams } from "next/navigation";
 
 export default function PetManagementPage() {
-  const queryParams = useSearchParams();
+  const { page, size, setPage, setSize } = useListUrlState();
   const queryClient = useQueryClient();
 
   const [createOpen, setCreateOpen] = React.useState(false);
 
   const listQuery = useQuery({
-    queryKey: ["pets", queryParams],
-    queryFn: () => petService.getAllPets(queryParams),
+    queryKey: ["pets", { page, size }],
+    queryFn: () => petService.getAllPets({ page, size }),
   });
 
   const createMutation = useMutation({
@@ -42,7 +42,7 @@ export default function PetManagementPage() {
   const data = listQuery.data;
 
   return (
-    <div className="@container/main flex flex-col gap-4 px-4 py-4 md:gap-6 md:px-6 md:py-6">
+    <div className="space-y-6">
       {/* Top Header */}
       <TitlePerPage
         title="Quản lý thú cưng"
@@ -85,7 +85,16 @@ export default function PetManagementPage() {
         />
       </div>
 
-      {data && data.content && <PetListTable data={data.content} />}
+      <PetListTable
+        data={data?.content ?? []}
+        loading={listQuery.isPending}
+        page={data?.page ?? page}
+        size={data?.size ?? size}
+        totalPages={data?.totalPages ?? 1}
+        totalElements={data?.totalElements ?? 0}
+        onPageChange={setPage}
+        onSizeChange={setSize}
+      />
 
       <PetCreateNew
         open={createOpen}

@@ -12,32 +12,21 @@ import {
   type OrganizationUpdateValues,
 } from "@/components/organization/OrganizationUpdate";
 import { OrganizationViewDetail } from "@/components/organization/OrganizationViewDetail";
+import {
+  getOptionalSearchParam,
+  useListUrlState,
+} from "@/hooks/use-list-url-state";
 import organizationService from "@/services/organization/organization";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 
 export default function CenterManagementPage() {
-  const queryParams = useSearchParams();
-  const router = useRouter();
-  const pathname = usePathname();
+  const { searchParams, page, size, setParams, setPage, setSize } =
+    useListUrlState();
   const queryClient = useQueryClient();
 
-  const page = Number(queryParams.get("page") || 1);
-  const size = Number(queryParams.get("size") || 10);
-
-  const setQueryParams = (
-    patch: Record<string, string | number | undefined | null>,
-  ) => {
-    const next = new URLSearchParams(queryParams.toString());
-
-    Object.entries(patch).forEach(([k, v]) => {
-      if (v === undefined || v === null || v === "") next.delete(k);
-      else next.set(k, String(v));
-    });
-
-    router.replace(`${pathname}?${next.toString()}`);
-  };
+  const status = getOptionalSearchParam(searchParams.get("status"));
+  const keyword = getOptionalSearchParam(searchParams.get("keyword")) ?? "";
 
   const [openDetail, setOpenDetail] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -49,8 +38,8 @@ export default function CenterManagementPage() {
   const [openUpdate, setOpenUpdate] = useState(false);
 
   const queryKey = useMemo(
-    () => ["organizations", queryParams.toString()],
-    [queryParams],
+    () => ["organizations", { page, size, status }],
+    [page, size, status],
   );
 
   // list
@@ -60,7 +49,7 @@ export default function CenterManagementPage() {
       organizationService.getAllOrganizations({
         page,
         size,
-        status: queryParams.get("status") || undefined,
+        status,
       }),
   });
 
@@ -193,7 +182,7 @@ export default function CenterManagementPage() {
 
       {/* card danh sách trung tâm đang hoạt động */}
 
-      {data?.content && (
+      
         <OrganizationListTable
           data={organizationTableData.data}
           onViewDetail={handleOpenViewDetail}
@@ -203,12 +192,14 @@ export default function CenterManagementPage() {
           size={size}
           totalElements={organizationTableData.totalElements}
           totalPages={organizationTableData.totalPages}
-          onPageChange={(nextPage) => setQueryParams({ page: nextPage })}
-          onSizeChange={(nextSize) =>
-            setQueryParams({ size: nextSize, page: 1 })
+          keyword={keyword}
+          onPageChange={setPage}
+          onSizeChange={setSize}
+          onKeywordChange={(nextKeyword) =>
+            setParams({ keyword: nextKeyword.trim(), page: 1 })
           }
         />
-      )}
+      
 
       {organization && (
         <OrganizationViewDetail

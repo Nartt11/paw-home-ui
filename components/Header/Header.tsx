@@ -3,14 +3,17 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, Smartphone, Users } from "lucide-react";
+import { Menu, X } from "lucide-react";
 
+import { useIsMobile } from "@/hooks/use-mobile";
 import NavLinks from "./NavLinks";
 import NotifBell from "./NotifBell";
 import { DarkToggle } from "./Toggles";
+import { APP_ROUTES } from "@/constants/routes";
 
 export default function Header() {
   const pathname = usePathname();
+  const isMobile = useIsMobile();
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -28,75 +31,100 @@ export default function Header() {
     return () => window.removeEventListener("scroll", fn);
   }, []);
 
-  // useEffect(() => {
-  //   setMenuOpen(false);
-  // }, [pathname]);
+  // Close mobile menu when route changes
+  useEffect(() => {
+    const closeMenu = () => {
+      if (isMobile) {
+        setMenuOpen(false);
+      }
+    };
 
-  const isHome = pathname === "/";
+    closeMenu();
+  }, [pathname, isMobile]);
+  debugger;
   const isTransparent = !scrolled;
 
   return (
     <header
-      className={`sticky transition-all duration-300 border-b
+      className={`sticky top-0 z-50 w-full transition-all duration-300 border-b
       ${
         isTransparent
           ? "bg-primary border-transparent"
           : "border-white/10 backdrop-blur-md bg-[#02171F]/80"
       }`}
     >
-      <div className="max-w-[1280px] mx-auto px-5 h-16 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl flex items-center justify-center text-xl bg-gradient-to-br from-[#FF9132] to-[#FF584F]">
+        <Link href="/" className="flex items-center gap-2.5 shrink-0">
+          <div className="w-9 h-9 rounded-lg flex items-center justify-center text-xl bg-linear-to-br from-orange-500 to-red-500 shadow-lg">
             🐾
           </div>
-          <div>
-            <div className="text-white text-[15px] font-extrabold">PawHome</div>
-            <div className="text-white/60 text-[9px] tracking-wider">
+          <div className="hidden sm:flex flex-col">
+            <div className="text-white text-sm font-bold">PawHome</div>
+            <div className="text-white/60 text-xs tracking-wider">
               CỨU HỘ · NHẬN NUÔI
             </div>
           </div>
         </Link>
 
-        {/* Nav */}
-        <NavLinks />
+        {/* Nav - Desktop */}
 
-        {/* Right */}
-        <div className="hidden lg:flex items-center gap-2">
-          <DarkToggle isDark={isDark} toggleDark={toggleDark} />
+        {!isMobile && <NavLinks />}
 
-          <Link
-            href="/"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/20 text-white/80 hover:text-white hover:bg-white/10 text-[11px]"
-          >
-            <Smartphone size={13} /> App
-          </Link>
+        {/* Right Section */}
+        <div className={`flex items-center gap-2 ${isMobile ? "gap-3" : ""}`}>
+          {/* {!isMobile && <DarkToggle isDark={isDark} toggleDark={toggleDark} />} */}
 
-          {isLoggedIn ? (
-            <NotifBell unread={unread} />
-          ) : (
-            <Link
-              href="/web/login"
-              className="flex items-center gap-1.5 px-4 py-2 rounded-full text-white text-[12px] font-bold bg-gradient-to-br from-[#2AC789] to-[#06A7E7]"
+          {!isMobile &&
+            (isLoggedIn ? (
+              <NotifBell unread={unread} />
+            ) : (
+              <Link
+                href={APP_ROUTES.LOGIN}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-full text-white text-xs font-semibold bg-linear-to-br from-green-500 to-blue-500 hover:shadow-lg transition-shadow"
+              >
+                Tham gia ngay
+              </Link>
+            ))}
+
+          {/* Mobile Menu Toggle */}
+          {isMobile && (
+            <button
+              onClick={() => setMenuOpen(!menuOpen)}
+              className="p-2 rounded-lg text-white hover:bg-white/10 transition-colors"
+              aria-label={menuOpen ? "Đóng menu" : "Mở menu"}
+              aria-expanded={menuOpen}
             >
-              <Users size={13} /> Join
-            </Link>
+              {menuOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
           )}
         </div>
-
-        {/* Mobile */}
-        <button
-          onClick={() => setMenuOpen(!menuOpen)}
-          className="lg:hidden text-white"
-        >
-          {menuOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
       </div>
 
       {/* Mobile menu */}
-      {menuOpen && (
-        <div className="lg:hidden border-t border-white/10 bg-[#02171F]">
-          <NavLinks />
+      {isMobile && menuOpen && (
+        <div className="border-t border-white/10 bg-[#02171F]/95 backdrop-blur-sm animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="max-w-7xl mx-auto px-4 py-3">
+            <NavLinks />
+            <div className="mt-3 pt-3 border-t border-white/10 space-y-2">
+              {isLoggedIn ? (
+                <NotifBell unread={unread} />
+              ) : (
+                <Link
+                  href={APP_ROUTES.LOGIN}
+                  className="flex items-center justify-center w-full px-4 py-2 rounded-lg text-white text-sm font-semibold bg-linear-to-br from-green-500 to-blue-500 hover:shadow-lg transition-shadow"
+                >
+                  Tham gia ngay
+                </Link>
+              )}
+              <button
+                onClick={() => toggleDark()}
+                className="w-full p-2 rounded-lg text-white hover:bg-white/10 transition-colors text-sm font-medium"
+              >
+                {isDark ? "☀️ Sáng" : "🌙 Tối"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </header>

@@ -14,6 +14,10 @@ import {
   SearchIcon,
 } from "lucide-react";
 
+import {
+  AdminTableEmptyRow,
+  AdminTableSkeletonRows,
+} from "@/components/common/admin/AdminTableState";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -36,6 +40,7 @@ import { OrganizationSummary } from "@/types/organization.type,";
 export interface OrganizationListTableProps {
   data: OrganizationSummary[];
   loading?: boolean;
+  keyword?: string;
   onViewDetail: (organizationId: string) => void;
   onEdit?: (organizationId: string) => void;
   onDelete?: (organizationId: string) => void;
@@ -47,6 +52,7 @@ export interface OrganizationListTableProps {
   totalPages?: number;
   onPageChange?: (page: number) => void;
   onSizeChange?: (size: number) => void;
+  onKeywordChange?: (keyword: string) => void;
 }
 
 function getStatusLabel(status?: string) {
@@ -207,6 +213,7 @@ function getPaginationItems(current: number, total: number, maxButtons = 5) {
 export function OrganizationListTable({
   data,
   loading = false,
+  keyword = "",
   onViewDetail,
   onEdit,
   onDelete,
@@ -216,9 +223,8 @@ export function OrganizationListTable({
   totalPages,
   onPageChange,
   onSizeChange,
+  onKeywordChange,
 }: OrganizationListTableProps) {
-  const [keyword, setKeyword] = React.useState("");
-
   const filteredData = React.useMemo(() => {
     const q = keyword.trim().toLowerCase();
 
@@ -263,7 +269,7 @@ export function OrganizationListTable({
           <Input
             placeholder="Tìm tổ chức..."
             value={keyword}
-            onChange={(e) => setKeyword(e.target.value)}
+            onChange={(e) => onKeywordChange?.(e.target.value)}
             className="pl-9"
           />
         </div>
@@ -271,7 +277,7 @@ export function OrganizationListTable({
         <div className="flex flex-wrap items-center gap-3 text-sm text-slate-500">
           <div>
             Tổng:{" "}
-            {typeof totalElements === "number"
+            {typeof totalElements === "number" && !keyword.trim()
               ? totalElements
               : filteredData.length}{" "}
             tổ chức
@@ -305,23 +311,19 @@ export function OrganizationListTable({
 
             <tbody>
               {loading ? (
-                <tr>
-                  <td
-                    colSpan={columns.length}
-                    className="px-4 py-8 text-center text-slate-500"
-                  >
-                    Đang tải dữ liệu...
-                  </td>
-                </tr>
+                <AdminTableSkeletonRows
+                  columnCount={columns.length}
+                  rowCount={5}
+                  cellClassName="whitespace-nowrap px-4 py-3 text-slate-700"
+                  rowClassName="border-t border-slate-100"
+                />
               ) : table.getRowModel().rows.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={columns.length}
-                    className="px-4 py-8 text-center text-slate-500"
-                  >
-                    Không có dữ liệu.
-                  </td>
-                </tr>
+                <AdminTableEmptyRow
+                  colSpan={columns.length}
+                  title="Chưa có tổ chức"
+                  description="Danh sách tổ chức sẽ hiển thị tại đây khi có dữ liệu."
+                  cellClassName="px-4 py-12"
+                />
               ) : (
                 table.getRowModel().rows.map((row) => (
                   <tr

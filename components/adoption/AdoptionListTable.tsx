@@ -11,6 +11,10 @@ import { EllipsisVerticalIcon } from "lucide-react";
 
 import type { AdoptionSummary } from "@/types/adoption.type";
 
+import {
+  AdminTableEmptyRow,
+  AdminTableSkeletonRows,
+} from "@/components/common/admin/AdminTableState";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -224,23 +228,19 @@ export function AdoptionListTable({
 
         <tbody>
           {loading ? (
-            <tr>
-              <td
-                colSpan={columnsWithActions.length}
-                className="px-3 py-10 text-center text-sm text-muted-foreground"
-              >
-                Đang tải...
-              </td>
-            </tr>
+            <AdminTableSkeletonRows
+              columnCount={columnsWithActions.length}
+              rowCount={5}
+              cellClassName="px-3 py-2 align-top"
+              rowClassName="border-b border-border last:border-0"
+            />
           ) : table.getRowModel().rows.length === 0 ? (
-            <tr>
-              <td
-                colSpan={columnsWithActions.length}
-                className="px-3 py-10 text-center text-sm text-muted-foreground"
-              >
-                Không có đơn nhận nuôi nào.
-              </td>
-            </tr>
+            <AdminTableEmptyRow
+              colSpan={columnsWithActions.length}
+              title="Chưa có đơn nhận nuôi"
+              description="Các yêu cầu nhận nuôi phù hợp sẽ xuất hiện tại đây."
+              cellClassName="px-3 py-12"
+            />
           ) : (
             table.getRowModel().rows.map((row) => (
               <tr
