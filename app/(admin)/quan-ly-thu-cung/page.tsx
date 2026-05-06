@@ -42,7 +42,7 @@ export default function PetManagementPage() {
   const data = listQuery.data;
 
   return (
-    <div className="@container/main flex flex-col gap-4 px-4 py-4 md:gap-6 md:px-6 md:py-6">
+    <div className="space-y-6">
       {/* Top Header */}
       <TitlePerPage
         title="Quản lý thú cưng"

@@ -31,6 +31,7 @@ import {
   FileIcon,
   CommandIcon,
 } from "lucide-react";
+import { APP_ROUTES } from "@/constants/routes";
 
 const data = {
   user: {
@@ -41,39 +42,39 @@ const data = {
   navSystem: [
     {
       title: "Dashboard",
-      url: "/dashboard",
+      url: `${APP_ROUTES.DASHBOARD}`,
       icon: <LayoutDashboardIcon />,
     },
     {
-      title: "Quản lý vật nuôi",
-      url: "/quan-ly-thu-cung",
+      title: "Quản lý thú cưng",
+      url: `${APP_ROUTES.PET_MANAGEMENT}`,
       icon: <ListIcon />,
     },
     {
       title: "Quản lý trung tâm",
-      url: "/quan-ly-trung-tam",
+      url: `${APP_ROUTES.CENTER_MANAGEMENT}`,
       icon: <ChartBarIcon />,
     },
     {
       title: "Quản lý người dùng",
-      url: "/quan-li-nguoi-dung",
+      url: `${APP_ROUTES.USER_MANAGEMENT}`,
       icon: <FolderIcon />,
     },
     {
       title: "Quản lý bài đăng",
-      url: "/quan-li-bai-dang",
+      url: `${APP_ROUTES.POST_MANAGEMENT}`,
       icon: <LayoutDashboardIcon />,
     },
   ],
   navContent: [
     {
       title: "Quản lý bài tin tức",
-      url: "/quan-li-tin-tuc",
+      url: `${APP_ROUTES.NEWS_MANAGEMENT}`,
       icon: <LayoutDashboardIcon />,
     },
     {
       title: "Quản lý banner",
-      url: "/quan-li-banner",
+      url: `${APP_ROUTES.BANNER_MANAGEMENT}`,
       icon: <LayoutDashboardIcon />,
     },
   ],
