@@ -2,6 +2,7 @@ import { RescueCasePriority, RescueCaseStatus } from "@/types/rescue-case.type";
 
 export interface RescueCaseSummaryDto {
   caseId: string;
+  caseCode: string;
   species: string;
   priority: RescueCasePriority;
   status: RescueCaseStatus;
@@ -67,3 +68,34 @@ export interface UpdateRescueCasePayloadDto {
   wardName: string;
   // image
 }
+
+export interface BoundingBoxConfigDto {
+  minLat: number;
+  maxLat: number;
+  minLng: number;
+  maxLng: number;
+  page?: number;
+  size?: number;
+}
+
+export interface RescueCaseMapMarkersConfigDto {
+  minLat: number;
+  maxLat: number;
+  minLng: number;
+  maxLng: number;
+  status?: RescueCaseStatus;
+  priority?: RescueCasePriority;
+  species?: string;
+}
+
+export interface RescueCaseMarkerDto {
+  caseId: string;
+  caseCode: string;
+  latitude: number;
+  longitude: number;
+  priority: RescueCasePriority;
+  status: RescueCaseStatus;
+  species: string;
+  reportedAt: string;
+}
+

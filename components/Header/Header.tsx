@@ -41,7 +41,6 @@ export default function Header() {
 
     closeMenu();
   }, [pathname, isMobile]);
-  debugger;
   const isTransparent = !scrolled;
 
   return (

@@ -28,7 +28,7 @@ export function getOptionalSearchParam(value: string | null): string | undefined
 }
 
 export function useListUrlState(options: UseListUrlStateOptions = {}) {
-  const { defaultPage = 1, defaultSize = 10 } = options;
+  const { defaultPage = 0, defaultSize = 10 } = options;
 
   const router = useRouter();
   const pathname = usePathname();

@@ -2,8 +2,11 @@ import http from "@/lib/http";
 
 import { RescueCase, RescueCaseSummary } from "@/types/rescue-case.type";
 import {
+  BoundingBoxConfigDto,
   RescueCaseDto,
   RescueCaseListConfigDto,
+  RescueCaseMapMarkersConfigDto,
+  RescueCaseMarkerDto,
   RescueCaseSummaryDto,
   UpdateRescueCasePayloadDto,
 } from "./rescue-case-dto";
@@ -11,6 +14,7 @@ import { PageDto } from "../api-dto";
 import { PaginatedResponse } from "@/types/api.type";
 import { mapPage } from "@/mappers/common";
 import { mapRescueCase, mapRescueCaseSummary } from "@/mappers/rescue-case";
+import { map } from "leaflet";
 
 const rescueService = {
   // GET /api/v1/rescue-cases - List all rescue cases
@@ -42,22 +46,27 @@ const rescueService = {
   //   );
   // },
 
-  // // GET /api/v1/rescue-cases/map/markers - Get map markers in bounding box
-  // async getRescueMapMarkers(params: RescueMapMarkersConfig) {
-  //   const dto = await http.get<BaseResponse<RescueCase[]>>("/rescue-cases/map/markers", {
-  //     params,
-  //   });
-  // },
+  // GET /api/v1/rescue-cases/map/markers - Get map markers in bounding box
+  async getRescueMapMarkers(params: RescueCaseMapMarkersConfigDto) : Promise<RescueCaseMarkerDto[]> {
+    const dto = await http.get<RescueCaseMarkerDto[]>(
+      "/rescue-cases/map/markers",
+      {
+        params,
+      },
+    );
+    return dto;
+  },
 
-  // // GET /api/v1/rescue-cases/bounding-box - Find rescue cases within bounding box
-  // async getRescueCasesInBoundingBox(
-  //   params: RescueBoundingBoxConfig & RescueListConfig,
-  // ) {
-  //   const dto = await http.get<BaseResponse<PaginatedResponse<RescueCase>>>(
-  //     "/rescue-cases/bounding-box",
-  //     { params },
-  //   );
-  // },
+  // GET /api/v1/rescue-cases/bounding-box - Find rescue cases within bounding box
+  async getRescueCasesInBoundingBox(
+    params: BoundingBoxConfigDto,
+  ): Promise<PaginatedResponse<RescueCaseSummary>> {
+    const dto = await http.get<PageDto<RescueCaseSummaryDto>>(
+      "/rescue-cases/bounding-box",
+      { params },
+    );
+    return mapPage(dto, mapRescueCaseSummary) as PaginatedResponse<RescueCaseSummary>;
+  },
 
   // POST /api/v1/rescue-cases - Report a new rescue case
   async createRescueCase(
