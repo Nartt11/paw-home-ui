@@ -8,44 +8,22 @@ import { RescueCaseCreate } from "@/components/rescue-case/RescueCaseCreate";
 import type { RescueCaseCreateValues } from "@/components/rescue-case/RescueCaseCreate";
 import { RescueCaseViewDetail } from "@/components/rescue-case/RescueCaseViewDetail";
 
+import { useListUrlState } from "@/hooks/use-list-url-state";
 import rescueService from "@/services/rescue-case/rescue-case";
 import type { RescueCase } from "@/types/rescue-case.type";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useRouter, useSearchParams } from "next/navigation";
-
-function toNumber(v: string | null, fallback: number) {
-  const n = Number(v);
-  return Number.isFinite(n) && n > 0 ? n : fallback;
-}
-
-function setQueryParams(
-  router: ReturnType<typeof useRouter>,
-  queryParams: ReturnType<typeof useSearchParams>,
-  patch: Record<string, string | number | undefined | null>,
-) {
-  const next = new URLSearchParams(queryParams.toString());
-  Object.entries(patch).forEach(([k, v]) => {
-    if (v === undefined || v === null || v === "") next.delete(k);
-    else next.set(k, String(v));
-  });
-  router.replace(`?${next.toString()}`);
-}
 
 export default function CenterManagementPage() {
-  const router = useRouter();
-  const queryParams = useSearchParams();
+  const { page, size, setPage, setSize } = useListUrlState();
   const queryClient = useQueryClient();
-
-  const page = toNumber(queryParams.get("page"), 1);
-  const size = toNumber(queryParams.get("size"), 10);
 
   const [createOpen, setCreateOpen] = React.useState(false);
   const [viewOpen, setViewOpen] = React.useState(false);
   const [selectedId, setSelectedId] = React.useState<string | null>(null);
 
   const listQuery = useQuery({
-    queryKey: ["rescue-cases", page, size],
+    queryKey: ["rescue-cases", { page, size }],
     queryFn: () => rescueService.getAllRescueCases({ page, size }),
   });
 
@@ -84,12 +62,8 @@ export default function CenterManagementPage() {
         size={data?.size ?? size}
         totalPages={data?.totalPages ?? 1}
         totalElements={data?.totalElements ?? 0}
-        onPageChange={(nextPage) =>
-          setQueryParams(router, queryParams, { page: nextPage })
-        }
-        onSizeChange={(nextSize) =>
-          setQueryParams(router, queryParams, { page: 1, size: nextSize })
-        }
+        onPageChange={setPage}
+        onSizeChange={setSize}
       />
 
       <RescueCaseCreate

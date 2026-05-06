@@ -36,6 +36,7 @@ import { OrganizationSummary } from "@/types/organization.type,";
 export interface OrganizationListTableProps {
   data: OrganizationSummary[];
   loading?: boolean;
+  keyword?: string;
   onViewDetail: (organizationId: string) => void;
   onEdit?: (organizationId: string) => void;
   onDelete?: (organizationId: string) => void;
@@ -47,6 +48,7 @@ export interface OrganizationListTableProps {
   totalPages?: number;
   onPageChange?: (page: number) => void;
   onSizeChange?: (size: number) => void;
+  onKeywordChange?: (keyword: string) => void;
 }
 
 function getStatusLabel(status?: string) {
@@ -207,6 +209,7 @@ function getPaginationItems(current: number, total: number, maxButtons = 5) {
 export function OrganizationListTable({
   data,
   loading = false,
+  keyword = "",
   onViewDetail,
   onEdit,
   onDelete,
@@ -216,9 +219,8 @@ export function OrganizationListTable({
   totalPages,
   onPageChange,
   onSizeChange,
+  onKeywordChange,
 }: OrganizationListTableProps) {
-  const [keyword, setKeyword] = React.useState("");
-
   const filteredData = React.useMemo(() => {
     const q = keyword.trim().toLowerCase();
 
@@ -263,7 +265,7 @@ export function OrganizationListTable({
           <Input
             placeholder="Tìm tổ chức..."
             value={keyword}
-            onChange={(e) => setKeyword(e.target.value)}
+            onChange={(e) => onKeywordChange?.(e.target.value)}
             className="pl-9"
           />
         </div>
@@ -271,7 +273,7 @@ export function OrganizationListTable({
         <div className="flex flex-wrap items-center gap-3 text-sm text-slate-500">
           <div>
             Tổng:{" "}
-            {typeof totalElements === "number"
+            {typeof totalElements === "number" && !keyword.trim()
               ? totalElements
               : filteredData.length}{" "}
             tổ chức

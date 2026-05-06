@@ -36,6 +36,7 @@ import {
 export interface UserListTableProps {
   data: UserSummary[];
   loading?: boolean;
+  keyword?: string;
 
   // pagination (server-side)
   page?: number;
@@ -44,6 +45,7 @@ export interface UserListTableProps {
   totalPages?: number;
   onPageChange?: (page: number) => void;
   onSizeChange?: (size: number) => void;
+  onKeywordChange?: (keyword: string) => void;
 
   onViewDetail?: (userId: string) => void;
   onEdit?: (userId: string) => void;
@@ -183,18 +185,18 @@ function getColumns(
 export function UserListTable({
   data,
   loading = false,
+  keyword = "",
   page = 1,
   size = 10,
   totalElements,
   totalPages,
   onPageChange,
   onSizeChange,
+  onKeywordChange,
   onViewDetail,
   onEdit,
   onDisable,
 }: UserListTableProps) {
-  const [keyword, setKeyword] = React.useState("");
-
   const filteredData = React.useMemo(() => {
     const q = keyword.trim().toLowerCase();
     if (!q) return data;
@@ -236,7 +238,7 @@ export function UserListTable({
           <Input
             placeholder="Tìm người dùng..."
             value={keyword}
-            onChange={(e) => setKeyword(e.target.value)}
+            onChange={(e) => onKeywordChange?.(e.target.value)}
             className="pl-9"
           />
         </div>
@@ -244,7 +246,7 @@ export function UserListTable({
         <div className="flex flex-wrap items-center gap-3 text-sm text-slate-500">
           <div>
             Tổng:{" "}
-            {typeof totalElements === "number"
+            {typeof totalElements === "number" && !keyword.trim()
               ? totalElements
               : filteredData.length}{" "}
             người dùng

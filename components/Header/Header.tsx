@@ -76,7 +76,7 @@ export default function Header() {
             <NotifBell unread={unread} />
           ) : (
             <Link
-              href="/web/login"
+              href="/dang-nhap"
               className="flex items-center gap-1.5 px-4 py-2 rounded-full text-white text-[12px] font-bold bg-gradient-to-br from-[#2AC789] to-[#06A7E7]"
             >
               <Users size={13} /> Join
