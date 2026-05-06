@@ -82,12 +82,12 @@ const data = {
   navOperation: [
     {
       title: "Quản lý cứu trợ",
-      url: "/quan-ly-cuu-tro",
+      url: `${APP_ROUTES.RESCUE_CASE_MANAGEMENT}`,
       icon: <LayoutDashboardIcon />,
     },
     {
       title: "Quản lý nhận nuôi",
-      url: "/quan-ly-nhan-nuoi",
+      url: `${APP_ROUTES.ADOPTION_MANAGEMENT}`,
       icon: <ListIcon />,
     },
   ],
