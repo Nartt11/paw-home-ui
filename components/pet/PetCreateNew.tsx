@@ -89,10 +89,9 @@ export function PetCreateNew({
 }: CreateNewPetProps) {
   const imageInputRef = React.useRef<HTMLInputElement | null>(null);
 
-  const form = useForm<CreateNewPetValues>({
-    resolver: zodResolver(createPetSchema),
-    defaultValues: createPetDefaultValues,
-  });
+ const form = useForm({
+   resolver: zodResolver(createPetSchema),
+ });
 
   const {
     control,
