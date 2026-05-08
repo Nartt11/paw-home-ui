@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import Image from "next/image";
 
 const DATA = rawData as AboutUsData;
 
@@ -76,6 +77,9 @@ function HeroSection() {
         <Image
           src={DATA.hero.image_url}
           alt={DATA.hero.title}
+
+          width={1600}
+          height={900}
           className="h-full w-full object-cover object-[center_40%]"
         />
         <div className="absolute inset-0 bg-linear-to-br from-slate-950/90 via-slate-900/75 to-slate-800/60" />
@@ -166,20 +170,22 @@ function StoryTab() {
 
       <div className="grid gap-4">
         <div className="overflow-hidden rounded-3xl">
-          {/* eslint-disable-next-line @next/next/no-Image-element */}
           <Image
             src={DATA.story.gallery.primary_image_url}
             alt=""
+            width={600}
+            height={400}
             className="h-64 w-full object-cover"
           />
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="overflow-hidden rounded-2xl">
-            {/* eslint-disable-next-line @next/next/no-Image-element */}
             <Image
               src={DATA.story.gallery.secondary_image_url}
               alt=""
+              width={600}
+              height={400}
               className="h-36 w-full object-cover"
             />
           </div>

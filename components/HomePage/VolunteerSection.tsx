@@ -12,6 +12,8 @@ export default function VolunteerSection() {
         <Image
           src={VOL_IMG}
           alt="Tình nguyện viên"
+          width={900}
+          height={600}
           className="h-full w-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-br from-slate-950/90 to-sky-900/80" />

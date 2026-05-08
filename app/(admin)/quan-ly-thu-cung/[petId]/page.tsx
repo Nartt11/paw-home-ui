@@ -611,6 +611,8 @@ export default function PetDetailPage() {
                   <Image
                     src="https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&q=80&w=400"
                     alt="fake"
+                    width={400}
+                    height={225}
                     className="h-full w-full object-cover opacity-50 grayscale"
                   />
                   <div className="absolute inset-0 flex items-center justify-center">

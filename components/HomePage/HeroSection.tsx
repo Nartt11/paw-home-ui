@@ -22,6 +22,8 @@ export default function HeroSection({
         <Image
           src={HERO_IMG}
           alt="fake"
+          width={1600}
+          height={900}
           className="h-full w-full object-cover object-[50%_30%]"
         />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.1),transparent_55%),linear-gradient(135deg,rgba(2,23,31,0.88)_0%,rgba(3,53,79,0.78)_50%,rgba(2,23,31,0.7)_100%)]" />

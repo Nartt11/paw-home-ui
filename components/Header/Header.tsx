@@ -10,6 +10,7 @@ import NavLinks from "./NavLinks";
 import NotifBell from "./NotifBell";
 import { DarkToggle } from "./Toggles";
 import { APP_ROUTES } from "@/constants/routes";
+import { Button } from "../ui/button";
 
 export default function Header() {
   const pathname = usePathname();
@@ -45,11 +46,11 @@ export default function Header() {
 
   return (
     <header
-      className={`sticky top-0 z-50 w-full transition-all duration-300 border-b
+      className={`sticky top-0 z-50 w-full transition-all duration-300 border-b bg-primary
       ${
         isTransparent
           ? "bg-primary border-transparent"
-          : "border-white/10 backdrop-blur-md bg-[#02171F]/80"
+          : "border-white/10 backdrop-blur-md text-primary"
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
@@ -80,7 +81,7 @@ export default function Header() {
             ) : (
               <Link
                 href={APP_ROUTES.LOGIN}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-full text-white text-xs font-semibold bg-linear-to-br from-green-500 to-blue-500 hover:shadow-lg transition-shadow"
+                className="flex items-center gap-1.5 px-4 py-2 rounded-full text-white text-xs border-2 border-white font-semibold hover:shadow-lg transition-shadow"
               >
                 Tham gia ngay
               </Link>

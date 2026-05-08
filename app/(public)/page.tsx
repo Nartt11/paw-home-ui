@@ -1,8 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
-import { ArrowRight, CalendarDays, Heart, MapPin, Star } from "lucide-react";
+import { useEffect, useState } from "react";
 
 import type {
   EventItem,
@@ -12,8 +10,6 @@ import type {
 import landingData from "./data.json" assert { type: "json" };
 import HeroSection from "@/components/HomePage/HeroSection";
 import StatsSection from "@/components/HomePage/StatsSection";
-import FeaturedPetsSection from "@/components/HomePage/FeaturedPetsSection";
-import { Pet } from "@/types/pet.type";
 import VolunteerSection from "@/components/HomePage/VolunteerSection";
 import HowItWorksSection from "@/components/HomePage/HowItWorksSection";
 import RescueMapSection from "@/components/HomePage/RescueMapSection";

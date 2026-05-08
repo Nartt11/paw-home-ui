@@ -6,7 +6,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import TitlePerPage from "@/components/common/admin/TitlePerPage";
 import { BannerListTable } from "@/components/banner/BannerListTable";
-import DeleteModal from "@/components/common/DeleteModal";
 import { BannerCreateNew } from "@/components/banner/BannerCreateNew";
 import type { BannerCreateNewValues } from "@/components/banner/BannerCreateNew";
 import { BannerViewDetail } from "@/components/banner/BannerViewDetail";
@@ -16,6 +15,7 @@ import type { BannerUpdateValues } from "@/components/banner/BannerUpdate";
 import { useListUrlState } from "@/hooks/use-list-url-state";
 import bannerService from "@/services/banner/banner";
 import type { Banner } from "@/types/banner.type";
+import { DeleteModal } from "@/components/common/admin/DeleteModal";
 
 export default function BannerManagementPage() {
   const { page, size, setPage, setSize } = useListUrlState();
@@ -161,7 +161,7 @@ export default function BannerManagementPage() {
         }}
         title="Xoá banner"
         description="Bạn có chắc muốn xoá banner này không? Hành động không thể hoàn tác."
-        deleting={deleteMutation.isPending}
+        confirming={deleteMutation.isPending}
         onConfirm={() => {
           if (deleteId) deleteMutation.mutate(deleteId);
         }}
