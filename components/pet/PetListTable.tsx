@@ -25,6 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
+import Image from "next/image";
 
 export interface PetListTableProps {
   data: PetSummary[];
@@ -115,9 +116,8 @@ const columns: ColumnDef<PetSummary>[] = [
     cell: ({ row }) => (
       <div className="flex min-w-60 items-center gap-3">
         <div className="size-9 overflow-hidden rounded-md border border-slate-200 bg-slate-50">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={row.original.imageUrl || "/file.svg"}
+          <Image
+            src={row.original.imageUrl}
             alt={row.original.name}
             className="h-full w-full object-cover"
           />

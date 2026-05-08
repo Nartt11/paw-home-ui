@@ -1,4 +1,5 @@
 import { ArrowRight, Link, Users } from "lucide-react";
+import Image from "next/image";
 
 const VOL_IMG =
   "https://images.unsplash.com/photo-1770355519733-cbdd0389c9d9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=900";
@@ -8,7 +9,7 @@ export default function VolunteerSection() {
     <section className="relative overflow-hidden px-6 py-16 md:py-20">
       <div className="absolute inset-0">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <Image
           src={VOL_IMG}
           alt="Tình nguyện viên"
           className="h-full w-full object-cover"

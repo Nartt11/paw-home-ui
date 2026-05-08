@@ -13,6 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import Image from "next/image";
 
 function FieldRow({
   label,
@@ -102,8 +103,8 @@ export function BannerViewDetail({
               <div className="grid gap-4 md:grid-cols-[240px_1fr]">
                 <div className="overflow-hidden rounded-xl border border-border bg-muted">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={banner.mediaUrl || "/file.svg"}
+                  <Image
+                    src={banner.mediaUrl}
                     alt={banner.title}
                     className="h-40 w-full object-cover"
                   />

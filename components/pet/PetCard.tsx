@@ -15,7 +15,6 @@ export default function PetCard({ pet }: PetCardProps) {
     <Link href="/pets" className="block">
       <article className="group flex cursor-pointer flex-col overflow-hidden rounded-2xl bg-white shadow-md transition duration-200 hover:-translate-y-1 hover:shadow-2xl">
         <div className="relative h-56 overflow-hidden">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
           <Image
             src={pet.imageUrls[0]}
             alt={pet.name}

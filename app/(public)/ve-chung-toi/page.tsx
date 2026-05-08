@@ -73,10 +73,9 @@ function HeroSection() {
   return (
     <section className="relative overflow-hidden">
       <div className="absolute inset-0">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <Image
           src={DATA.hero.image_url}
-          alt=""
+          alt={DATA.hero.title}
           className="h-full w-full object-cover object-[center_40%]"
         />
         <div className="absolute inset-0 bg-linear-to-br from-slate-950/90 via-slate-900/75 to-slate-800/60" />
@@ -167,8 +166,8 @@ function StoryTab() {
 
       <div className="grid gap-4">
         <div className="overflow-hidden rounded-3xl">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+          {/* eslint-disable-next-line @next/next/no-Image-element */}
+          <Image
             src={DATA.story.gallery.primary_image_url}
             alt=""
             className="h-64 w-full object-cover"
@@ -177,8 +176,8 @@ function StoryTab() {
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="overflow-hidden rounded-2xl">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            {/* eslint-disable-next-line @next/next/no-Image-element */}
+            <Image
               src={DATA.story.gallery.secondary_image_url}
               alt=""
               className="h-36 w-full object-cover"

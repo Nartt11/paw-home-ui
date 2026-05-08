@@ -1,6 +1,7 @@
 import { PublicPageData } from "@/types/public-page.type";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 
 const HERO_IMG =
   "https://images.unsplash.com/photo-1638552758613-0a9a70102bdb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=1600";
@@ -18,10 +19,9 @@ export default function HeroSection({
   return (
     <section className="relative flex min-h-screen items-center overflow-hidden bg-slate-950">
       <div className="absolute inset-0">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <Image
           src={HERO_IMG}
-          alt=""
+          alt="fake"
           className="h-full w-full object-cover object-[50%_30%]"
         />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.1),transparent_55%),linear-gradient(135deg,rgba(2,23,31,0.88)_0%,rgba(3,53,79,0.78)_50%,rgba(2,23,31,0.7)_100%)]" />
