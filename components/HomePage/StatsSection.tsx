@@ -1,5 +1,7 @@
-import { StatItemConfig } from "@/types/public-page.type";
 import { useEffect, useRef, useState } from "react";
+
+import { MetricCard } from "@/components/marketing/MetricCard";
+import { StatItemConfig } from "@/types/public-page.type";
 
 interface StatItemProps {
   config: StatItemConfig;
@@ -36,23 +38,16 @@ function StatItem({ config, started }: StatItemProps) {
   const count = useCounter(config.value, 1600, started);
 
   return (
-    <div className="px-2 text-center">
-      <div
-        className="font-black leading-none"
-        style={{
-          fontSize: "clamp(32px, 5vw, 52px)",
-          color: config.color,
-        }}
-      >
-        {count.toLocaleString()}
-        {config.suffix ?? ""}
-      </div>
-      <div className="mt-1 text-[13px] font-medium text-white/70">
-        {config.label}
-      </div>
-    </div>
+    <MetricCard
+      value={`${count.toLocaleString()}${config.suffix ?? ""}`}
+      label={config.label}
+      valueClassName="text-[clamp(32px,5vw,52px)]"
+      labelClassName="text-white/70"
+      style={{ color: config.color }}
+    />
   );
 }
+
 export default function StatsSection({ stats }: StatsSectionProps) {
   const [visible, setVisible] = useState(false);
   const ref = useRef<HTMLDivElement | null>(null);
