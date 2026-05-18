@@ -2,6 +2,7 @@ export const APP_ROUTES = {
   HOME: "/",
   MAP: "/ban-do",
   ADOPTION: "/nhan-nuoi",
+  adoptionDetail: (petId: string) => `/nhan-nuoi/${petId}`,
   NEWS: "/tin-tuc",
   DONATION: "/ung-ho",
   ABOUT_US: "/ve-chung-toi",

@@ -88,6 +88,7 @@ export interface PetListConfig {
   species?: string;
   breed?: string;
   gender?: PetGender;
+  searchName?: string;
   status?: PetStatus[];
   healthStatus?: PetHealthStatus;
   userId?: string;
