@@ -1,5 +1,6 @@
 import http from "@/lib/http";
 import { mapAuth } from "@/mappers/auth";
+import apiEndpoints from "@/services/endpoint";
 import { Auth } from "@/types/auth.type";
 
 export interface LoginPayload {
@@ -54,43 +55,43 @@ export interface UserDto {
 export const authService = {
   // done
   async login(data: LoginPayload): Promise<Auth> {
-    const res = await http.post<AuthResponseDto>("/auth/login", data);
+    const res = await http.post<AuthResponseDto>(apiEndpoints.auth.login, data);
     return mapAuth(res);
   },
 
   // POST /api/v1/auth/logout - Logout — revoke all refresh tokens
   logout() {
-    return http.post("/auth/logout", {});
+    return http.post(apiEndpoints.auth.logout, {});
   },
 
   // POST /api/v1/auth/refresh - Refresh access token (silent refresh)
   refresh() {
-    return http.post("/auth/refresh", {});
+    return http.post(apiEndpoints.auth.refresh, {});
   },
 
   // POST /api/v1/auth/register - Register a new account
   register(data: RegisterPayload) {
-    return http.post("/auth/register", data);
+    return http.post(apiEndpoints.auth.register, data);
   },
 
   // POST /api/v1/auth/forgot-password - Request password reset
   forgotPassword(data: ForgotPasswordPayload) {
-    return http.post("/auth/forgot-password", data);
+    return http.post(apiEndpoints.auth.forgotPassword, data);
   },
 
   // POST /api/v1/auth/reset-password - Reset password using token
   resetPassword(data: ResetPasswordPayload) {
-    return http.post("/auth/reset-password", data);
+    return http.post(apiEndpoints.auth.resetPassword, data);
   },
 
   // POST /api/v1/auth/resend-verification - Resend verification email
   resendVerification(data: ResendVerificationPayload) {
-    return http.post("/auth/resend-verification", data);
+    return http.post(apiEndpoints.auth.resendVerification, data);
   },
 
   // GET /api/v1/auth/verify-email - Verify email via token (query param)
   verifyEmail(params: VerifyEmailParams) {
-    return http.get("/auth/verify-email", { params });
+    return http.get(apiEndpoints.auth.verifyEmail, { params });
   },
 };
 

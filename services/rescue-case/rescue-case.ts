@@ -1,4 +1,5 @@
 import http from "@/lib/http";
+import apiEndpoints from "@/services/endpoint";
 
 import { RescueCase, RescueCaseSummary } from "@/types/rescue-case.type";
 import {
@@ -14,14 +15,13 @@ import { PageDto } from "../api-dto";
 import { PaginatedResponse } from "@/types/api.type";
 import { mapPage } from "@/mappers/common";
 import { mapRescueCase, mapRescueCaseSummary } from "@/mappers/rescue-case";
-import { map } from "leaflet";
 
 const rescueService = {
   // GET /api/v1/rescue-cases - List all rescue cases
   async getAllRescueCases(
     params: RescueCaseListConfigDto,
   ): Promise<PaginatedResponse<RescueCaseSummary>> {
-    const dto = await http.get<PageDto<RescueCaseSummaryDto>>("/rescue-cases", {
+    const dto = await http.get<PageDto<RescueCaseSummaryDto>>(apiEndpoints.rescueCases.root, {
       params,
     });
     return mapPage(
@@ -32,24 +32,25 @@ const rescueService = {
 
   // GET /api/v1/rescue-cases/{id} - Get rescue case by ID
   async getRescueCaseById(id: string): Promise<RescueCase> {
-    const dto = await http.get<RescueCaseDto>(`/rescue-cases/${id}`);
+    const dto = await http.get<RescueCaseDto>(apiEndpoints.rescueCases.byId(id));
     return mapRescueCase(dto);
   },
 
   // GET /api/v1/rescue-cases/nearby - Find rescue cases near a location
-  // async getNearbyRescueCases(
-  //   params: NearbyRescueCasesConfig & RescueListConfig,
-  // ) {
-  //   const dto = await http.get<BaseResponse<PaginatedResponse<RescueCase>>>(
-  //     "/rescue-cases/nearby",
-  //     { params },
-  //   );
-  // },
+  async getNearbyRescueCases(
+    params: RescueCaseListConfigDto & Record<string, string | number | undefined>,
+  ): Promise<PaginatedResponse<RescueCaseSummary>> {
+    const dto = await http.get<PageDto<RescueCaseSummaryDto>>(
+      apiEndpoints.rescueCases.nearby,
+      { params },
+    );
+    return mapPage(dto, mapRescueCaseSummary) as PaginatedResponse<RescueCaseSummary>;
+  },
 
   // GET /api/v1/rescue-cases/map/markers - Get map markers in bounding box
   async getRescueMapMarkers(params: RescueCaseMapMarkersConfigDto) : Promise<RescueCaseMarkerDto[]> {
     const dto = await http.get<RescueCaseMarkerDto[]>(
-      "/rescue-cases/map/markers",
+      apiEndpoints.rescueCases.map.markers,
       {
         params,
       },
@@ -62,7 +63,7 @@ const rescueService = {
     params: BoundingBoxConfigDto,
   ): Promise<PaginatedResponse<RescueCaseSummary>> {
     const dto = await http.get<PageDto<RescueCaseSummaryDto>>(
-      "/rescue-cases/bounding-box",
+      apiEndpoints.rescueCases.map.boundingBox,
       { params },
     );
     return mapPage(dto, mapRescueCaseSummary) as PaginatedResponse<RescueCaseSummary>;
@@ -73,7 +74,7 @@ const rescueService = {
     payload: UpdateRescueCasePayloadDto,
   ): Promise<RescueCase> {
     const dto = await http.post<RescueCase, UpdateRescueCasePayloadDto>(
-      "/rescue-cases",
+      apiEndpoints.rescueCases.root,
       payload,
     );
     return mapRescueCase(dto);
@@ -85,7 +86,7 @@ const rescueService = {
     payload: UpdateRescueCasePayloadDto,
   ): Promise<RescueCase> {
     const dto = await http.put<RescueCase, UpdateRescueCasePayloadDto>(
-      `/rescue-cases/${id}`,
+      apiEndpoints.rescueCases.byId(id),
       payload,
     );
     return mapRescueCase(dto);
@@ -93,7 +94,7 @@ const rescueService = {
 
   // PATCH /api/v1/rescue-cases/{id}/status - Change rescue case status
   async updateRescueCaseStatus(id: string): Promise<RescueCase> {
-    const dto = await http.patch<RescueCase>(`/rescue-cases/${id}/status`);
+    const dto = await http.patch<RescueCase>(apiEndpoints.rescueCases.status(id));
     return mapRescueCase(dto);
   },
 };
