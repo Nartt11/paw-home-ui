@@ -1,10 +1,5 @@
 "use client";
 
-import Link from "next/link";
-
-const HERO_IMG =
-  "https://images.unsplash.com/photo-1638552758613-0a9a70102bdb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=1200";
-
 export default function AuthLayout({
   children,
 }: {

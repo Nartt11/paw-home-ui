@@ -7,7 +7,7 @@ export const APP_ROUTES = {
   ABOUT_US: "/ve-chung-toi",
 
   LOGIN: "/dang-nhap",
-  SIGNUP: "/dang-ky",
+  SIGNUP: "/dang-ki",
 
   // admin
   DASHBOARD: "/dashboard",

@@ -4,8 +4,8 @@ import Link from "next/link";
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Eye, EyeOff } from "lucide-react";
+import { useForm } from "react-hook-form";
 
 import {
   Card,
@@ -23,29 +23,16 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useForm } from "react-hook-form";
-
-import authService from "@/services/auth";
-import userService from "@/services/user/user";
-import { HttpError, tokenStorage } from "@/lib/http";
+import {
+  useLogin,
+  getAuthErrorMessage,
+  getPostLoginRedirectPath,
+} from "@/hooks/use-auth";
 import { loginSchema, type LoginSchema } from "@/lib/schemas/auth";
-import { queryKeys } from "@/lib/query-keys";
-
-function getErrorMessage(error: unknown, fallback: string) {
-  if (error instanceof HttpError) {
-    return error.message;
-  }
-
-  if (error instanceof Error && error.message) {
-    return error.message;
-  }
-
-  return fallback;
-}
+import { APP_ROUTES } from "@/constants/routes";
 
 export default function LoginForm() {
   const router = useRouter();
-  const queryClient = useQueryClient();
   const [showPassword, setShowPassword] = React.useState(false);
 
   const {
@@ -62,40 +49,21 @@ export default function LoginForm() {
     },
   });
 
-  const loginMutation = useMutation({
-    mutationFn: authService.login,
-  });
+  const loginMutation = useLogin();
 
   const onSubmit = handleSubmit(async (data) => {
     clearErrors("root");
 
     try {
       const auth = await loginMutation.mutateAsync(data);
-
-      tokenStorage.setAccessToken(auth.accessToken);
-      tokenStorage.setRefreshToken(auth.refreshToken);
-
-      try {
-        await queryClient.fetchQuery({
-          queryKey: queryKeys.auth.currentUser,
-          queryFn: () => userService.getCurrentUser(),
-          staleTime: 5 * 60 * 1000,
-        });
-
-        router.replace("/dashboard");
-      } catch (error) {
-        tokenStorage.clear();
-        queryClient.removeQueries({ queryKey: queryKeys.auth.currentUser });
-
-        setError("root", {
-          type: "server",
-          message: getErrorMessage(error, "Unable to load the current user."),
-        });
-      }
+      console.log("Login successful:", getPostLoginRedirectPath(auth));
+      
+      router.replace(getPostLoginRedirectPath(auth));
+      debugger
     } catch (error) {
       setError("root", {
         type: "server",
-        message: getErrorMessage(error, "Login failed."),
+        message: getAuthErrorMessage(error, "Login failed."),
       });
     }
   });
@@ -103,43 +71,40 @@ export default function LoginForm() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Login to your account</CardTitle>
+        <CardTitle>Dang nhap</CardTitle>
         <CardDescription>
-          Enter your email below to login to your account
+          Su dung email hoac ten dang nhap de vao he thong.
         </CardDescription>
       </CardHeader>
       <CardContent>
         {errors.root?.message ? (
-          <FieldError className="mb-4 text-red-500">
-            {errors.root.message}
-          </FieldError>
+          <FieldError className="mb-4">{errors.root.message}</FieldError>
         ) : null}
+
         <form onSubmit={onSubmit}>
           <FieldGroup>
             <Field>
-              <FieldLabel htmlFor="email">Email</FieldLabel>
+              <FieldLabel htmlFor="emailOrUsername">Email hoac username</FieldLabel>
               <Input
-                id="email"
+                id="emailOrUsername"
                 type="text"
                 placeholder="m@example.com"
                 {...register("emailOrUsername")}
               />
-              {errors.emailOrUsername && (
-                <FieldError className="text-red-500">
-                  {errors.emailOrUsername.message}
-                </FieldError>
-              )}
+              {errors.emailOrUsername ? (
+                <FieldError>{errors.emailOrUsername.message}</FieldError>
+              ) : null}
             </Field>
 
             <Field>
               <div className="flex items-center">
-                <FieldLabel htmlFor="password">Password</FieldLabel>
-                <a
-                  href="#"
+                <FieldLabel htmlFor="password">Mat khau</FieldLabel>
+                <Link
+                  href="/quen-mat-khau"
                   className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
                 >
-                  Forgot your password?
-                </a>
+                  Quen mat khau?
+                </Link>
               </div>
 
               <div className="relative">
@@ -153,7 +118,7 @@ export default function LoginForm() {
                   type="button"
                   aria-label={showPassword ? "Hide password" : "Show password"}
                   className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground hover:text-foreground"
-                  onClick={() => setShowPassword((v) => !v)}
+                  onClick={() => setShowPassword((value) => !value)}
                 >
                   {showPassword ? (
                     <EyeOff className="h-4 w-4" />
@@ -163,22 +128,23 @@ export default function LoginForm() {
                 </button>
               </div>
 
-              {errors.password && (
-                <FieldError className="text-red-500">
-                  {errors.password.message}
-                </FieldError>
-              )}
+              {errors.password ? (
+                <FieldError>{errors.password.message}</FieldError>
+              ) : null}
             </Field>
 
             <Field>
-              <Button type="submit" disabled={loginMutation.isPending}>
-                {loginMutation.isPending ? "Logging in..." : "Login"}
+              <Button type="submit" className="w-full" disabled={loginMutation.isPending}>
+                {loginMutation.isPending ? "Dang dang nhap..." : "Dang nhap"}
               </Button>
-              <Button variant="outline" type="button">
-                Login with Google
+              <Button asChild variant="outline" className="w-full">
+                <Link href={APP_ROUTES.HOME}>Ve trang chu</Link>
               </Button>
               <FieldDescription className="text-center">
-                Don&apos;t have an account? <Link href="/dang-ki">Sign up</Link>
+                Chua co tai khoan? <Link href="/dang-ki">Dang ky</Link>
+              </FieldDescription>
+              <FieldDescription className="text-center">
+                Can xac thuc email? <Link href="/xac-thuc-email">Xac thuc tai day</Link>
               </FieldDescription>
             </Field>
           </FieldGroup>
