@@ -2,7 +2,10 @@ import { ArrowRight } from "lucide-react";
 
 import { PageHero } from "@/components/marketing/PageHero";
 import { PrimaryCta } from "@/components/marketing/PrimaryCta";
-import { PublicPageData } from "@/types/public-page.type";
+import { APP_ROUTES } from "@/constants/routes";
+import { getBannerHref } from "@/lib/banner";
+import type { Banner } from "@/types/banner.type";
+import type { PublicPageData } from "@/types/public-page.type";
 
 const HERO_IMG =
   "https://images.unsplash.com/photo-1638552758613-0a9a70102bdb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=1600";
@@ -11,17 +14,21 @@ interface HeroSectionProps {
   hero: PublicPageData["hero"];
   searchQuery: string;
   onSearchChange: (value: string) => void;
+  banner?: Banner;
 }
 
 export default function HeroSection({
   hero,
   searchQuery,
   onSearchChange,
+  banner,
 }: HeroSectionProps) {
+  const primaryHref = getBannerHref(banner, APP_ROUTES.ADOPTION);
+
   return (
     <PageHero
-      imageSrc={HERO_IMG}
-      imageAlt={hero.titleHighlight}
+      imageSrc={banner?.mediaUrl || HERO_IMG}
+      imageAlt={banner?.title || hero.titleHighlight}
       className="bg-slate-950"
       minHeightClassName="min-h-screen"
       imageClassName="object-[50%_30%]"
@@ -31,31 +38,37 @@ export default function HeroSection({
       badge={
         <div className="inline-flex items-center gap-2 rounded-full border border-orange-400/50 bg-orange-400/15 px-4 py-1.5 text-[12px] font-semibold text-orange-300">
           <span className="inline-flex h-2 w-2 animate-pulse rounded-full bg-orange-400" />
-          ðŸ†˜ {hero.emergencyCases} ca cá»©u há»™ kháº©n cáº¥p Ä‘ang cáº§n há»— trá»£ hÃ´m nay
+          {hero.emergencyCases} ca cuu ho khan cap dang can ho tro hom nay
         </div>
       }
       title={
-        <h1 className="text-balance text-4xl font-black leading-tight text-white sm:text-5xl md:text-6xl lg:text-7xl">
-          Má»—i chÃº thÃº cÆ°ng
-          <br />
-          <span className="bg-linear-to-r from-[#FF9132] to-[#F7DB47] bg-clip-text text-transparent">
-            {hero.titleHighlight}
-          </span>
-        </h1>
+        banner?.title ? (
+          <h1 className="max-w-3xl whitespace-pre-line text-balance text-4xl font-black leading-tight text-white sm:text-5xl md:text-6xl lg:text-7xl">
+            {banner.title}
+          </h1>
+        ) : (
+          <h1 className="text-balance text-4xl font-black leading-tight text-white sm:text-5xl md:text-6xl lg:text-7xl">
+            Moi chu thu cung
+            <br />
+            <span className="bg-linear-to-r from-[#FF9132] to-[#F7DB47] bg-clip-text text-transparent">
+              {hero.titleHighlight}
+            </span>
+          </h1>
+        )
       }
       description={
         <p className="max-w-xl text-[15px] leading-relaxed text-white/80 md:text-[17px]">
-          {hero.description}
+          {banner?.subtitle || hero.description}
         </p>
       }
       actions={
         <>
-          <PrimaryCta href="/pets" variant="warm">
-            ðŸ¾ Nháº­n nuÃ´i ngay
+          <PrimaryCta href={primaryHref} variant="warm">
+            {banner ? "Kham pha ngay" : "Nhan nuoi ngay"}
             <ArrowRight size={18} />
           </PrimaryCta>
-          <PrimaryCta href="/rescues/map" variant="glass">
-            ðŸ†˜ Báº£n Ä‘á»“ cá»©u há»™
+          <PrimaryCta href={APP_ROUTES.MAP} variant="glass">
+            Ban do cuu ho
           </PrimaryCta>
         </>
       }
@@ -78,15 +91,15 @@ export default function HeroSection({
             className="w-full border-0 bg-transparent text-[14px] text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-0"
             placeholder={hero.searchPlaceholder}
             value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
+            onChange={(event) => onSearchChange(event.target.value)}
           />
         </div>
         <PrimaryCta
-          href="/pets"
+          href={APP_ROUTES.ADOPTION}
           variant="ocean"
           className="rounded-none px-5 py-3.5 shadow-none"
         >
-          TÃ¬m kiáº¿m
+          Tim kiem
           <ArrowRight size={16} />
         </PrimaryCta>
       </div>

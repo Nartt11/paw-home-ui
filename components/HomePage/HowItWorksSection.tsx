@@ -3,7 +3,8 @@ import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { MarketingCard } from "@/components/marketing/MarketingCard";
 import { PrimaryCta } from "@/components/marketing/PrimaryCta";
 import { SectionShell } from "@/components/marketing/SectionShell";
-import { HowItWorksStep } from "@/types/public-page.type";
+import { APP_ROUTES } from "@/constants/routes";
+import type { HowItWorksStep } from "@/types/public-page.type";
 
 interface HowItWorksSectionProps {
   steps: HowItWorksStep[];
@@ -17,22 +18,22 @@ export default function HowItWorksSection({ steps }: HowItWorksSectionProps) {
       eyebrow={
         <div className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-[11px] font-bold text-emerald-500">
           <CheckCircle2 size={13} />
-          QUY TRÃŒNH ÄÆ N GIáº¢N
+          QUY TRINH DON GIAN
         </div>
       }
       title={
         <h2 className="text-balance text-[26px] font-black text-slate-900 md:text-[34px]">
-          Nháº­n nuÃ´i thÃº cÆ°ng chá»‰ 4 bÆ°á»›c
+          Nhan nuoi thu cung chi 4 buoc
         </h2>
       }
       description={
         <p className="mx-auto max-w-xl text-[15px] text-slate-600">
-          Quy trÃ¬nh minh báº¡ch, Ä‘Æ°á»£c HPA hÆ°á»›ng dáº«n táº­n tÃ¬nh tá»« Ä‘áº§u Ä‘áº¿n cuá»‘i.
+          Quy trinh minh bach, duoc HPA huong dan tan tinh tu dau den cuoi.
         </p>
       }
       actions={
-        <PrimaryCta href="/pets" variant="ocean" size="lg">
-          ðŸ¾ Báº¯t Ä‘áº§u tÃ¬m thÃº cÆ°ng
+        <PrimaryCta href={APP_ROUTES.ADOPTION} variant="ocean" size="lg">
+          Bat dau tim thu cung
           <ArrowRight size={18} />
         </PrimaryCta>
       }
@@ -60,7 +61,7 @@ export default function HowItWorksSection({ steps }: HowItWorksSectionProps) {
               className="mb-2 text-[10px] font-bold tracking-[0.2em]"
               style={{ color: step.color }}
             >
-              BÆ¯á»šC {step.step}
+              BUOC {step.step}
             </div>
             <h3 className="mb-2 text-[18px] font-extrabold text-slate-900">
               {step.title}

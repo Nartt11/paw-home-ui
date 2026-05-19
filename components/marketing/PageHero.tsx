@@ -48,6 +48,7 @@ export function PageHero({
           alt={imageAlt}
           width={1600}
           height={900}
+          unoptimized
           className={cn("h-full w-full object-cover", imageClassName)}
         />
         <div className={cn("absolute inset-0", overlayClassName)} />

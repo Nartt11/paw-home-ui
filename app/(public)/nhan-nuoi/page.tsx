@@ -27,10 +27,16 @@ import { PageHero } from "@/components/marketing/PageHero";
 import GridSkeleton from "@/components/pet/GridSkeleton";
 import PetCard from "@/components/pet/PetCard";
 import { APP_ROUTES } from "@/constants/routes";
+import { useActiveBanners } from "@/hooks/use-active-banners";
 import {
   getOptionalSearchParam,
   useListUrlState,
 } from "@/hooks/use-list-url-state";
+import {
+  getBannerHref,
+  pickBannerForTargetPage,
+  PUBLIC_BANNER_TARGETS,
+} from "@/lib/banner";
 import {
   adoptionSearchSchema,
   type AdoptionSearchSchema,
@@ -96,6 +102,16 @@ export default function AdoptionPage() {
       }),
     placeholderData: (previousData) => previousData,
   });
+  const activeBannersQuery = useActiveBanners();
+  const adoptionBanner = React.useMemo(
+    () =>
+      pickBannerForTargetPage(
+        activeBannersQuery.data ?? [],
+        PUBLIC_BANNER_TARGETS.ADOPTION,
+      ),
+    [activeBannersQuery.data],
+  );
+  const heroPrimaryHref = getBannerHref(adoptionBanner, "#pet-list");
 
   const pets = availablePetsQuery.data?.content ?? [];
   const totalPages = Math.max(availablePetsQuery.data?.totalPages ?? 1, 1);
@@ -128,8 +144,11 @@ export default function AdoptionPage() {
   return (
     <div className="bg-[linear-gradient(180deg,#fff7ed_0%,#ffffff_16%,#fffaf5_100%)]">
       <PageHero
-        imageSrc="https://images.unsplash.com/photo-1517849845537-4d257902454a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=1600"
-        imageAlt="Pets waiting for adoption"
+        imageSrc={
+          adoptionBanner?.mediaUrl ||
+          "https://images.unsplash.com/photo-1517849845537-4d257902454a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=1600"
+        }
+        imageAlt={adoptionBanner?.title || "Pets waiting for adoption"}
         minHeightClassName="min-h-[500px]"
         overlayClassName="bg-[linear-gradient(100deg,rgba(6,23,35,0.88)_10%,rgba(6,23,35,0.55)_45%,rgba(6,23,35,0.18)_100%)]"
         containerClassName="max-w-7xl"
@@ -141,15 +160,16 @@ export default function AdoptionPage() {
         }
         title={
           <div>
-            <h1 className="max-w-3xl text-balance text-4xl font-black tracking-tight text-white md:text-6xl">
-              Mo cua trai tim cho mot nguoi ban bon chan dang cho duoc yeu thuong.
+            <h1 className="max-w-3xl whitespace-pre-line text-balance text-4xl font-black tracking-tight text-white md:text-6xl">
+              {adoptionBanner?.title ||
+                "Mo cua trai tim cho mot nguoi ban bon chan dang cho duoc yeu thuong."}
             </h1>
           </div>
         }
         description={
           <p className="max-w-2xl text-base leading-7 text-white/78 md:text-lg">
-            Kham pha danh sach thu cung dang san sang nhan nuoi, loc nhanh theo
-            nhu cau cua ban va bat dau hanh trinh dem mot mai am moi den cho cac be.
+            {adoptionBanner?.subtitle ||
+              "Kham pha danh sach thu cung dang san sang nhan nuoi, loc nhanh theo nhu cau cua ban va bat dau hanh trinh dem mot mai am moi den cho cac be."}
           </p>
         }
         actions={
@@ -159,7 +179,9 @@ export default function AdoptionPage() {
               size="lg"
               className="rounded-2xl bg-white px-6 text-slate-900 hover:bg-white/90"
             >
-              <Link href="#pet-list">Xem danh sach</Link>
+              <Link href={heroPrimaryHref}>
+                {adoptionBanner ? "Xem chien dich" : "Xem danh sach"}
+              </Link>
             </Button>
             <Button
               asChild

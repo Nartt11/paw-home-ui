@@ -35,30 +35,33 @@ type BaseProps = VariantProps<typeof primaryCtaVariants> & {
   children: React.ReactNode;
 };
 
-type LinkProps = BaseProps &
-  Omit<React.ComponentProps<typeof Link>, "className" | "children"> & {
-    href: React.ComponentProps<typeof Link>["href"];
-  };
+type PrimaryCtaLinkProps = BaseProps &
+  Omit<React.ComponentProps<typeof Link>, "className" | "children">;
 
-type NativeButtonProps = BaseProps &
+type PrimaryCtaButtonProps = BaseProps &
   Omit<React.ComponentProps<"button">, "className" | "children"> & {
     href?: undefined;
   };
 
-export function PrimaryCta(props: LinkProps | NativeButtonProps) {
-  const { variant, size, className, children, ...rest } = props;
-  const classes = cn(primaryCtaVariants({ variant, size }), className);
-
+export function PrimaryCta(props: PrimaryCtaLinkProps | PrimaryCtaButtonProps) {
   if ("href" in props && props.href !== undefined) {
+    const { variant, size, className, children, href, ...linkProps } = props;
+    const classes = cn(primaryCtaVariants({ variant, size }), className);
+
     return (
       <Button asChild className={classes}>
-        <Link {...rest}>{children}</Link>
+        <Link href={href} {...linkProps}>
+          {children}
+        </Link>
       </Button>
     );
   }
 
+  const { variant, size, className, children, ...buttonProps } = props;
+  const classes = cn(primaryCtaVariants({ variant, size }), className);
+
   return (
-    <Button className={classes} {...rest}>
+    <Button className={classes} {...buttonProps}>
       {children}
     </Button>
   );
