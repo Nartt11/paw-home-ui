@@ -103,7 +103,7 @@ export function NavUser({
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={() => router.push(APP_ROUTES.PROFILE)}>
                 <CircleUserRoundIcon />
                 Account
               </DropdownMenuItem>

@@ -9,6 +9,7 @@ export const APP_ROUTES = {
 
   LOGIN: "/dang-nhap",
   SIGNUP: "/dang-ki",
+  PROFILE: "/trang-ca-nhan",
 
   // admin
   DASHBOARD: "/dashboard",
@@ -17,7 +18,7 @@ export const APP_ROUTES = {
   RESCUE_CASE_MANAGEMENT: "/quan-ly-cuu-tro",
   CENTER_MANAGEMENT: "/quan-ly-trung-tam",
   BANNER_MANAGEMENT: "/quan-ly-banner",
-  POST_MANAGEMENT: "/quan-ly-bai-viet",
+  POST_MANAGEMENT: "/quan-ly-bai-dang",
   USER_MANAGEMENT: "/quan-ly-nguoi-dung",
   NEWS_MANAGEMENT: "/quan-ly-tin-tuc",
 };

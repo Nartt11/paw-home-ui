@@ -1,41 +1,24 @@
-import { baseEntity } from "./core.type";
+export type PostMediaType = "IMAGE" | "VIDEO" | "UNKNOWN";
 
-export interface Post extends baseEntity {
-  post_id: string;
-  author_id?: string;
-  rescue_case_id?: string;
-
-  content?: string;
-}
 export interface PostMedia {
-  post_id: string;
-  media_id: string;
+  mediaId: string;
+  uploaderId?: string;
+  url: string;
+  type: PostMediaType;
+  createdAt?: string;
 }
 
-export interface Tag extends baseEntity {
-  tag_id: string;
-  code?: string;
-  name?: string;
-  description?: string;
-}
-
-export interface PostTag {
-  post_id: string;
-  tag_id: string;
-}
-export interface PostMedia {
-  post_id: string;
-  media_id: string;
-}
-
-export interface Tag extends baseEntity {
-  tag_id: string;
-  code?: string;
-  name?: string;
-  description?: string;
-}
-
-export interface PostTag {
-  post_id: string;
-  tag_id: string;
+export interface Post {
+  postId: string;
+  authorId: string;
+  authorUsername?: string;
+  rescueCaseId?: string;
+  content: string;
+  tags: string[];
+  media: PostMedia[];
+  likeCount: number;
+  commentCount: number;
+  createdAt?: string;
+  updatedAt?: string;
+  raw: Record<string, unknown>;
 }

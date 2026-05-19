@@ -1,0 +1,338 @@
+"use client";
+
+import * as React from "react";
+
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { CheckCircle2, ShieldCheck, UserRound } from "lucide-react";
+
+import { useCurrentUser } from "@/hooks/use-current-user";
+import {
+  profileDefaultValues,
+  profileSchema,
+  type ProfileFormValues,
+} from "@/lib/schemas/profile";
+import { queryKeys } from "@/lib/query-keys";
+import userService from "@/services/user/user";
+
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Field,
+  FieldContent,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
+
+function statusToLabel(status?: string) {
+  switch (status) {
+    case "ACTIVE":
+      return "Hoat dong";
+    case "DISABLED":
+      return "Vo hieu";
+    case "PENDING_VERIFICATION":
+      return "Cho xac minh";
+    default:
+      return status || "Khong ro";
+  }
+}
+
+function getInitials(name?: string, fallback = "U") {
+  const parts = (name || "").trim().split(/\s+/).filter(Boolean);
+  return ((parts[0]?.[0] ?? fallback) + (parts[1]?.[0] ?? "")).toUpperCase();
+}
+
+function readOnlyValue(value?: string) {
+  return value?.trim() ? value : "Chua cap nhat";
+}
+
+export default function ProfilePage() {
+  const queryClient = useQueryClient();
+  const currentUserQuery = useCurrentUser();
+  const currentUser = currentUserQuery.data;
+
+  const form = useForm<ProfileFormValues>({
+    resolver: zodResolver(profileSchema),
+    defaultValues: profileDefaultValues,
+  });
+
+  const {
+    formState: { errors, isDirty },
+    handleSubmit,
+    register,
+    reset,
+  } = form;
+
+  React.useEffect(() => {
+    if (!currentUser) return;
+
+    reset({
+      userName: currentUser.username ?? "",
+      avatarUrl: "",
+    });
+  }, [currentUser, reset]);
+
+  const updateProfileMutation = useMutation({
+    mutationFn: (values: ProfileFormValues) =>
+      userService.updateMyProfile({
+        userName: values.userName.trim(),
+        avatarUrl: values.avatarUrl?.trim() || undefined,
+      }),
+    onSuccess: async (user) => {
+      toast.success("Da cap nhat trang ca nhan");
+      queryClient.setQueryData(queryKeys.auth.currentUser, user);
+      reset({
+        userName: user.username ?? "",
+        avatarUrl: "",
+      });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.auth.currentUser });
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : "Khong the cap nhat ho so");
+    },
+  });
+
+  if (currentUserQuery.isPending) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Trang ca nhan</h1>
+          <p className="font-medium text-muted-foreground">
+            Dang tai thong tin tai khoan...
+          </p>
+        </div>
+        <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+          <div className="h-96 rounded-xl border border-border bg-card animate-pulse" />
+          <div className="h-96 rounded-xl border border-border bg-card animate-pulse" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!currentUser) {
+    return (
+      <div className="space-y-4">
+        <h1 className="text-3xl font-bold text-foreground">Trang ca nhan</h1>
+        <div className="rounded-xl border border-dashed border-border bg-card px-6 py-12 text-center text-sm text-muted-foreground">
+          Khong tai duoc thong tin nguoi dung hien tai.
+        </div>
+      </div>
+    );
+  }
+
+  const rolesText =
+    Array.isArray(currentUser.roles) && currentUser.roles.length > 0
+      ? currentUser.roles.join(", ")
+      : "Chua co role";
+
+  const avatarFallback = getInitials(
+    currentUser.fullName || currentUser.username,
+    "U",
+  );
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold text-foreground">Trang ca nhan</h1>
+        <p className="font-medium text-muted-foreground">
+          Xem thong tin tai khoan hien tai va cap nhat profile tu API user/me.
+        </p>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
+        <Card className="overflow-hidden">
+          <CardHeader className="border-b border-border bg-gradient-to-br from-slate-50 via-white to-emerald-50">
+            <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
+              <Avatar size="lg" className="h-20 w-20">
+                <AvatarImage src="" alt={currentUser.username} />
+                <AvatarFallback className="text-lg font-semibold">
+                  {avatarFallback}
+                </AvatarFallback>
+              </Avatar>
+
+              <div className="space-y-3">
+                <div>
+                  <CardTitle className="text-2xl">
+                    {currentUser.fullName || currentUser.username}
+                  </CardTitle>
+                  <CardDescription className="mt-1 text-sm">
+                    @{currentUser.username} • {currentUser.email}
+                  </CardDescription>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  <Badge className="bg-emerald-50 text-emerald-700 hover:bg-emerald-50">
+                    <ShieldCheck className="mr-1 h-3.5 w-3.5" />
+                    {statusToLabel(currentUser.status)}
+                  </Badge>
+                  <Badge variant="secondary">
+                    <UserRound className="mr-1 h-3.5 w-3.5" />
+                    {currentUser.organizationRole || "Khong co vai tro to chuc"}
+                  </Badge>
+                  <Badge variant={currentUser.emailVerified ? "default" : "outline"}>
+                    <CheckCircle2 className="mr-1 h-3.5 w-3.5" />
+                    {currentUser.emailVerified ? "Da xac minh email" : "Chua xac minh email"}
+                  </Badge>
+                </div>
+              </div>
+            </div>
+          </CardHeader>
+
+          <CardContent className="space-y-6 pt-6">
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="rounded-xl border border-border p-4">
+                <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  User ID
+                </div>
+                <div className="mt-2 break-all font-mono text-sm">{currentUser.userId}</div>
+              </div>
+              <div className="rounded-xl border border-border p-4">
+                <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  Roles
+                </div>
+                <div className="mt-2 text-sm">{rolesText}</div>
+              </div>
+            </div>
+
+            <Separator />
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <div>
+                <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  So dien thoai
+                </div>
+                <div className="mt-2 text-sm">{readOnlyValue(currentUser.phone)}</div>
+              </div>
+              <div>
+                <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  Gioi tinh
+                </div>
+                <div className="mt-2 text-sm">{readOnlyValue(currentUser.gender)}</div>
+              </div>
+              <div>
+                <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  To chuc
+                </div>
+                <div className="mt-2 text-sm">{readOnlyValue(currentUser.organizationName)}</div>
+              </div>
+              <div>
+                <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  Organization ID
+                </div>
+                <div className="mt-2 break-all font-mono text-sm">
+                  {readOnlyValue(currentUser.organizationId)}
+                </div>
+              </div>
+            </div>
+
+            <Separator />
+
+            <div className="grid gap-4 md:grid-cols-3">
+              <div>
+                <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  Dia chi
+                </div>
+                <div className="mt-2 text-sm">{readOnlyValue(currentUser.streetAddress)}</div>
+              </div>
+              <div>
+                <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  Phuong / Xa
+                </div>
+                <div className="mt-2 text-sm">{readOnlyValue(currentUser.wardName)}</div>
+              </div>
+              <div>
+                <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  Tinh / Thanh
+                </div>
+                <div className="mt-2 text-sm">{readOnlyValue(currentUser.provinceName)}</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Cap nhat profile</CardTitle>
+            <CardDescription>
+              API hien co cho phep cap nhat `userName` va `avatarUrl`.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form
+              className="space-y-5"
+              onSubmit={handleSubmit((values) =>
+                updateProfileMutation.mutate(values),
+              )}
+            >
+              <FieldGroup>
+                <Field>
+                  <FieldLabel htmlFor="profile-user-name">Username</FieldLabel>
+                  <FieldContent>
+                    <Input
+                      id="profile-user-name"
+                      disabled={updateProfileMutation.isPending}
+                      aria-invalid={Boolean(errors.userName)}
+                      {...register("userName")}
+                    />
+                    <FieldError errors={[errors.userName]} />
+                  </FieldContent>
+                </Field>
+
+                <Field>
+                  <FieldLabel htmlFor="profile-avatar-url">Avatar URL</FieldLabel>
+                  <FieldContent>
+                    <Input
+                      id="profile-avatar-url"
+                      placeholder="https://example.com/avatar.jpg"
+                      disabled={updateProfileMutation.isPending}
+                      aria-invalid={Boolean(errors.avatarUrl)}
+                      {...register("avatarUrl")}
+                    />
+                    <FieldError errors={[errors.avatarUrl]} />
+                  </FieldContent>
+                </Field>
+              </FieldGroup>
+
+              <div className="flex gap-3">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  disabled={updateProfileMutation.isPending}
+                  onClick={() =>
+                    reset({
+                      userName: currentUser.username ?? "",
+                      avatarUrl: "",
+                    })
+                  }
+                >
+                  Dat lai
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={updateProfileMutation.isPending || !isDirty}
+                >
+                  {updateProfileMutation.isPending
+                    ? "Dang cap nhat..."
+                    : "Luu thay doi"}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}

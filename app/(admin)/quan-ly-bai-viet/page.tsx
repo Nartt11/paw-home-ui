@@ -1,3 +1,1 @@
-export default function page() {
-  return <div>page</div>;
-}
+export { default } from "../quan-ly-bai-dang/page";
