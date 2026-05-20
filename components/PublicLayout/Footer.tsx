@@ -2,13 +2,12 @@
 import Link from "next/link";
 import { ChevronRight, MapPin, Phone, Mail, Smartphone } from "lucide-react";
 import { usePathname } from "next/navigation";
+import { APP_ROUTES } from "@/constants/routes";
 
 const SOCIAL_ICONS = ["📘", "▶️", "📷"];
 
 export default function Footer() {
   const path = usePathname();
-  console.log("Footer params:", path);
-
   return (
     <footer className={`bg-[#02171F] text-white pt-14 `}>
       <div className="max-w-7xl mx-auto px-6 ">
@@ -58,21 +57,21 @@ export default function Footer() {
             {[
               {
                 label: "Nhận nuôi thú cưng",
-                href: "/adoption",
+                href: `${APP_ROUTES.ADOPTION}`,
               },
-              { label: "Bản đồ cứu hộ", href: "/map" },
+              { label: "Bản đồ cứu hộ", href: `${APP_ROUTES.MAP}` },
               {
                 label: "Đăng ký TNV",
-                href: "/volunteer",
+                href: `#`,
               },
               {
                 label: "Tin tức & Sự kiện",
-                href: "/articles",
+                href: `${APP_ROUTES.NEWS}`,
               },
-              {
-                label: "Cộng đồng PawHome",
-                href: "/community",
-              },
+              // {
+              //   label: "Cộng đồng PawHome",
+              //   href: "/community",
+              // },
             ].map((item) => (
               <div
                 key={item.label}
@@ -113,7 +112,7 @@ export default function Footer() {
           </div>
 
           {/* APP */}
-          <div>
+          {/* <div>
             <h4 className="text-[11px] font-bold uppercase tracking-[1px] text-ph-orange mb-3.5">
               Ứng dụng
             </h4>
@@ -137,7 +136,7 @@ export default function Footer() {
                 </div>
               </div>
             </Link>
-          </div>
+          </div> */}
         </div>
 
         {/* BOTTOM */}

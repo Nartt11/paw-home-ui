@@ -1,57 +1,70 @@
-import { ArrowRight, Link, Users } from "lucide-react";
+import { ArrowRight, Users } from "lucide-react";
+
+import { PageHero } from "@/components/marketing/PageHero";
+import { PrimaryCta } from "@/components/marketing/PrimaryCta";
+import { APP_ROUTES } from "@/constants/routes";
+import { getBannerHref } from "@/lib/banner";
+import type { Banner } from "@/types/banner.type";
 
 const VOL_IMG =
   "https://images.unsplash.com/photo-1770355519733-cbdd0389c9d9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=900";
 
-export default function VolunteerSection() {
-  return (
-    <section className="relative overflow-hidden px-6 py-16 md:py-20">
-      <div className="absolute inset-0">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={VOL_IMG}
-          alt="Tình nguyện viên"
-          className="h-full w-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-950/90 to-sky-900/80" />
-      </div>
+interface VolunteerSectionProps {
+  banner?: Banner;
+}
 
-      <div className="relative mx-auto max-w-7xl text-center">
-        <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-emerald-300/50 bg-emerald-400/15 px-4 py-1.5 text-[11px] font-bold text-emerald-300">
+export default function VolunteerSection({ banner }: VolunteerSectionProps) {
+  const primaryHref = getBannerHref(banner, APP_ROUTES.ABOUT_US);
+
+  return (
+    <PageHero
+      imageSrc={banner?.mediaUrl || VOL_IMG}
+      imageAlt={banner?.title || "Tinh nguyen vien"}
+      className="px-6 py-16 md:py-20"
+      minHeightClassName="min-h-0"
+      overlayClassName="bg-gradient-to-br from-slate-950/90 to-sky-900/80"
+      containerClassName="max-w-7xl"
+      contentClassName="max-w-none text-center"
+      badge={
+        <div className="inline-flex items-center gap-2 rounded-full border border-emerald-300/50 bg-emerald-400/15 px-4 py-1.5 text-[11px] font-bold text-emerald-300">
           <Users size={13} />
-          180+ TÌNH NGUYỆN VIÊN TẠI HÀ NỘI
+          180+ tinh nguyen vien tai Ha Noi
         </div>
-        <h2 className="mb-4 text-balance text-[28px] font-black text-white md:text-[40px]">
-          Trở thành Tình nguyện viên HPA
+      }
+      title={
+        <h2 className="text-balance text-[28px] font-black text-white md:text-[40px]">
+          {banner?.title || "Tro thanh tinh nguyen vien HPA"}
         </h2>
-        <p className="mx-auto mb-8 max-w-xl text-[15px] leading-relaxed text-white/80">
-          Tham gia cứu hộ, vận chuyển, chăm sóc và tìm mái ấm cho thú cưng. Mỗi
-          giờ của bạn tạo ra sự thay đổi thực sự.
+      }
+      description={
+        <p className="mx-auto max-w-xl text-[15px] leading-relaxed text-white/80">
+          {banner?.subtitle ||
+            "Tham gia cuu ho, van chuyen, cham soc va tim mai am cho thu cung. Moi gio cua ban tao ra su thay doi thuc su."}
         </p>
-        <div className="mb-10 flex flex-wrap justify-center gap-3 text-[13px] text-white">
-          {[
-            "🤝 Cứu hộ khẩn cấp",
-            "🚗 Vận chuyển thú cưng",
-            "📷 Ghi lại hành trình",
-            "💬 Tư vấn nhận nuôi",
-          ].map((item) => (
-            <span
-              key={item}
-              className="rounded-full border border-white/25 bg-white/10 px-4 py-1.5 backdrop-blur-md"
-            >
-              {item}
-            </span>
-          ))}
-        </div>
-        <Link
-          href="/about"
-          className="inline-flex items-center gap-2 rounded-xl bg-linear-to-r from-emerald-400 to-sky-400 px-9 py-4 text-[15px] font-semibold text-white shadow-[0_8px_28px_rgba(45,212,191,0.4)]"
-        >
+      }
+      actions={
+        <PrimaryCta href={primaryHref} variant="mint" size="lg">
           <Users size={20} />
-          Đăng ký TNV ngay
+          {banner ? "Xem chi tiet" : "Dang ky TNV ngay"}
           <ArrowRight size={18} />
-        </Link>
+        </PrimaryCta>
+      }
+    >
+      <div className="mb-10 mt-8 flex flex-wrap justify-center gap-3 text-[13px] text-white">
+        {[
+          "Cuu ho khan cap",
+          "Van chuyen thu cung",
+          "Ghi lai hanh trinh",
+          "Tu van nhan nuoi",
+        ].map((item) => (
+          <span
+            key={item}
+            className="rounded-full border border-white/25 bg-white/10 px-4 py-1.5 backdrop-blur-md"
+          >
+            {item}
+          </span>
+        ))}
       </div>
-    </section>
+    </PageHero>
   );
 }

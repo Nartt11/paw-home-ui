@@ -195,10 +195,7 @@ export function PetCreateNew({
       <DialogContent className="w-full p-0 sm:max-w-4xl">
         <DialogHeader className="px-6 pt-6">
           <DialogTitle>Thêm thú cưng</DialogTitle>
-          <DialogDescription>
-            Nhập thông tin thú cưng. Tối thiểu cần <b>Tên</b>, <b>Loài</b>,{" "}
-            <b>Shelter ID</b> và <b>ít nhất 1 ảnh</b>.
-          </DialogDescription>
+          <DialogDescription>Nhập thông tin thú cưng.</DialogDescription>
         </DialogHeader>
 
         <div className="max-h-[calc(100vh-12rem)] overflow-y-auto px-6 pb-6">
@@ -400,12 +397,12 @@ export function PetCreateNew({
                     onChange={handleImageChange}
                   />
                   <FieldError errors={[errors.imageUrls]} />
-                  {uploadMutation.isPending ? (
+                  {uploadMutation.isPending && (
                     <p className="text-sm text-muted-foreground">
                       Đang tải ảnh lên Cloudinary...
                     </p>
-                  ) : null}
-                  {imageUrls.length > 0 ? (
+                  )}
+                  {imageUrls && imageUrls?.length > 0 ? (
                     <div className="space-y-3">
                       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                         {imageUrls.map((imageUrl, index) => (

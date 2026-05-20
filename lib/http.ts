@@ -133,7 +133,7 @@ class Http {
   }
 
   async get<T>(url: string, params?: object): Promise<T> {
-    const res = await this.instance.get<ApiResponse<T>>(url, { params });
+    const res = await this.instance.get<ApiResponse<T>>(url, params);
     return res.data.data;
   }
 

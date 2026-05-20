@@ -2,7 +2,6 @@
 
 import * as React from "react";
 
-import { NavDocuments } from "@/components/nav-documents";
 import { NavMain } from "@/components/nav-main";
 import { NavSecondary } from "@/components/nav-secondary";
 import { NavUser } from "@/components/nav-user";
@@ -16,29 +15,20 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import {
+  ChartBarIcon,
+  CircleHelpIcon,
+  CommandIcon,
+  FolderIcon,
   LayoutDashboardIcon,
   ListIcon,
-  ChartBarIcon,
-  FolderIcon,
-  UsersIcon,
-  CameraIcon,
-  FileTextIcon,
-  Settings2Icon,
-  CircleHelpIcon,
   SearchIcon,
-  DatabaseIcon,
-  FileChartColumnIcon,
-  FileIcon,
-  CommandIcon,
+  Settings2Icon,
 } from "lucide-react";
+
 import { APP_ROUTES } from "@/constants/routes";
+import { useCurrentUser } from "@/hooks/use-current-user";
 
 const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
   navSystem: [
     {
       title: "Dashboard",
@@ -46,52 +36,50 @@ const data = {
       icon: <LayoutDashboardIcon />,
     },
     {
-      title: "Quản lý thú cưng",
+      title: "Quan ly thu cung",
       url: `${APP_ROUTES.PET_MANAGEMENT}`,
       icon: <ListIcon />,
     },
     {
-      title: "Quản lý trung tâm",
+      title: "Quan ly trung tam",
       url: `${APP_ROUTES.CENTER_MANAGEMENT}`,
       icon: <ChartBarIcon />,
     },
     {
-      title: "Quản lý người dùng",
+      title: "Quan ly nguoi dung",
       url: `${APP_ROUTES.USER_MANAGEMENT}`,
       icon: <FolderIcon />,
     },
     {
-      title: "Quản lý bài đăng",
+      title: "Quan ly bai dang",
       url: `${APP_ROUTES.POST_MANAGEMENT}`,
       icon: <LayoutDashboardIcon />,
     },
   ],
   navContent: [
     {
-      title: "Quản lý bài tin tức",
+      title: "Quan ly bai tin tuc",
       url: `${APP_ROUTES.NEWS_MANAGEMENT}`,
       icon: <LayoutDashboardIcon />,
     },
     {
-      title: "Quản lý banner",
+      title: "Quan ly banner",
       url: `${APP_ROUTES.BANNER_MANAGEMENT}`,
       icon: <LayoutDashboardIcon />,
     },
   ],
-
   navOperation: [
     {
-      title: "Quản lý cứu trợ",
+      title: "Quan ly cuu tro",
       url: `${APP_ROUTES.RESCUE_CASE_MANAGEMENT}`,
       icon: <LayoutDashboardIcon />,
     },
     {
-      title: "Quản lý nhận nuôi",
+      title: "Quan ly nhan nuoi",
       url: `${APP_ROUTES.ADOPTION_MANAGEMENT}`,
       icon: <ListIcon />,
     },
   ],
-
   navSecondary: [
     {
       title: "Settings",
@@ -112,6 +100,17 @@ const data = {
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { data: currentUser } = useCurrentUser();
+
+  const sidebarUser = {
+    name:
+      currentUser?.fullName?.trim() ||
+      currentUser?.username ||
+      "Tai khoan",
+    email: currentUser?.email || "dang tai...",
+    avatar: "",
+  };
+
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
@@ -130,13 +129,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain label="Quản lý hệ thống" items={data.navSystem} />
-        <NavMain label="Hoạt động cứu trợ" items={data.navOperation} />
-        <NavMain label="Quản lý nội dung" items={data.navContent} />
+        <NavMain label="Quan ly he thong" items={data.navSystem} />
+        <NavMain label="Hoat dong cuu tro" items={data.navOperation} />
+        <NavMain label="Quan ly noi dung" items={data.navContent} />
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser user={sidebarUser} />
       </SidebarFooter>
     </Sidebar>
   );

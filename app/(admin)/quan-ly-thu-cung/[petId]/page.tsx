@@ -492,8 +492,9 @@ export default function PetDetailPage() {
                               key={media.mediaId ?? media.url}
                               className="group relative aspect-square overflow-hidden rounded-2xl border border-border bg-muted"
                             >
-                              <img
-                                src={media.url || "/file.svg"}
+                              <Image
+                                src={media.url}
+                                alt={ "media"}
                                 className="h-full w-full object-cover transition-transform group-hover:scale-110"
                               />
                               <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
@@ -607,8 +608,11 @@ export default function PetDetailPage() {
                 </div>
 
                 <div className="relative aspect-video overflow-hidden rounded-2xl border border-border bg-muted">
-                  <img
+                  <Image
                     src="https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&q=80&w=400"
+                    alt="fake"
+                    width={400}
+                    height={225}
                     className="h-full w-full object-cover opacity-50 grayscale"
                   />
                   <div className="absolute inset-0 flex items-center justify-center">

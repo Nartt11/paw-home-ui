@@ -1,4 +1,5 @@
 import { AppSidebar } from "@/components/app-sidebar";
+import RequireAuth from "@/components/auth/RequireAuth";
 import { SiteHeader } from "@/components/site-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 
@@ -16,13 +17,13 @@ export default function AdminLayout({
         } as React.CSSProperties
       }
     >
-      <AppSidebar variant="inset" />
-      <SidebarInset>
-        <SiteHeader />
-        <div className="mx-6 my-3 md:mx-12 md:my-6">
-          {children}
-        </div>
-      </SidebarInset>
+      <RequireAuth allowedRoles={["ADMIN", "STAFF", "OWNER", "VET"]}>
+        <AppSidebar variant="inset" />
+        <SidebarInset>
+          <SiteHeader />
+          <div className="mx-6 my-3 md:mx-12 md:my-6">{children}</div>
+        </SidebarInset>
+      </RequireAuth>
     </SidebarProvider>
   );
 }

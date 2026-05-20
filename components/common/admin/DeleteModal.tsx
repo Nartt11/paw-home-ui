@@ -16,27 +16,13 @@ import {
 export interface DeleteModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-
-  /** Optional title (default: "Xác nhận xoá") */
   title?: string;
-
-  /** Main description content */
   description?: React.ReactNode;
-
-  /** Optional subtle warning line */
   warningText?: React.ReactNode;
-
-  /** Override button labels */
   cancelText?: string;
   confirmText?: string;
-
-  /** Disable confirm (e.g., in-flight) */
   confirmDisabled?: boolean;
-
-  /** Loading state for confirm button */
   confirming?: boolean;
-
-  /** Called when user confirms delete */
   onConfirm: () => void;
 }
 

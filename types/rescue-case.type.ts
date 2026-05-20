@@ -6,6 +6,7 @@ export type RescueCaseStatus =
 export type RescueCasePriority = "LOW" | "NORMAL" | "HIGH" | "CRITICAL";
 export interface RescueCaseSummary {
   caseId: string;
+  caseCode: string;
   species: string;
   priority: RescueCasePriority;
   status: RescueCaseStatus;

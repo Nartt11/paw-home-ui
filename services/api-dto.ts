@@ -6,3 +6,16 @@ export interface PageDto<T> {
   totalPages: number;
   last: boolean;
 }
+
+export interface CursorPageDto<T> {
+  items: T[];
+  nextCursor?: string | null;
+  hasMore: boolean;
+}
+
+export interface ListParams {
+  page?: number;
+  size?: number;
+}
+
+export type ApiEntity = Record<string, unknown>;

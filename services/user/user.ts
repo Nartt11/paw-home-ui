@@ -4,6 +4,7 @@ import type { UserReputation } from "@/types/reputation.type";
 
 import type { UserDto, UserSummaryDto } from "./user-dto";
 import type { PageDto } from "../api-dto";
+import apiEndpoints from "../endpoint";
 
 import { mapUser, mapUserSummary } from "@/mappers/user";
 import { mapPage } from "../organization/organization-dto";
@@ -24,7 +25,7 @@ const userService = {
   async getAllUsers(
     params: UserListConfig,
   ): Promise<PaginatedResponse<UserSummary>> {
-    const dto = await http.get<PageDto<UserSummaryDto>>("/users", {
+    const dto = await http.get<PageDto<UserSummaryDto>>(apiEndpoints.users.root, {
       params,
     });
 
@@ -33,25 +34,25 @@ const userService = {
 
   // GET /api/v1/users/{id} - Get user by ID
   async getUserById(id: string): Promise<User> {
-    const dto = await http.get<UserDto>(`/users/${id}`);
+    const dto = await http.get<UserDto>(apiEndpoints.users.byId(id));
     return mapUser(dto);
   },
 
   // GET /api/v1/users/{id}/reputation - Get user reputation
-  // async getUserReputation(id: string): Promise<UserReputation> {
-  //   return http.get<UserReputation>(`/users/${id}/reputation`);
-  // },
+  async getUserReputation(id: string): Promise<UserReputation> {
+    return http.get<UserReputation>(apiEndpoints.users.reputation(id));
+  },
 
   // GET /api/v1/users/me - Get current user info
   async getCurrentUser(): Promise<User> {
-    const dto = await http.get<UserDto>("/users/me");
+    const dto = await http.get<UserDto>(apiEndpoints.users.me);
     return mapUser(dto);
   },
 
   // PATCH /api/v1/users/me/profile - Update current user profile
   async updateMyProfile(payload: UpdateMyProfilePayload): Promise<User> {
     const dto = await http.patch<UserDto, UpdateMyProfilePayload>(
-      "/users/me/profile",
+      apiEndpoints.users.profile,
       payload,
     );
 

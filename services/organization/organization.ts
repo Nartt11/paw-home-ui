@@ -1,5 +1,6 @@
 import http from "@/lib/http";
 import { mapOrganization, mapOrganizationSummary } from "@/mappers/organition";
+import apiEndpoints from "@/services/endpoint";
 import type {
   Organization,
   OrganizationMember,
@@ -26,7 +27,7 @@ const organizationService = {
     params: OrganizationListConfig,
   ): Promise<OrganizationPageModel> {
     const dto = await http.get<PageDto<OrganizationSummaryDto>>(
-      "/organizations",
+      apiEndpoints.organizations.root,
       {
         params,
       },
@@ -37,29 +38,29 @@ const organizationService = {
 
   // GET /api/v1/organizations/{id} - Get organization by ID
   async getOrganizationById(id: string): Promise<Organization> {
-    const dto = await http.get<OrganizationDto>(`/organizations/${id}`);
+    const dto = await http.get<OrganizationDto>(apiEndpoints.organizations.byId(id));
     return mapOrganization(dto);
   },
 
   // GET /api/v1/organizations/{id}/members - List members of an organization (paginated)
-  // async getOrganizationMembers(
-  //   id: string,
-  //   params: OrganizationListConfig,
-  // ): Promise<PageDto<OrganizationMember>> {
-  //   const dto = await http.get<PageDto<OrganizationMemberDto>>(
-  //     `/organizations/${id}/members`,
-  //     { params },
-  //   );
+  async getOrganizationMembers(
+    id: string,
+    params: OrganizationListConfig,
+  ): Promise<PageDto<OrganizationMember>> {
+    const dto = await http.get<PageDto<OrganizationMemberDto>>(
+      apiEndpoints.organizations.members(id),
+      { params },
+    );
 
-  //   return mapPage(dto, mapOrganization);
-  // },
+    return mapPage(dto, mapOrganizationMember);
+  },
 
   // GET /api/v1/organizations/pending - List pending organizations (ADMIN only)
   async getPendingOrganizations(
     params: OrganizationListConfig,
   ): Promise<PageDto<OrganizationSummary>> {
     const dto = await http.get<PageDto<OrganizationSummaryDto>>(
-      "/organizations/pending",
+      apiEndpoints.organizations.pending,
       {
         params,
       },
@@ -73,7 +74,7 @@ const organizationService = {
     params: OrganizationListConfig,
   ): Promise<PageDto<OrganizationSummary>> {
     const dto = await http.get<PageDto<OrganizationSummaryDto>>(
-      "/organizations/inactive",
+      apiEndpoints.organizations.inactive,
       {
         params,
       },
@@ -87,7 +88,7 @@ const organizationService = {
     params: OrganizationListConfig,
   ): Promise<PageDto<OrganizationSummary>> {
     const dto = await http.get<PageDto<OrganizationSummaryDto>>(
-      "/organizations/active",
+      apiEndpoints.organizations.active,
       {
         params,
       },
@@ -101,7 +102,7 @@ const organizationService = {
     payload: CreateOrganizationPayload,
   ): Promise<Organization> {
     const dto = await http.post<OrganizationDto, CreateOrganizationPayload>(
-      "/organizations",
+      apiEndpoints.organizations.root,
       payload,
     );
 
@@ -114,7 +115,7 @@ const organizationService = {
     payload: UpdateOrganizationPayload,
   ): Promise<Organization> {
     const dto = await http.put<OrganizationDto, UpdateOrganizationPayload>(
-      `/organizations/${id}`,
+      apiEndpoints.organizations.byId(id),
       payload,
     );
 
@@ -129,7 +130,7 @@ const organizationService = {
     const dto = await http.patch<
       OrganizationDto,
       OrganizationStatusUpdatePayload
-    >(`/organizations/${id}/status`, payload);
+    >(apiEndpoints.organizations.status(id), payload);
 
     return mapOrganization(dto);
   },
@@ -140,7 +141,7 @@ const organizationService = {
     payload: AddMemberPayload,
   ): Promise<OrganizationMember> {
     const dto = await http.post<OrganizationMemberDto, AddMemberPayload>(
-      `/organizations/${id}/members`,
+      apiEndpoints.organizations.members(id),
       payload,
     );
 
@@ -150,15 +151,37 @@ const organizationService = {
   // DELETE /api/v1/organizations/{id}/members/{userId} - Remove a member from an organization
   async removeMember(id: string, userId: string): Promise<null> {
     const res = await http.delete<null>(
-      `/organizations/${id}/members/${userId}`,
+      apiEndpoints.organizations.memberByUser(id, userId),
     );
     return res;
   },
 
   // DELETE /api/v1/organizations/{id} - Deactivate an organization (soft delete)
   async deactivateOrganization(id: string): Promise<null> {
-    const res = await http.delete<null>(`/organizations/${id}`);
+    const res = await http.delete<null>(apiEndpoints.organizations.byId(id));
     return res;
+  },
+
+  // GET /api/v1/organizations/map/bounding-box - Find organizations within bounding box
+  async getOrganizationsInBoundingBox(
+    params: Record<string, string | number | undefined>,
+  ): Promise<PageDto<OrganizationSummary>> {
+    const dto = await http.get<PageDto<OrganizationSummaryDto>>(
+      apiEndpoints.organizations.map.boundingBox,
+      { params },
+    );
+
+    return mapPage(dto, mapOrganizationSummary);
+  },
+
+  // GET /api/v1/organizations/map/markers - Get organization markers in bounding box
+  async getOrganizationMapMarkers(
+    params: Record<string, string | number | undefined>,
+  ): Promise<Record<string, unknown>[]> {
+    return http.get<Record<string, unknown>[]>(
+      apiEndpoints.organizations.map.markers,
+      { params },
+    );
   },
 };
 

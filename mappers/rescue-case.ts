@@ -4,6 +4,7 @@ import { RescueCase, RescueCaseSummary } from "@/types/rescue-case.type"
 export function mapRescueCaseSummary (dto: RescueCaseSummaryDto): RescueCaseSummary {
   return {
     caseId: dto.caseId,
+    caseCode: dto.caseCode,
     species: dto.species,
     priority: dto.priority,
     status: dto.status,
