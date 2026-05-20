@@ -5,6 +5,8 @@ import { PrimaryCta } from "@/components/marketing/PrimaryCta";
 import { SectionShell } from "@/components/marketing/SectionShell";
 import { APP_ROUTES } from "@/constants/routes";
 import type { HowItWorksStep } from "@/types/public-page.type";
+import Link from "next/link";
+import { Button } from "../ui/button";
 
 interface HowItWorksSectionProps {
   steps: HowItWorksStep[];
@@ -18,24 +20,27 @@ export default function HowItWorksSection({ steps }: HowItWorksSectionProps) {
       eyebrow={
         <div className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-[11px] font-bold text-emerald-500">
           <CheckCircle2 size={13} />
-          QUY TRINH DON GIAN
+          QUY TRÌNH ĐƠN GIẢN
         </div>
       }
       title={
         <h2 className="text-balance text-[26px] font-black text-slate-900 md:text-[34px]">
-          Nhan nuoi thu cung chi 4 buoc
+          Nhận nuôi thú cưng chỉ trong 4 bước đơn giản
         </h2>
       }
       description={
         <p className="mx-auto max-w-xl text-[15px] text-slate-600">
-          Quy trinh minh bach, duoc HPA huong dan tan tinh tu dau den cuoi.
+          Từ việc duyệt qua hồ sơ thú cưng đến việc mang về nhà, chúng tôi đã
+          đơn giản hóa quy trình nhận nuôi để bạn có thể nhanh chóng tìm thấy
+          người bạn đồng hành hoàn hảo.
         </p>
       }
       actions={
-        <PrimaryCta href={APP_ROUTES.ADOPTION} variant="ocean" size="lg">
-          Bat dau tim thu cung
-          <ArrowRight size={18} />
-        </PrimaryCta>
+        <Link href={APP_ROUTES.ADOPTION}>
+          <Button>
+            Tìm kiếm 1 bạn đồng hành ngay <ArrowRight size={18} />
+          </Button>
+        </Link>
       }
     >
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
@@ -61,7 +66,7 @@ export default function HowItWorksSection({ steps }: HowItWorksSectionProps) {
               className="mb-2 text-[10px] font-bold tracking-[0.2em]"
               style={{ color: step.color }}
             >
-              BUOC {step.step}
+              BƯỚC {step.step}
             </div>
             <h3 className="mb-2 text-[18px] font-extrabold text-slate-900">
               {step.title}

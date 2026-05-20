@@ -49,7 +49,7 @@
       "step": "02",
       "icon": "📋",
       "title": "Đăng ký",
-      "desc": "Điền form đăng ký nhận nuôi online. HPA xét duyệt trong 1-3 ngày làm việc.",
+      "desc": "Điền form đăng ký nhận nuôi online. Chúng tôi sẽ xét duyệt trong 1-3 ngày làm việc.",
       "color": "#FF9132"
     },
     {
@@ -63,7 +63,7 @@
       "step": "04",
       "icon": "🏠",
       "title": "Về nhà",
-      "desc": "Ký hợp đồng nhận nuôi có trách nhiệm. HPA theo dõi định kỳ 3-6 tháng đầu.",
+      "desc": "Ký hợp đồng nhận nuôi có trách nhiệm. Chúng theo dõi định kỳ 3-6 tháng đầu.",
       "color": "#FF584F"
     }
   ],

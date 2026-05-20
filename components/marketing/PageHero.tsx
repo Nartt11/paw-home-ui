@@ -60,7 +60,7 @@ export function PageHero({
           <div className="mt-4">{title}</div>
           {description ? <div className="mt-4">{description}</div> : null}
           {children}
-          {actions ? <div className="mt-8 flex flex-wrap gap-3">{actions}</div> : null}
+          {actions ? <div className="mt-8 flex items-center justify-center flex-wrap gap-3">{actions}</div> : null}
         </div>
       </div>
     </section>

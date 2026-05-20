@@ -41,7 +41,7 @@ function StatItem({ config, started }: StatItemProps) {
     <MetricCard
       value={`${count.toLocaleString()}${config.suffix ?? ""}`}
       label={config.label}
-      valueClassName="text-[clamp(32px,5vw,52px)]"
+      valueClassName="text-white text-[28px] font-black md:text-[34px]"
       labelClassName="text-white/70"
       style={{ color: config.color }}
     />
@@ -70,10 +70,10 @@ export default function StatsSection({ stats }: StatsSectionProps) {
   }, []);
 
   return (
-    <section className="bg-linear-to-r from-[#03354F] to-[#064a70] px-6 py-12">
+    <section className="bg-primary px-6 py-4">
       <div
         ref={ref}
-        className="mx-auto grid max-w-7xl grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
+        className="mx-auto grid max-w-7xl grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5"
       >
         {stats.map((item) => (
           <StatItem key={item.label} config={item} started={visible} />
