@@ -38,7 +38,7 @@ export default function HeroSection({
       badge={
         <div className="inline-flex items-center gap-2 rounded-full border border-orange-400/50 bg-orange-400/15 px-4 py-1.5 text-[12px] font-semibold text-orange-300">
           <span className="inline-flex h-2 w-2 animate-pulse rounded-full bg-orange-400" />
-          {hero.emergencyCases} ca cuu ho khan cap dang can ho tro hom nay
+          {hero.emergencyCases} ca cứu hộ khẩn cấp đang cần hỗ trợ hôm nay
         </div>
       }
       title={
@@ -99,7 +99,7 @@ export default function HeroSection({
           variant="ocean"
           className="rounded-none px-5 py-3.5 shadow-none"
         >
-          Tim kiem
+          Tìm kiếm
           <ArrowRight size={16} />
         </PrimaryCta>
       </div>

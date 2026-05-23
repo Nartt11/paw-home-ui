@@ -29,12 +29,17 @@ export default function RequireGuest({
     if (currentUserQuery.isError) {
       tokenStorage.clear();
     }
-  }, [currentUserQuery.isError, currentUserQuery.isSuccess, redirectPath, router]);
+  }, [
+    currentUserQuery.isError,
+    currentUserQuery.isSuccess,
+    redirectPath,
+    router,
+  ]);
 
   if (hasToken && currentUserQuery.isPending) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center text-sm text-muted-foreground">
-        Dang kiem tra phien dang nhap...
+        Đang kiểm tra phiên đăng nhập...
       </div>
     );
   }

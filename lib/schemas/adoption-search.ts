@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const adoptionSearchSchema = z.object({
-  searchName: z.string().trim().max(100, "Tu khoa tim kiem qua dai"),
+  searchName: z.string().trim().max(100, "Từ khóa tìm kiếm quá dài"),
   gender: z.enum(["ALL", "MALE", "FEMALE", "UNKNOWN"]),
 });
 

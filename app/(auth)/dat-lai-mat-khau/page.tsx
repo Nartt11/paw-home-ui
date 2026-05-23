@@ -24,7 +24,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { getAuthErrorMessage, useResetPassword } from "@/hooks/use-auth";
-import { resetPasswordSchema, type ResetPasswordSchema } from "@/lib/schemas/auth";
+import {
+  resetPasswordSchema,
+  type ResetPasswordSchema,
+} from "@/lib/schemas/auth";
 import { APP_ROUTES } from "@/constants/routes";
 
 export default function ResetPasswordPage() {
@@ -55,7 +58,7 @@ export default function ResetPasswordPage() {
     if (!token) {
       setError("root", {
         type: "server",
-        message: "Lien ket dat lai mat khau khong hop le hoac da het han.",
+        message: "Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn.",
       });
       return;
     }
@@ -69,7 +72,7 @@ export default function ResetPasswordPage() {
     } catch (error) {
       setError("root", {
         type: "server",
-        message: getAuthErrorMessage(error, "Dat lai mat khau that bai."),
+        message: getAuthErrorMessage(error, "Đặt lại mật khẩu thất bại."),
       });
     }
   });
@@ -77,32 +80,32 @@ export default function ResetPasswordPage() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Dat lai mat khau</CardTitle>
+        <CardTitle>Đặt lại mật khẩu</CardTitle>
         <CardDescription>
-          Nhap mat khau moi cho tai khoan cua ban.
+          Nhập mật khẩu mới cho tài khoản của bạn.
         </CardDescription>
       </CardHeader>
       <CardContent>
         {!token ? (
           <div className="space-y-4">
-            <FieldError>Lien ket dat lai mat khau khong hop le.</FieldError>
+            <FieldError>Liên kết đặt lại mật khẩu không hợp lệ.</FieldError>
             <Button asChild className="w-full">
-              <Link href="/quen-mat-khau">Yeu cau lien ket moi</Link>
+              <Link href="/quen-mat-khau">Yêu cầu liên kết mới</Link>
             </Button>
             <Button asChild variant="outline" className="w-full">
-              <Link href={APP_ROUTES.HOME}>Ve trang chu</Link>
+              <Link href={APP_ROUTES.HOME}>Về trang chủ</Link>
             </Button>
           </div>
         ) : isReset ? (
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Mat khau da duoc cap nhat. Ban co the dang nhap lai ngay bay gio.
+              Mật khẩu đã được cập nhật. Bạn có thể đăng nhập lại ngay bây giờ.
             </p>
             <Button asChild className="w-full">
-              <Link href="/dang-nhap">Dang nhap</Link>
+              <Link href="/dang-nhap">Đăng nhập</Link>
             </Button>
             <Button asChild variant="outline" className="w-full">
-              <Link href={APP_ROUTES.HOME}>Ve trang chu</Link>
+              <Link href={APP_ROUTES.HOME}>Về trang chủ</Link>
             </Button>
           </div>
         ) : (
@@ -114,7 +117,7 @@ export default function ResetPasswordPage() {
             <form onSubmit={onSubmit}>
               <FieldGroup>
                 <Field>
-                  <FieldLabel htmlFor="new_password">Mat khau moi</FieldLabel>
+                  <FieldLabel htmlFor="new_password">Mật khẩu mới</FieldLabel>
                   <div className="relative">
                     <Input
                       id="new_password"
@@ -140,7 +143,9 @@ export default function ResetPasswordPage() {
                 </Field>
 
                 <Field>
-                  <FieldLabel htmlFor="confirmPassword">Xac nhan mat khau</FieldLabel>
+                  <FieldLabel htmlFor="confirmPassword">
+                    Xác nhận mật khẩu
+                  </FieldLabel>
                   <div className="relative">
                     <Input
                       id="confirmPassword"
@@ -171,13 +176,15 @@ export default function ResetPasswordPage() {
                     className="w-full"
                     disabled={resetPasswordMutation.isPending}
                   >
-                    {resetPasswordMutation.isPending ? "Dang cap nhat..." : "Cap nhat mat khau"}
+                    {resetPasswordMutation.isPending
+                      ? "Đang cập nhật..."
+                      : "Cập nhật mật khẩu"}
                   </Button>
                   <Button asChild variant="outline" className="w-full">
-                    <Link href={APP_ROUTES.HOME}>Ve trang chu</Link>
+                    <Link href={APP_ROUTES.HOME}>Về trang chủ</Link>
                   </Button>
                   <FieldDescription className="text-center">
-                    Quay lai <Link href="/dang-nhap">dang nhap</Link>
+                    Quay lại <Link href="/dang-nhap">đăng nhập</Link>
                   </FieldDescription>
                 </Field>
               </FieldGroup>

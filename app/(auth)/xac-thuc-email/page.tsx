@@ -59,7 +59,10 @@ export default function VerifyEmailPage() {
     } catch (error) {
       setError("root", {
         type: "server",
-        message: getAuthErrorMessage(error, "Khong gui lai duoc email xac thuc."),
+        message: getAuthErrorMessage(
+          error,
+          "Không gửi lại được email xác thực.",
+        ),
       });
     }
   });
@@ -67,9 +70,9 @@ export default function VerifyEmailPage() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Xac thuc email</CardTitle>
+        <CardTitle>Xác thực email</CardTitle>
         <CardDescription>
-          Xac thuc tai khoan bang lien ket trong email hoac gui lai email moi.
+          Xác thực tài khoản bằng liên kết trong email hoặc gửi lại email mới.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -77,18 +80,18 @@ export default function VerifyEmailPage() {
           <div className="space-y-3 rounded-lg border p-4">
             {verifyEmailQuery.isPending ? (
               <p className="text-sm text-muted-foreground">
-                Dang xac thuc email...
+                Đang xác thực email...
               </p>
             ) : verifyEmailQuery.isSuccess ? (
               <>
                 <p className="text-sm text-muted-foreground">
-                  Email da duoc xac thuc thanh cong. Ban co the dang nhap ngay.
+                  Email đã được xác thực thành công. Bạn có thể đăng nhập ngay.
                 </p>
                 <Button asChild className="w-full">
-                  <Link href="/dang-nhap">Dang nhap</Link>
+                  <Link href="/dang-nhap">Đăng nhập</Link>
                 </Button>
                 <Button asChild variant="outline" className="w-full">
-                  <Link href={APP_ROUTES.HOME}>Ve trang chu</Link>
+                  <Link href={APP_ROUTES.HOME}>Về trang chủ</Link>
                 </Button>
               </>
             ) : (
@@ -96,18 +99,20 @@ export default function VerifyEmailPage() {
                 <FieldError>
                   {getAuthErrorMessage(
                     verifyEmailQuery.error,
-                    "Xac thuc email that bai hoac lien ket da het han.",
+                    "Xác thực email thất bại hoặc liên kết đã hết hạn.",
                   )}
                 </FieldError>
                 <p className="text-sm text-muted-foreground">
-                  Ban co the nhap email ben duoi de yeu cau gui lai lien ket moi.
+                  Bạn có thể nhập email bên dưới để yêu cầu gửi lại liên kết
+                  mới.
                 </p>
               </>
             )}
           </div>
         ) : (
           <p className="text-sm text-muted-foreground">
-            Chua co token xac thuc. Neu ban can gui lai email, hay dien form ben duoi.
+            Chưa có token xác thực. Nếu bạn cần gửi lại email, hãy điền form bên
+            dưới.
           </p>
         )}
 
@@ -120,7 +125,9 @@ export default function VerifyEmailPage() {
             <Field>
               <FieldLabel htmlFor="email">Email</FieldLabel>
               <Input id="email" type="email" {...register("email")} />
-              {errors.email ? <FieldError>{errors.email.message}</FieldError> : null}
+              {errors.email ? (
+                <FieldError>{errors.email.message}</FieldError>
+              ) : null}
             </Field>
 
             <Field>
@@ -130,18 +137,20 @@ export default function VerifyEmailPage() {
                 variant="outline"
                 disabled={resendVerificationMutation.isPending}
               >
-                {resendVerificationMutation.isPending ? "Dang gui lai..." : "Gui lai email xac thuc"}
+                {resendVerificationMutation.isPending
+                  ? "Đang gửi lại..."
+                  : "Gửi lại email xác thực"}
               </Button>
               <Button asChild variant="outline" className="w-full">
-                <Link href={APP_ROUTES.HOME}>Ve trang chu</Link>
+                <Link href={APP_ROUTES.HOME}>Về trang chủ</Link>
               </Button>
               {resendVerificationMutation.isSuccess ? (
                 <FieldDescription className="text-center">
-                  Neu email hop le, he thong da gui lai huong dan xac thuc.
+                  Nếu email hợp lệ, hệ thống đã gửi lại hướng dẫn xác thực.
                 </FieldDescription>
               ) : null}
               <FieldDescription className="text-center">
-                Quay lai <Link href="/dang-nhap">dang nhap</Link>
+                Quay lại <Link href="/dang-nhap">đăng nhập</Link>
               </FieldDescription>
             </Field>
           </FieldGroup>

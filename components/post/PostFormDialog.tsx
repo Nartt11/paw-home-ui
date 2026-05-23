@@ -91,10 +91,10 @@ export function PostFormDialog({
       <DialogContent className="w-full p-0 sm:max-w-3xl">
         <DialogHeader className="px-6 pt-6">
           <DialogTitle>
-            {isCreate ? "Them bai dang" : "Cap nhat bai dang"}
+            {isCreate ? "Thêm bài đăng" : "Cập nhật bài đăng"}
           </DialogTitle>
           <DialogDescription>
-            Nhap dung payload post gom noi dung, rescue case, media IDs va tag
+            Nhập đúng payload post gồm nội dung, rescue case, media IDs và tag
             codes.
           </DialogDescription>
         </DialogHeader>
@@ -104,7 +104,7 @@ export function PostFormDialog({
 
           {loading && !post ? (
             <div className="rounded-lg border border-dashed border-border px-4 py-10 text-center text-sm text-muted-foreground">
-              Dang tai du lieu bai dang...
+              Đang tải dữ liệu bài đăng...
             </div>
           ) : (
             <form
@@ -113,11 +113,11 @@ export function PostFormDialog({
             >
               <FieldGroup className="grid gap-5 md:grid-cols-2">
                 <Field className="md:col-span-2">
-                  <FieldLabel htmlFor="post-content">Noi dung</FieldLabel>
+                  <FieldLabel htmlFor="post-content">Nội dung</FieldLabel>
                   <FieldContent>
                     <Textarea
                       id="post-content"
-                      placeholder="Nhap noi dung bai dang..."
+                      placeholder="Nhập nội dung bài đăng..."
                       disabled={isBusy}
                       aria-invalid={Boolean(errors.content)}
                       {...register("content")}
@@ -183,11 +183,11 @@ export function PostFormDialog({
                 <Button type="submit" disabled={isBusy}>
                   {submitting
                     ? isCreate
-                      ? "Dang tao..."
-                      : "Dang cap nhat..."
+                      ? "Đang tạo..."
+                      : "Đang cập nhật..."
                     : isCreate
-                      ? "Tao bai dang"
-                      : "Luu thay doi"}
+                      ? "Tạo bài đăng"
+                      : "Lưu thay đổi"}
                 </Button>
               </DialogFooter>
             </form>

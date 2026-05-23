@@ -58,7 +58,7 @@ export default function RequireAuth({
   if (!hasToken || currentUserQuery.isPending) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center text-sm text-muted-foreground">
-        Dang kiem tra phien dang nhap...
+        Đang kiểm tra phiên đăng nhập...
       </div>
     );
   }
@@ -70,7 +70,7 @@ export default function RequireAuth({
   if (!hasRequiredRole) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center text-sm text-muted-foreground">
-        Ban khong co quyen truy cap khu vuc nay.
+        Bạn không có quyền truy cập khu vực này.
       </div>
     );
   }

@@ -103,11 +103,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { data: currentUser } = useCurrentUser();
 
   const sidebarUser = {
-    name:
-      currentUser?.fullName?.trim() ||
-      currentUser?.username ||
-      "Tai khoan",
-    email: currentUser?.email || "dang tai...",
+    name: currentUser?.fullName?.trim() || currentUser?.username || "Tài khoản",
+    email: currentUser?.email || "đang tải...",
     avatar: "",
   };
 
@@ -129,9 +126,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain label="Quan ly he thong" items={data.navSystem} />
-        <NavMain label="Hoat dong cuu tro" items={data.navOperation} />
-        <NavMain label="Quan ly noi dung" items={data.navContent} />
+        <NavMain label="Quản lý hệ thống" items={data.navSystem} />
+        <NavMain label="Hoạt động cứu trợ" items={data.navOperation} />
+        <NavMain label="Quản lý nội dung" items={data.navContent} />
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>

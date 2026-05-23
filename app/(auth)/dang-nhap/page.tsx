@@ -57,13 +57,13 @@ export default function LoginForm() {
     try {
       const auth = await loginMutation.mutateAsync(data);
       console.log("Login successful:", getPostLoginRedirectPath(auth));
-      
+
       router.replace(getPostLoginRedirectPath(auth));
-      debugger
+      debugger;
     } catch (error) {
       setError("root", {
         type: "server",
-        message: getAuthErrorMessage(error, "Login failed."),
+        message: getAuthErrorMessage(error, "Đăng nhập thất bại."),
       });
     }
   });
@@ -71,9 +71,9 @@ export default function LoginForm() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Dang nhap</CardTitle>
+        <CardTitle>Đăng nhập</CardTitle>
         <CardDescription>
-          Su dung email hoac ten dang nhap de vao he thong.
+          Sử dụng email hoặc tên đăng nhập để vào hệ thống.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -84,7 +84,9 @@ export default function LoginForm() {
         <form onSubmit={onSubmit}>
           <FieldGroup>
             <Field>
-              <FieldLabel htmlFor="emailOrUsername">Email hoac username</FieldLabel>
+              <FieldLabel htmlFor="emailOrUsername">
+                Email hoặc username
+              </FieldLabel>
               <Input
                 id="emailOrUsername"
                 type="text"
@@ -98,12 +100,12 @@ export default function LoginForm() {
 
             <Field>
               <div className="flex items-center">
-                <FieldLabel htmlFor="password">Mat khau</FieldLabel>
+                <FieldLabel htmlFor="password">Mật khẩu</FieldLabel>
                 <Link
                   href="/quen-mat-khau"
                   className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
                 >
-                  Quen mat khau?
+                  Quên mật khẩu?
                 </Link>
               </div>
 
@@ -134,17 +136,22 @@ export default function LoginForm() {
             </Field>
 
             <Field>
-              <Button type="submit" className="w-full" disabled={loginMutation.isPending}>
-                {loginMutation.isPending ? "Dang dang nhap..." : "Dang nhap"}
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={loginMutation.isPending}
+              >
+                {loginMutation.isPending ? "Đang đăng nhập..." : "Đăng nhập"}
               </Button>
               <Button asChild variant="outline" className="w-full">
-                <Link href={APP_ROUTES.HOME}>Ve trang chu</Link>
+                <Link href={APP_ROUTES.HOME}>Về trang chủ</Link>
               </Button>
               <FieldDescription className="text-center">
-                Chua co tai khoan? <Link href="/dang-ki">Dang ky</Link>
+                Chưa có tài khoản? <Link href="/dang-ki">Đăng ký</Link>
               </FieldDescription>
               <FieldDescription className="text-center">
-                Can xac thuc email? <Link href="/xac-thuc-email">Xac thuc tai day</Link>
+                Cần xác thực email?{" "}
+                <Link href="/xac-thuc-email">Xác thực tại đây</Link>
               </FieldDescription>
             </Field>
           </FieldGroup>

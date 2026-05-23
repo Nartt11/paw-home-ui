@@ -2,7 +2,16 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter } from                     <button
+                    type="button"
+                    onClick={() => {
+                      void handleLogout();
+                    }}
+                    disabled={logoutMutation.isPending}
+                    className="flex items-center justify-center w-full px-4 py-2 rounded-lg text-white text-sm font-semibold bg-white/10 disabled:opacity-60"
+                  >
+                    {logoutMutation.isPending ? "Đang đăng xuất..." : "Đăng xuất"}
+                  </button>gation";
 import { Menu, X } from "lucide-react";
 
 import { APP_ROUTES } from "@/constants/routes";
@@ -92,7 +101,7 @@ export default function Header() {
                   disabled={logoutMutation.isPending}
                   className="rounded-full border-2 border-white px-4 py-2 text-xs font-semibold text-white transition hover:shadow-lg disabled:opacity-60"
                 >
-                  {logoutMutation.isPending ? "Dang xuat..." : "Dang xuat"}
+                  {logoutMutation.isPending ? "Đang đăng xuất..." : "Đăng xuất"}
                 </button>
               </div>
             ) : (
@@ -139,7 +148,7 @@ export default function Header() {
                     disabled={logoutMutation.isPending}
                     className="flex items-center justify-center w-full px-4 py-2 rounded-lg text-white text-sm font-semibold bg-white/10 disabled:opacity-60"
                   >
-                    {logoutMutation.isPending ? "Dang xuat..." : "Dang xuat"}
+                    {logoutMutation.isPending ? "Đang đăng xuất..." : "Đăng xuất"}
                   </button>
                 </>
               ) : (

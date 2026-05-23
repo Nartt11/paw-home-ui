@@ -316,7 +316,7 @@ export default function AboutUsPage() {
   const [activeTab, setActiveTab] = React.useState<AboutUsTabKey>("story");
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen">
       <HeroSection />
       <StatsStrip />
 

@@ -30,7 +30,7 @@ export default function LandingPage() {
   );
 
   return (
-    <div className="bg-background text-foreground">
+    <div >
       <HeroSection
         hero={DATA.hero}
         searchQuery={searchQuery}

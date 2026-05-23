@@ -18,11 +18,11 @@ const IMAGE_FALLBACK =
 function getGenderLabel(gender: Pet["gender"] | PetSummary["gender"]) {
   switch (gender) {
     case "MALE":
-      return "Duc";
+      return "Đực";
     case "FEMALE":
-      return "Cai";
+      return "Cái";
     default:
-      return "Chua ro";
+      return "Chưa rõ";
   }
 }
 
@@ -30,12 +30,12 @@ function getStatusLabel(status: Pet["status"] | PetSummary["status"]) {
   switch (status) {
     case "UNOWNED":
       return {
-        text: "San sang nhan nuoi",
+        text: "Sẵn sàng nhận nuôi",
         className: "bg-emerald-50 text-emerald-600",
       };
     case "PENDING":
       return {
-        text: "Dang cho duyet",
+        text: "Đang chờ duyệt",
         className: "bg-amber-50 text-amber-600",
       };
     default:
@@ -56,10 +56,10 @@ export default function PetCard({
 }: PetCardProps) {
   const imageSrc = isPetDetail(pet) ? pet.imageUrls[0] : pet.imageUrl;
   const location = isPetDetail(pet)
-    ? pet.rescueLocation || pet.province || "Khong xac dinh"
-    : pet.province || "Khong xac dinh";
-  const speciesLabel = pet.species || "Thu cung";
-  const ageLabel = pet.ageDisplay || `${pet.age} thang`;
+    ? pet.rescueLocation || pet.province || "Không xác định"
+    : pet.province || "Không xác định";
+  const speciesLabel = pet.species || "Thú cưng";
+  const ageLabel = pet.ageDisplay || `${pet.age} tháng`;
   const status = getStatusLabel(pet.status);
 
   return (
@@ -94,7 +94,9 @@ export default function PetCard({
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/70">
                 {speciesLabel}
               </p>
-              <h3 className="mt-1 text-2xl font-black text-white">{pet.name}</h3>
+              <h3 className="mt-1 text-2xl font-black text-white">
+                {pet.name}
+              </h3>
             </div>
             <span
               className={`rounded-full px-3 py-1 text-[10px] font-bold ${status.className}`}
@@ -110,7 +112,7 @@ export default function PetCard({
             <span className="text-slate-300">•</span>
             <span>{ageLabel}</span>
             <span className="text-slate-300">•</span>
-            <span>{pet.breed || "Dang cap nhat"}</span>
+            <span>{pet.breed || "Đang cập nhật"}</span>
           </div>
 
           <div className="flex items-center gap-2 text-sm text-slate-500">
@@ -139,12 +141,13 @@ export default function PetCard({
 
           {isPetDetail(pet) ? (
             <p className="line-clamp-3 text-sm leading-6 text-slate-600">
-              {pet.description || "Be dang tim mot mai am an toan va yeu thuong."}
+              {pet.description ||
+                "Bé đang tìm một mái ấm an toàn và yêu thương."}
             </p>
           ) : (
             <p className="line-clamp-3 text-sm leading-6 text-slate-600">
-              Be dang san sang cho mot gia dinh moi. Hay mo card chi tiet khi luong
-              nhan nuoi duoc hoan thien.
+              Bé đang sẵn sàng cho một gia đình mới. Hãy mở card chi tiết khi
+              lựa nhận nuôi được hoàn thiện.
             </p>
           )}
         </div>

@@ -15,7 +15,6 @@ interface HowItWorksSectionProps {
 export default function HowItWorksSection({ steps }: HowItWorksSectionProps) {
   return (
     <SectionShell
-      className="bg-white"
       align="center"
       eyebrow={
         <div className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-[11px] font-bold text-emerald-500">
