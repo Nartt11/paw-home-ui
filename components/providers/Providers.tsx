@@ -22,7 +22,7 @@ export function Providers({ children }: ProvidersProps) {
       <TooltipProvider>
         {children}
 
-        <ReactQueryDevtools initialIsOpen={false} buttonPosition="top-right" />
+        <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-right" />
       </TooltipProvider>
     </QueryClientProvider>
   );
