@@ -14,3 +14,12 @@ export interface Banner {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface BannerListParams {
+  targetPage?: string;
+  page?: number;
+  size?: number;
+  status?: boolean;
+}
+
+export type BannerPayload = Omit<Banner, "bannerId" | "createdAt" | "updatedAt">;

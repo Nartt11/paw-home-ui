@@ -6,3 +6,8 @@ export interface PaginatedResponse<T> {
   totalPages: number;
   last: boolean;
 }
+
+export interface ListParams{
+  page?: number;
+  size?: number;
+}

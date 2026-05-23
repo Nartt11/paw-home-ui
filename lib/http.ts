@@ -4,6 +4,7 @@ import axios, {
   AxiosInstance,
   InternalAxiosRequestConfig,
   AxiosResponse,
+  AxiosRequestConfig,
 } from "axios";
 
 export interface ApiResponse<T> {
@@ -137,8 +138,13 @@ class Http {
     return res.data.data;
   }
 
-  async post<T, Body = unknown>(url: string, body?: Body): Promise<T> {
-    const res = await this.instance.post<ApiResponse<T>>(url, body);
+  async post<T, Body = unknown>(
+    url: string,
+    body?: Body,
+    config?: AxiosRequestConfig,
+  ): Promise<T> {
+    const res = await this.instance.post<ApiResponse<T>>(url, body, config);
+
     return res.data.data;
   }
 

@@ -2,7 +2,7 @@
 
 import * as React from "react";
 
-import type { Organization } from "@/types/organization.type,.ts";
+import type { Organization } from "@/types/organization.type";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";

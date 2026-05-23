@@ -1,4 +1,4 @@
-import { Organization, OrganizationMember } from "@/types/organization.type,";
+import { Organization, OrganizationMember } from "@/types/organization.type";
 
 export interface OrganizationListConfig {
   status?: string; // pending, active, inactive

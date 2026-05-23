@@ -1,4 +1,4 @@
-import { Organization } from "@/types/organization.type,";
+import { Organization } from "@/types/organization.type";
 import {
   Pet,
   PetGender,

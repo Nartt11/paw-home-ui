@@ -35,7 +35,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { OrganizationSummary } from "@/types/organization.type,";
+import { OrganizationSummary } from "@/types/organization.type";
 
 export interface OrganizationListTableProps {
   data: OrganizationSummary[];

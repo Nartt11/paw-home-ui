@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import type { Organization } from "@/types/organization.type,";
+import type { Organization } from "@/types/organization.type";
 
 export type OrganizationTypeValue = "SHELTER" | "VET_CENTER";
 

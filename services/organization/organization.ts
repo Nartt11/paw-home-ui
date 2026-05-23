@@ -1,151 +1,76 @@
 import http from "@/lib/http";
-import { mapOrganization, mapOrganizationSummary } from "@/mappers/organition";
 import apiEndpoints from "@/services/endpoint";
+import { PaginatedResponse } from "@/types/api.type";
 import type {
   Organization,
-  OrganizationMember,
-  OrganizationPageModel,
+  OrganizationListParams,
+  OrganizationCreatePayload,
+  OrganizationUpdatePayload,
+  OrganizationBoundingBoxParams,
   OrganizationSummary,
-} from "@/types/organization.type,.ts";
-import {
-  AddMemberPayload,
-  CreateOrganizationPayload,
-  mapOrganizationMember,
-  OrganizationDto,
-  OrganizationListConfig,
-  OrganizationMemberDto,
-  OrganizationStatusUpdatePayload,
-  OrganizationSummaryDto,
-  PageDto,
-  UpdateOrganizationPayload,
-} from "./organization-dto";
-import { mapPage } from "@/mappers/common";
+  OrganizationStatus,
+  OrganizationMarkerParams,
+} from "@/types/organization.type";
 
 const organizationService = {
   // GET /api/v1/organizations - List all organizations (paginated)
   async getAllOrganizations(
-    params: OrganizationListConfig,
-  ): Promise<OrganizationPageModel> {
-    const dto = await http.get<PageDto<OrganizationSummaryDto>>(
+    params: OrganizationListParams,
+  ): Promise<PaginatedResponse<OrganizationSummary>> {
+    return await http.get<PaginatedResponse<OrganizationSummary>>(
       apiEndpoints.organizations.root,
       {
         params,
       },
     );
-    return mapPage(dto, mapOrganizationSummary);
-    // return mapPage(dto, mapOrganizationSummary) as OrganizationPageModel;
   },
 
   // GET /api/v1/organizations/{id} - Get organization by ID
   async getOrganizationById(id: string): Promise<Organization> {
-    const dto = await http.get<OrganizationDto>(apiEndpoints.organizations.byId(id));
-    return mapOrganization(dto);
+    return await http.get<Organization>(apiEndpoints.organizations.byId(id));
   },
 
   // GET /api/v1/organizations/{id}/members - List members of an organization (paginated)
   async getOrganizationMembers(
     id: string,
-    params: OrganizationListConfig,
-  ): Promise<PageDto<OrganizationMember>> {
-    const dto = await http.get<PageDto<OrganizationMemberDto>>(
+    params: OrganizationListParams,
+  ): Promise<PaginatedResponse<OrganizationSummary>> {
+    return await http.get<PaginatedResponse<OrganizationSummary>>(
       apiEndpoints.organizations.members(id),
       { params },
     );
-
-    return mapPage(dto, mapOrganizationMember);
-  },
-
-  // GET /api/v1/organizations/pending - List pending organizations (ADMIN only)
-  async getPendingOrganizations(
-    params: OrganizationListConfig,
-  ): Promise<PageDto<OrganizationSummary>> {
-    const dto = await http.get<PageDto<OrganizationSummaryDto>>(
-      apiEndpoints.organizations.pending,
-      {
-        params,
-      },
-    );
-
-    return mapPage(dto, mapOrganizationSummary);
-  },
-
-  // GET /api/v1/organizations/inactive - List inactive organizations (ADMIN only)
-  async getInactiveOrganizations(
-    params: OrganizationListConfig,
-  ): Promise<PageDto<OrganizationSummary>> {
-    const dto = await http.get<PageDto<OrganizationSummaryDto>>(
-      apiEndpoints.organizations.inactive,
-      {
-        params,
-      },
-    );
-
-    return mapPage(dto, mapOrganizationSummary);
-  },
-
-  // GET /api/v1/organizations/active - List active organizations (public)
-  async getActiveOrganizations(
-    params: OrganizationListConfig,
-  ): Promise<PageDto<OrganizationSummary>> {
-    const dto = await http.get<PageDto<OrganizationSummaryDto>>(
-      apiEndpoints.organizations.active,
-      {
-        params,
-      },
-    );
-
-    return mapPage(dto, mapOrganizationSummary);
   },
 
   // POST /api/v1/organizations - Create a new organization
   async createOrganization(
-    payload: CreateOrganizationPayload,
+    payload: OrganizationCreatePayload,
   ): Promise<Organization> {
-    const dto = await http.post<OrganizationDto, CreateOrganizationPayload>(
+    return await http.post<Organization, OrganizationCreatePayload>(
       apiEndpoints.organizations.root,
       payload,
     );
-
-    return mapOrganization(dto);
   },
 
   // PUT /api/v1/organizations/{id} - Update an existing organization
   async updateOrganization(
     id: string,
-    payload: UpdateOrganizationPayload,
+    payload: OrganizationUpdatePayload,
   ): Promise<Organization> {
-    const dto = await http.put<OrganizationDto, UpdateOrganizationPayload>(
+    return await http.put<Organization, OrganizationUpdatePayload>(
       apiEndpoints.organizations.byId(id),
       payload,
     );
-
-    return mapOrganization(dto);
   },
 
   // PATCH /api/v1/organizations/{id}/status - Change organization status (ADMIN only)
   async updateOrganizationStatus(
     id: string,
-    payload: OrganizationStatusUpdatePayload,
+    status: OrganizationStatus,
   ): Promise<Organization> {
-    const dto = await http.patch<
-      OrganizationDto,
-      OrganizationStatusUpdatePayload
-    >(apiEndpoints.organizations.status(id), payload);
-
-    return mapOrganization(dto);
-  },
-
-  // POST /api/v1/organizations/{id}/members - Add STAFF or VET to this organization (OWNER only)
-  async addMember(
-    id: string,
-    payload: AddMemberPayload,
-  ): Promise<OrganizationMember> {
-    const dto = await http.post<OrganizationMemberDto, AddMemberPayload>(
-      apiEndpoints.organizations.members(id),
-      payload,
+    return await http.patch<Organization, OrganizationStatus>(
+      apiEndpoints.organizations.status(id),
+      status,
     );
-
-    return mapOrganizationMember(dto);
   },
 
   // DELETE /api/v1/organizations/{id}/members/{userId} - Remove a member from an organization
@@ -164,24 +89,21 @@ const organizationService = {
 
   // GET /api/v1/organizations/map/bounding-box - Find organizations within bounding box
   async getOrganizationsInBoundingBox(
-    params: Record<string, string | number | undefined>,
-  ): Promise<PageDto<OrganizationSummary>> {
-    const dto = await http.get<PageDto<OrganizationSummaryDto>>(
+    params: OrganizationBoundingBoxParams,
+  ): Promise<PaginatedResponse<OrganizationSummary>> {
+    return await http.get<PaginatedResponse<OrganizationSummary>>(
       apiEndpoints.organizations.map.boundingBox,
       { params },
     );
-
-    return mapPage(dto, mapOrganizationSummary);
   },
 
   // GET /api/v1/organizations/map/markers - Get organization markers in bounding box
   async getOrganizationMapMarkers(
-    params: Record<string, string | number | undefined>,
-  ): Promise<Record<string, unknown>[]> {
-    return http.get<Record<string, unknown>[]>(
-      apiEndpoints.organizations.map.markers,
-      { params },
-    );
+    params: OrganizationMarkerParams,
+  ): Promise<Organization[]> {
+    return http.get<Organization[]>(apiEndpoints.organizations.map.markers, {
+      params,
+    });
   },
 };
 
