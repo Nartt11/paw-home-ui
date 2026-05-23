@@ -7,7 +7,10 @@ import { toast } from "sonner";
 
 import TitlePerPage from "@/components/common/admin/TitlePerPage";
 import { DeleteModal } from "@/components/common/admin/DeleteModal";
-import { PostFormDialog, type PostFormValues } from "@/components/post/PostFormDialog";
+import {
+  PostFormDialog,
+  type PostFormValues,
+} from "@/components/post/PostFormDialog";
 import { PostListTable } from "@/components/post/PostListTable";
 import { PostViewDetail } from "@/components/post/PostViewDetail";
 import { useListUrlState } from "@/hooks/use-list-url-state";
@@ -78,25 +81,25 @@ export default function PostManagementPage() {
     mutationFn: (values: PostFormValues) =>
       postService.createPost(buildCreatePostPayload(values)),
     onSuccess: async () => {
-      toast.success("Da tao bai dang thanh cong");
+      toast.success("Đã tạo bài đăng thành công");
       setCreateOpen(false);
       await queryClient.invalidateQueries({ queryKey: ["posts"] });
     },
     onError: (error) => {
-      toast.error(getErrorMessage(error, "Khong the tao bai dang"));
+      toast.error(getErrorMessage(error, "Không thể tạo bài đăng"));
     },
   });
 
   const updateMutation = useMutation({
     mutationFn: (values: PostFormValues) => {
       if (!selectedId) {
-        throw new Error("Khong tim thay bai dang can cap nhat");
+        throw new Error("Không tìm thấy bài đăng cần cập nhật");
       }
 
       return postService.updatePost(selectedId, buildUpdatePostPayload(values));
     },
     onSuccess: async () => {
-      toast.success("Da cap nhat bai dang thanh cong");
+      toast.success("Đã cập nhật bài đăng thành công");
       setEditOpen(false);
       setSelectedId(null);
       await Promise.all([
@@ -105,20 +108,20 @@ export default function PostManagementPage() {
       ]);
     },
     onError: (error) => {
-      toast.error(getErrorMessage(error, "Khong the cap nhat bai dang"));
+      toast.error(getErrorMessage(error, "Không thể cập nhật bài đăng"));
     },
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => postService.deletePost(id),
     onSuccess: async () => {
-      toast.success("Da xoa bai dang thanh cong");
+      toast.success("Đã xóa bài đăng thành công");
       setDeleteOpen(false);
       setDeleteId(null);
       await queryClient.invalidateQueries({ queryKey: ["posts"] });
     },
     onError: (error) => {
-      toast.error(getErrorMessage(error, "Khong the xoa bai dang"));
+      toast.error(getErrorMessage(error, "Không thể xóa bài đăng"));
     },
   });
 
@@ -130,9 +133,9 @@ export default function PostManagementPage() {
   return (
     <div className="space-y-6">
       <TitlePerPage
-        title="Quan ly bai dang"
-        description="Danh sach bai dang duoc dong bo tu cac API post"
-        buttonText="Them bai dang"
+        title="Quản lý bài đăng"
+        description="Danh sách bài đăng được đồng bộ từ các API post"
+        buttonText="Thêm bài đăng"
         handleOpenModal={() => setCreateOpen(true)}
       />
 
@@ -196,8 +199,8 @@ export default function PostManagementPage() {
           setDeleteOpen(nextOpen);
           if (!nextOpen) setDeleteId(null);
         }}
-        title="Xoa bai dang"
-        description="Ban co chac chan muon xoa bai dang nay khong? Hanh dong nay khong the hoan tac."
+        title="Xóa bài đăng"
+        description="Bạn có chắc chắn muốn xóa bài đăng này không? Hành động này không thể hoàn tác."
         confirming={deleteMutation.isPending}
         confirmDisabled={!deleteId}
         onConfirm={() => {

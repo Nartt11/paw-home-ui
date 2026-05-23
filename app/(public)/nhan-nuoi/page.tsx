@@ -115,7 +115,8 @@ export default function AdoptionPage() {
 
   const pets = availablePetsQuery.data?.content ?? [];
   const totalPages = Math.max(availablePetsQuery.data?.totalPages ?? 1, 1);
-  const currentPage = (availablePetsQuery.data?.page ?? Math.max(page - 1, 0)) + 1;
+  const currentPage =
+    (availablePetsQuery.data?.page ?? Math.max(page - 1, 0)) + 1;
   const paginationItems = React.useMemo(
     () => getPaginationItems(currentPage, totalPages, 5),
     [currentPage, totalPages],
@@ -162,14 +163,14 @@ export default function AdoptionPage() {
           <div>
             <h1 className="max-w-3xl whitespace-pre-line text-balance text-4xl font-black tracking-tight text-white md:text-6xl">
               {adoptionBanner?.title ||
-                "Mo cua trai tim cho mot nguoi ban bon chan dang cho duoc yeu thuong."}
+                "Mở cửa trái tim cho một người bạn bốn chân đang chờ được yêu thương."}
             </h1>
           </div>
         }
         description={
           <p className="max-w-2xl text-base leading-7 text-white/78 md:text-lg">
             {adoptionBanner?.subtitle ||
-              "Kham pha danh sach thu cung dang san sang nhan nuoi, loc nhanh theo nhu cau cua ban va bat dau hanh trinh dem mot mai am moi den cho cac be."}
+              "Khám phá danh sách thú cưng đang sẵn sàng nhận nuôi, lọc nhanh theo nhu cầu của bạn và bắt đầu hành trình đem một mái ấm mới đến cho các bé."}
           </p>
         }
         actions={
@@ -180,7 +181,7 @@ export default function AdoptionPage() {
               className="rounded-2xl bg-white px-6 text-slate-900 hover:bg-white/90"
             >
               <Link href={heroPrimaryHref}>
-                {adoptionBanner ? "Xem chien dich" : "Xem danh sach"}
+                {adoptionBanner ? "Xem chiến dịch" : "Xem danh sách"}
               </Link>
             </Button>
             <Button
@@ -189,7 +190,7 @@ export default function AdoptionPage() {
               variant="outline"
               className="rounded-2xl border-white/30 bg-white/10 px-6 text-white backdrop-blur hover:bg-white/15"
             >
-              <Link href={APP_ROUTES.DONATION}>Ung ho trung tam</Link>
+              <Link href={APP_ROUTES.DONATION}>Ủng hộ trung tâm</Link>
             </Button>
           </>
         }
@@ -198,7 +199,7 @@ export default function AdoptionPage() {
           <div className="rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur">
             <div className="flex items-center gap-2 text-white/80">
               <PawPrint size={16} />
-              <span className="text-sm font-semibold">San sang nhan nuoi</span>
+              <span className="text-sm font-semibold">Sẵn sàng nhận nuôi</span>
             </div>
             <p className="mt-2 text-2xl font-black text-white">
               {availablePetsQuery.data?.totalElements ?? "--"}
@@ -207,19 +208,19 @@ export default function AdoptionPage() {
           <div className="rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur">
             <div className="flex items-center gap-2 text-white/80">
               <HeartHandshake size={16} />
-              <span className="text-sm font-semibold">Quy trinh minh bach</span>
+              <span className="text-sm font-semibold">Quy trình minh bạch</span>
             </div>
             <p className="mt-2 text-sm leading-6 text-white/75">
-              Loc, theo doi va sap xep theo tung nhu cau nhan nuoi.
+              Lọc, theo dõi và sắp xếp theo từng nhu cầu nhận nuôi.
             </p>
           </div>
           <div className="rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur">
             <div className="flex items-center gap-2 text-white/80">
               <Search size={16} />
-              <span className="text-sm font-semibold">Tim nhanh hon</span>
+              <span className="text-sm font-semibold">Tìm nhanh hơn</span>
             </div>
             <p className="mt-2 text-sm leading-6 text-white/75">
-              Tim theo ten va loc theo gioi tinh chi trong mot thao tac.
+              Tìm theo tên và lọc theo giới tính chỉ trong một thao tác.
             </p>
           </div>
         </div>
@@ -230,23 +231,23 @@ export default function AdoptionPage() {
           <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.22em] text-orange-500">
-                Tim thu cung phu hop
+                Tìm thú cưng phù hợp
               </p>
               <h2 className="mt-2 text-3xl font-black tracking-tight text-slate-900">
-                Danh sach thu cung dang mo nhan nuoi
+                Danh sách thú cưng đang mở nhận nuôi
               </h2>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
-                Mot bo loc don gian, mot thanh tim kiem ro rang, va mot danh sach
-                card gon dep de nguoi dung tap trung vao dieu quan trong nhat:
-                chon duoc be phu hop.
+                Một bộ lọc đơn giản, một thanh tìm kiếm rõ ràng, và một danh
+                sách card gọn gẽ để người dùng tập trung vào điều quan trọng
+                nhất: chọn được bé phù hợp.
               </p>
             </div>
             <div className="rounded-2xl bg-orange-50 px-4 py-3 text-sm text-orange-700">
-              Hien co{" "}
+              Hiện có{" "}
               <span className="font-bold">
                 {availablePetsQuery.data?.totalElements ?? 0}
               </span>{" "}
-              be dang san sang.
+              bé đang sẵn sàng.
             </div>
           </div>
 
@@ -258,7 +259,7 @@ export default function AdoptionPage() {
                   <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
                   <Input
                     id="adoption-search"
-                    placeholder="Tim theo ten thu cung..."
+                    placeholder="Tìm theo tên thú cưng..."
                     className="h-11 rounded-xl pl-10"
                     {...form.register("searchName")}
                   />
@@ -271,24 +272,29 @@ export default function AdoptionPage() {
                 <Select
                   value={selectedGender}
                   onValueChange={(value) =>
-                    form.setValue("gender", value as AdoptionSearchSchema["gender"])
+                    form.setValue(
+                      "gender",
+                      value as AdoptionSearchSchema["gender"],
+                    )
                   }
                 >
                   <SelectTrigger className="h-11 w-full rounded-xl">
-                    <SelectValue placeholder="Chon gioi tinh" />
+                    <SelectValue placeholder="Chọn giới tính" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="ALL">Tat ca gioi tinh</SelectItem>
-                    <SelectItem value="MALE">Duc</SelectItem>
-                    <SelectItem value="FEMALE">Cai</SelectItem>
-                    <SelectItem value="UNKNOWN">Chua ro</SelectItem>
+                    <SelectItem value="ALL">Tất cả giới tính</SelectItem>
+                    <SelectItem value="MALE">Đực</SelectItem>
+                    <SelectItem value="FEMALE">Cái</SelectItem>
+                    <SelectItem value="UNKNOWN">Chưa rõ</SelectItem>
                   </SelectContent>
                 </Select>
-                <FieldDescription>Mot filter duy nhat de giu thao tac gon.</FieldDescription>
+                <FieldDescription>
+                  Một filter duy nhất để giữ thao tác gọn.
+                </FieldDescription>
               </Field>
 
               <Button type="submit" className="h-11 rounded-xl px-6">
-                Ap dung
+                Áp dụng
               </Button>
 
               <Button
@@ -297,7 +303,7 @@ export default function AdoptionPage() {
                 className="h-11 rounded-xl px-6"
                 onClick={handleReset}
               >
-                Dat lai
+                Đặt lại
               </Button>
             </FieldGroup>
           </form>
@@ -314,10 +320,11 @@ export default function AdoptionPage() {
             ) : (
               <div className="rounded-[24px] border border-dashed border-slate-200 bg-slate-50 px-6 py-16 text-center">
                 <p className="text-lg font-semibold text-slate-900">
-                  Chua tim thay thu cung phu hop
+                  Chưa tìm thấy thú cưng phù hợp
                 </p>
                 <p className="mt-2 text-sm text-slate-500">
-                  Thu thu nho bo loc hoac xoa tu khoa tim kiem de xem them cac be khac.
+                  Thử thỏa nỏi bộ lọc hoặc xóa từ khóa tìm kiếm để xem thêm các
+                  bé khác.
                 </p>
                 <Button
                   type="button"
@@ -325,7 +332,7 @@ export default function AdoptionPage() {
                   className="mt-6 rounded-xl"
                   onClick={handleReset}
                 >
-                  Xoa bo loc
+                  Xóa bộ lọc
                 </Button>
               </div>
             )}
@@ -333,7 +340,10 @@ export default function AdoptionPage() {
 
           <div className="mt-8 flex flex-col gap-4 border-t border-slate-100 pt-6 md:flex-row md:items-center md:justify-between">
             <p className="text-sm text-slate-500">
-              Trang <span className="font-semibold text-slate-900">{currentPage}</span>
+              Trang{" "}
+              <span className="font-semibold text-slate-900">
+                {currentPage}
+              </span>
               /{totalPages}
             </p>
 
@@ -344,7 +354,7 @@ export default function AdoptionPage() {
                 disabled={currentPage <= 1}
                 onClick={() => setPage(Math.max(1, currentPage - 1))}
               >
-                Truoc
+                Trước
               </Button>
 
               {paginationItems.map((item) => (

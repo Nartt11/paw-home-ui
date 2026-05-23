@@ -66,7 +66,7 @@ export default function RegisterPage() {
     } catch (error) {
       setError("root", {
         type: "server",
-        message: getAuthErrorMessage(error, "Dang ky that bai."),
+        message: getAuthErrorMessage(error, "Đăng ký thất bại."),
       });
     }
   });
@@ -74,26 +74,26 @@ export default function RegisterPage() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Dang ky tai khoan</CardTitle>
+        <CardTitle>Đăng ký tài khoản</CardTitle>
         <CardDescription>
-          Tao tai khoan moi de bat dau su dung he thong cuu ho thu cung.
+          Tạo tài khoản mới để bắt đầu sử dụng hệ thống cứu hộ thú cưng.
         </CardDescription>
       </CardHeader>
       <CardContent>
         {isRegistered ? (
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Dang ky thanh cong. Vui long kiem tra email de xac thuc tai khoan
-              truoc khi dang nhap.
+              Đăng ký thành công. Vui lòng kiểm tra email để xác thực tài khoản
+              trước khi đăng nhập.
             </p>
             <Button asChild className="w-full">
-              <Link href="/dang-nhap">Di den dang nhap</Link>
+              <Link href="/dang-nhap">Đi đến đăng nhập</Link>
             </Button>
             <Button asChild variant="outline" className="w-full">
-              <Link href="/xac-thuc-email">Nhap lai email xac thuc</Link>
+              <Link href="/xac-thuc-email">Nhập lại email xác thực</Link>
             </Button>
             <Button asChild variant="ghost" className="w-full">
-              <Link href={APP_ROUTES.HOME}>Ve trang chu</Link>
+              <Link href={APP_ROUTES.HOME}>Về trang chủ</Link>
             </Button>
           </div>
         ) : (
@@ -107,7 +107,9 @@ export default function RegisterPage() {
                 <Field>
                   <FieldLabel htmlFor="email">Email</FieldLabel>
                   <Input id="email" type="email" {...register("email")} />
-                  {errors.email ? <FieldError>{errors.email.message}</FieldError> : null}
+                  {errors.email ? (
+                    <FieldError>{errors.email.message}</FieldError>
+                  ) : null}
                 </Field>
 
                 <Field>
@@ -119,15 +121,19 @@ export default function RegisterPage() {
                 </Field>
 
                 <Field>
-                  <FieldLabel htmlFor="full_name">Ho ten</FieldLabel>
-                  <Input id="full_name" type="text" {...register("full_name")} />
+                  <FieldLabel htmlFor="full_name">Họ tên</FieldLabel>
+                  <Input
+                    id="full_name"
+                    type="text"
+                    {...register("full_name")}
+                  />
                   {errors.full_name ? (
                     <FieldError>{errors.full_name.message}</FieldError>
                   ) : null}
                 </Field>
 
                 <Field>
-                  <FieldLabel htmlFor="password">Mat khau</FieldLabel>
+                  <FieldLabel htmlFor="password">Mật khẩu</FieldLabel>
                   <div className="relative">
                     <Input
                       id="password"
@@ -153,7 +159,9 @@ export default function RegisterPage() {
                 </Field>
 
                 <Field>
-                  <FieldLabel htmlFor="confirmPassword">Xac nhan mat khau</FieldLabel>
+                  <FieldLabel htmlFor="confirmPassword">
+                    Xác nhận mật khẩu
+                  </FieldLabel>
                   <div className="relative">
                     <Input
                       id="confirmPassword"
@@ -184,13 +192,15 @@ export default function RegisterPage() {
                     className="w-full"
                     disabled={registerMutation.isPending}
                   >
-                    {registerMutation.isPending ? "Dang tao tai khoan..." : "Dang ky"}
+                    {registerMutation.isPending
+                      ? "Đang tạo tài khoản..."
+                      : "Đăng ký"}
                   </Button>
                   <Button asChild variant="outline" className="w-full">
-                    <Link href={APP_ROUTES.HOME}>Ve trang chu</Link>
+                    <Link href={APP_ROUTES.HOME}>Về trang chủ</Link>
                   </Button>
                   <FieldDescription className="text-center">
-                    Da co tai khoan? <Link href="/dang-nhap">Dang nhap</Link>
+                    Đã có tài khoản? <Link href="/dang-nhap">Đăng nhập</Link>
                   </FieldDescription>
                 </Field>
               </FieldGroup>

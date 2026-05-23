@@ -28,34 +28,34 @@ export default function VolunteerSection({ banner }: VolunteerSectionProps) {
       badge={
         <div className="inline-flex items-center gap-2 rounded-full border border-emerald-300/50 bg-emerald-400/15 px-4 py-1.5 text-[11px] font-bold text-emerald-300">
           <Users size={13} />
-          180+ tinh nguyen vien tai Ha Noi
+          180+ tình nguyện viên
         </div>
       }
       title={
         <h2 className="text-balance text-[28px] font-black text-white md:text-[40px]">
-          {banner?.title || "Tro thanh tinh nguyen vien HPA"}
+          {banner?.title || "Trở thành tình nguyện viên"}
         </h2>
       }
       description={
         <p className="mx-auto max-w-xl text-[15px] leading-relaxed text-white/80">
-          {banner?.subtitle ||
-            "Tham gia cuu ho, van chuyen, cham soc va tim mai am cho thu cung. Moi gio cua ban tao ra su thay doi thuc su."}
+          {banner?.subtitle || "Tham gia cứu hộ, vận chuyển, chăm sóc và tìm mái ấm cho thú cưng. Mỗi giờ của bạn tạo ra sự thay đổi thực sự."}
+            
         </p>
       }
       actions={
         <PrimaryCta href={primaryHref} variant="mint" size="lg">
           <Users size={20} />
-          {banner ? "Xem chi tiet" : "Dang ky TNV ngay"}
+          {banner ? "Xem chi tiết" : "Đăng kí tình nguyện viên ngay"}
           <ArrowRight size={18} />
         </PrimaryCta>
       }
     >
       <div className="mb-10 mt-8 flex flex-wrap justify-center gap-3 text-[13px] text-white">
         {[
-          "Cuu ho khan cap",
-          "Van chuyen thu cung",
-          "Ghi lai hanh trinh",
-          "Tu van nhan nuoi",
+          "Hỗ trợ khan cap",
+          "Vận chuyển thú cưng",
+          "Chăm sóc thú cưng",
+          "Tư vấn nhận nuôi",
         ].map((item) => (
           <span
             key={item}

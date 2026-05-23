@@ -36,46 +36,46 @@ const data = {
       icon: <LayoutDashboardIcon />,
     },
     {
-      title: "Quan ly thu cung",
+      title: "Quản lý thú cưng",
       url: `${APP_ROUTES.PET_MANAGEMENT}`,
       icon: <ListIcon />,
     },
     {
-      title: "Quan ly trung tam",
+      title: "Quản lý trung tâm",
       url: `${APP_ROUTES.CENTER_MANAGEMENT}`,
       icon: <ChartBarIcon />,
     },
     {
-      title: "Quan ly nguoi dung",
+      title: "Quản lý người dùng",
       url: `${APP_ROUTES.USER_MANAGEMENT}`,
       icon: <FolderIcon />,
     },
     {
-      title: "Quan ly bai dang",
+      title: "Quản lý bài đăng",
       url: `${APP_ROUTES.POST_MANAGEMENT}`,
       icon: <LayoutDashboardIcon />,
     },
   ],
   navContent: [
     {
-      title: "Quan ly bai tin tuc",
+      title: "Quản lý bài tin tức",
       url: `${APP_ROUTES.NEWS_MANAGEMENT}`,
       icon: <LayoutDashboardIcon />,
     },
     {
-      title: "Quan ly banner",
+      title: "Quản lý banner",
       url: `${APP_ROUTES.BANNER_MANAGEMENT}`,
       icon: <LayoutDashboardIcon />,
     },
   ],
   navOperation: [
     {
-      title: "Quan ly cuu tro",
+      title: "Quản lý cứu trợ",
       url: `${APP_ROUTES.RESCUE_CASE_MANAGEMENT}`,
       icon: <LayoutDashboardIcon />,
     },
     {
-      title: "Quan ly nhan nuoi",
+      title: "Quản lý nhận nuôi",
       url: `${APP_ROUTES.ADOPTION_MANAGEMENT}`,
       icon: <ListIcon />,
     },
@@ -103,11 +103,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { data: currentUser } = useCurrentUser();
 
   const sidebarUser = {
-    name:
-      currentUser?.fullName?.trim() ||
-      currentUser?.username ||
-      "Tai khoan",
-    email: currentUser?.email || "dang tai...",
+    name: currentUser?.fullName?.trim() || currentUser?.username || "Tài khoản",
+    email: currentUser?.email || "đang tải...",
     avatar: "",
   };
 
@@ -129,9 +126,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain label="Quan ly he thong" items={data.navSystem} />
-        <NavMain label="Hoat dong cuu tro" items={data.navOperation} />
-        <NavMain label="Quan ly noi dung" items={data.navContent} />
+        <NavMain label="Quản lý hệ thống" items={data.navSystem} />
+        <NavMain label="Hoạt động cứu trợ" items={data.navOperation} />
+        <NavMain label="Quản lý nội dung" items={data.navContent} />
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>

@@ -74,7 +74,7 @@ export default function DonatePage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-muted">
       <DonateHero data={DATA.hero} />
 
       <main className="mx-auto w-full max-w-6xl px-6 py-10 md:py-14">

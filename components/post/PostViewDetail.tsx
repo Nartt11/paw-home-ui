@@ -27,7 +27,7 @@ export interface PostViewDetailProps {
 }
 
 function formatDateTime(value?: string) {
-  if (!value) return "Chua co";
+  if (!value) return "Chưa có";
 
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) return value;
@@ -36,7 +36,7 @@ function formatDateTime(value?: string) {
 }
 
 function renderValue(value?: string) {
-  return value?.trim() ? value : "Chua co";
+  return value?.trim() ? value : "Chưa có";
 }
 
 export function PostViewDetail({
@@ -60,18 +60,18 @@ export function PostViewDetail({
 
           {loading && !post ? (
             <div className="rounded-lg border border-dashed border-border px-4 py-10 text-center text-sm text-muted-foreground">
-              Dang tai chi tiet bai dang...
+              Đang tải chi tiết bài đăng...
             </div>
           ) : !post ? (
             <div className="rounded-lg border border-dashed border-border px-4 py-10 text-center text-sm text-muted-foreground">
-              Chua co du lieu bai dang de hien thi.
+              Chưa có dữ liệu bài đăng để hiển thị.
             </div>
           ) : (
             <div className="grid gap-4">
               <Card>
                 <CardHeader>
                   <CardTitle className="flex flex-wrap items-center gap-2">
-                    <span>{post.postId || "Post khong co ID"}</span>
+                    <span>{post.postId || "Bài đăng không có ID"}</span>
                     {post.authorId ? (
                       <Badge variant="secondary">Author: {post.authorId}</Badge>
                     ) : null}
@@ -87,13 +87,13 @@ export function PostViewDetail({
                     ) : null}
                   </CardTitle>
                   <CardDescription>
-                    Tao luc {formatDateTime(post.createdAt)}. Cap nhat luc{" "}
+                    Tạo lúc {formatDateTime(post.createdAt)}. Cập nhật lúc{" "}
                     {formatDateTime(post.updatedAt)}.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <div className="text-sm font-medium">Noi dung</div>
+                    <div className="text-sm font-medium">Nội dung</div>
                     <div className="rounded-lg bg-muted/50 p-4 text-sm whitespace-pre-wrap">
                       {renderValue(post.content)}
                     </div>
@@ -125,7 +125,9 @@ export function PostViewDetail({
                             </Badge>
                           ))
                         ) : (
-                          <span className="text-muted-foreground">Chua co tag</span>
+                          <span className="text-muted-foreground">
+                            Chưa có tag
+                          </span>
                         )}
                       </div>
                     </div>
@@ -153,7 +155,9 @@ export function PostViewDetail({
                             </div>
                           ))
                         ) : (
-                          <span className="text-muted-foreground">Chua co media</span>
+                          <span className="text-muted-foreground">
+                            Chưa có media
+                          </span>
                         )}
                       </div>
                     </div>
@@ -165,7 +169,7 @@ export function PostViewDetail({
                 <CardHeader>
                   <CardTitle>Raw payload</CardTitle>
                   <CardDescription>
-                    Giup doi chieu khi backend bo sung them truong.
+                    Giúp đội chịu trách nhiệm khi backend bổ sung thêm trường.
                   </CardDescription>
                 </CardHeader>
                 <CardContent>

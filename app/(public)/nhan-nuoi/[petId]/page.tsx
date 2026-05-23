@@ -57,26 +57,26 @@ function formatDateVi(value?: string) {
 function getGenderLabel(gender?: string) {
   switch (gender) {
     case "MALE":
-      return "Duc";
+      return "Đực";
     case "FEMALE":
-      return "Cai";
+      return "Cái";
     default:
-      return "Chua ro";
+      return "Chưa rõ";
   }
 }
 
 function getHealthLabel(status?: string) {
   switch (status) {
     case "HEALTHY":
-      return "Khoe manh";
+      return "Khỏe mạnh";
     case "UNDER_TREATMENT":
-      return "Dang dieu tri";
+      return "Đang điều trị";
     case "RECOVERING":
-      return "Dang hoi phuc";
+      return "Đang hồi phục";
     case "SPECIAL_NEEDS":
-      return "Can cham soc dac biet";
+      return "Cần chăm sóc đặc biệt";
     default:
-      return status || "Dang cap nhat";
+      return status || "Đang cập nhật";
   }
 }
 
@@ -130,7 +130,7 @@ export default function AdoptionPetDetailPage() {
     if (!currentUserQuery.data) {
       form.setError("root", {
         type: "server",
-        message: "Ban can dang nhap truoc khi gui don nhan nuoi.",
+        message: "Bạn cần đăng nhập trước khi gửi đơn nhận nuôi.",
       });
       return;
     }
@@ -138,7 +138,7 @@ export default function AdoptionPetDetailPage() {
     if (!petId || !organizationId) {
       form.setError("root", {
         type: "server",
-        message: "Khong du thong tin to chuc de tao don nhan nuoi.",
+        message: "Không đủ thông tin tổ chức để tạo đơn nhận nuôi.",
       });
       return;
     }
@@ -152,13 +152,13 @@ export default function AdoptionPetDetailPage() {
       });
 
       setSubmitSuccessMessage(
-        "Don nhan nuoi da duoc gui thanh cong. Trung tam se lien he voi ban som.",
+        "Đơn nhận nuôi đã được gửi thành công. Trung tâm sẽ liên hệ với bạn sớm.",
       );
       form.reset();
     } catch (error) {
       form.setError("root", {
         type: "server",
-        message: getAuthErrorMessage(error, "Gui don nhan nuoi that bai."),
+        message: getAuthErrorMessage(error, "Gửi đơn nhận nuôi thất bại."),
       });
     }
   });
@@ -176,15 +176,16 @@ export default function AdoptionPetDetailPage() {
           onClick={() => router.push(APP_ROUTES.ADOPTION)}
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Quay lai danh sach
+          Quay lại danh sách
         </Button>
         <Card className="mt-6 rounded-[28px] border-slate-200">
           <CardContent className="p-10 text-center">
             <p className="text-lg font-semibold text-slate-900">
-              Khong tim thay thong tin thu cung
+              Không tìm thấy thông tin thú cưng
             </p>
             <p className="mt-2 text-sm text-slate-500">
-              Be co the da duoc cap nhat hoac tam thoi khong con san sang nhan nuoi.
+              Bé có thể đã được cập nhật hoặc tạm thời không còn sẵn sàng nhận
+              nuôi.
             </p>
           </CardContent>
         </Card>
@@ -201,7 +202,7 @@ export default function AdoptionPetDetailPage() {
           onClick={() => router.push(APP_ROUTES.ADOPTION)}
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Quay lai danh sach nhan nuoi
+          Quay lại danh sách nhận nuôi
         </Button>
 
         <div className="mt-6 grid grid-cols-1 gap-8 lg:grid-cols-[1.55fr_0.95fr]">
@@ -220,12 +221,12 @@ export default function AdoptionPetDetailPage() {
                 <div className="absolute left-6 top-6 flex flex-wrap gap-2">
                   {pet.vaccinated ? (
                     <Badge className="rounded-full bg-emerald-500 text-white hover:bg-emerald-500">
-                      Da tiem vaccine
+                      Đã tiêm vaccine
                     </Badge>
                   ) : null}
                   {pet.neutered ? (
                     <Badge className="rounded-full bg-sky-500 text-white hover:bg-sky-500">
-                      Da triet san
+                      Đã triệt sản
                     </Badge>
                   ) : null}
                 </div>
@@ -236,7 +237,7 @@ export default function AdoptionPetDetailPage() {
                       {pet.species}
                     </Badge>
                     <Badge className="rounded-full bg-white/18 text-white backdrop-blur hover:bg-white/18">
-                      {pet.breed || "Dang cap nhat"}
+                      {pet.breed || "Đang cập nhật"}
                     </Badge>
                     <Badge className="rounded-full bg-white/18 text-white backdrop-blur hover:bg-white/18">
                       {getGenderLabel(pet.gender)}
@@ -247,7 +248,8 @@ export default function AdoptionPetDetailPage() {
                     {pet.name}
                   </h1>
                   <p className="mt-2 max-w-2xl text-sm leading-7 text-white/80 md:text-base">
-                    {pet.description || "Be dang tim mot gia dinh moi, an toan va day yeu thuong."}
+                    {pet.description ||
+                      "Bé đang tìm một gia đình mới, an toàn và đầy yêu thương."}
                   </p>
                 </div>
               </div>
@@ -256,45 +258,51 @@ export default function AdoptionPetDetailPage() {
             <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
               <InfoCard
                 icon={<PawPrint className="h-5 w-5 text-orange-500" />}
-                label="Tuoi"
-                value={pet.ageDisplay || `${pet.age} thang`}
+                label="Tuổi"
+                value={pet.ageDisplay || `${pet.age} tháng`}
               />
               <InfoCard
                 icon={<ShieldPlus className="h-5 w-5 text-emerald-500" />}
-                label="Suc khoe"
+                label="Sức khỏe"
                 value={getHealthLabel(pet.healthStatus)}
               />
               <InfoCard
                 icon={<MapPin className="h-5 w-5 text-sky-500" />}
-                label="Khu vuc"
-                value={pet.rescueLocation || pet.province || "Dang cap nhat"}
+                label="Khu vực"
+                value={pet.rescueLocation || pet.province || "Đang cập nhật"}
               />
             </div>
 
             <Card className="rounded-[28px] border-slate-200 shadow-[0_24px_60px_rgba(15,23,42,0.06)]">
               <CardHeader className="pb-0">
                 <CardTitle className="text-2xl font-black tracking-tight text-slate-900">
-                  Thong tin thu cung
+                  Thông tin thú cưng
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6 pt-6">
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                  <DetailRow label="Ma thu cung" value={pet.petCode || pet.petId} />
                   <DetailRow
-                    label="Can nang"
-                    value={pet.weight ? `${pet.weight} kg` : "Dang cap nhat"}
-                  />
-                  <DetailRow label="Mau sac" value={pet.color || "Dang cap nhat"} />
-                  <DetailRow
-                    label="To chuc quan ly"
-                    value={pet.organization?.name || "Cong dong"}
+                    label="Mã thú cưng"
+                    value={pet.petCode || pet.petId}
                   />
                   <DetailRow
-                    label="Chu so huu hien tai"
-                    value={pet.owner?.name || "Dang cap nhat"}
+                    label="Cân nặng"
+                    value={pet.weight ? `${pet.weight} kg` : "Đang cập nhật"}
                   />
                   <DetailRow
-                    label="Ngay tiep nhan"
+                    label="Màu sắc"
+                    value={pet.color || "Đang cập nhật"}
+                  />
+                  <DetailRow
+                    label="Tổ chức quản lý"
+                    value={pet.organization?.name || "Cộng đồng"}
+                  />
+                  <DetailRow
+                    label="Chủ sở hữu hiện tại"
+                    value={pet.owner?.name || "Đang cập nhật"}
+                  />
+                  <DetailRow
+                    label="Ngày tiếp nhận"
                     value={formatDateVi(pet.rescueDate)}
                   />
                 </div>
@@ -303,10 +311,11 @@ export default function AdoptionPetDetailPage() {
 
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">
-                    Mo ta
+                    Mô tả
                   </p>
                   <p className="mt-3 text-sm leading-7 text-slate-600">
-                    {pet.description || "Thong tin mo ta dang duoc cap nhat bo sung."}
+                    {pet.description ||
+                      "Thông tin mô tả đang được cập nhật bổ sung."}
                   </p>
                 </div>
               </CardContent>
@@ -316,7 +325,7 @@ export default function AdoptionPetDetailPage() {
               <CardHeader className="pb-0">
                 <CardTitle className="flex items-center gap-3 text-2xl font-black tracking-tight text-slate-900">
                   <Stethoscope className="h-6 w-6 text-primary" />
-                  Lich su y te gan day
+                  Lịch sử y tế gần đây
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-6">
@@ -336,26 +345,29 @@ export default function AdoptionPetDetailPage() {
                         <div className="flex flex-wrap items-center justify-between gap-3">
                           <div>
                             <p className="text-sm font-bold text-slate-900">
-                              {record.diagnosis || "Thong tin chan doan dang cap nhat"}
+                              {record.diagnosis ||
+                                "Thông tin chẩn đoán đang cập nhật"}
                             </p>
                             <p className="mt-1 text-xs uppercase tracking-[0.2em] text-slate-400">
-                              {record.vaccine || "Khong co vaccine"} • {formatDateVi(record.recordDate)}
+                              {record.vaccine || "Không có vaccine"} •{" "}
+                              {formatDateVi(record.recordDate)}
                             </p>
                           </div>
                           <div className="flex items-center gap-2 text-xs text-slate-500">
                             <CalendarDays className="h-4 w-4" />
-                            {record.createdBy || "He thong"}
+                            {record.createdBy || "Hệ thống"}
                           </div>
                         </div>
                         <p className="mt-3 text-sm leading-6 text-slate-600">
-                          {record.description || "Chua co ghi chu bo sung cho lan kham nay."}
+                          {record.description ||
+                            "Chưa có ghi chú bổ sung cho lần khám này."}
                         </p>
                       </div>
                     ))}
                   </div>
                 ) : (
                   <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-6 py-10 text-center text-sm text-slate-500">
-                    Chua co du lieu y te de hien thi cho thu cung nay.
+                    Chưa có dữ liệu y tế để hiển thị cho thú cưng này.
                   </div>
                 )}
               </CardContent>
@@ -367,37 +379,42 @@ export default function AdoptionPetDetailPage() {
               <CardContent className="p-7">
                 <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-white/75">
                   <HeartHandshake className="h-3.5 w-3.5" />
-                  Form nhan nuoi
+                  Biểu mẫu nhận nuôi
                 </div>
 
                 <h2 className="mt-4 text-3xl font-black tracking-tight">
-                  Dang ky don nhan nuoi cho {pet.name}
+                  Đăng ký đơn nhận nuôi cho {pet.name}
                 </h2>
                 <p className="mt-3 text-sm leading-7 text-white/74">
-                  Dien thong tin trung thuc de trung tam danh gia kha nang cham soc
-                  va ket noi voi ban nhanh hon.
+                  Điền thông tin trung thực để trung tâm đánh giá khả năng chăm
+                  sóc và kết nối với bạn nhanh hơn.
                 </p>
 
                 <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-white/75">
                   {pet.organization?.name
-                    ? `Don se duoc gui den ${pet.organization.name}.`
-                    : "Don se duoc gui den don vi dang quan ly thu cung nay."}
+                    ? `Đơn sẽ được gửi đến ${pet.organization.name}.`
+                    : "Đơn sẽ được gửi đến đơn vị đang quản lý thú cưng này."}
                 </div>
 
                 {!currentUserQuery.data ? (
                   <div className="mt-6 space-y-3">
                     <p className="text-sm text-amber-200">
-                      Ban can dang nhap de gui don nhan nuoi.
+                      Bạn cần đăng nhập để gửi đơn nhận nuôi.
                     </p>
-                    <Button asChild className="w-full rounded-2xl bg-white text-slate-900 hover:bg-white/90">
-                      <Link href={APP_ROUTES.LOGIN}>Dang nhap de tiep tuc</Link>
+                    <Button
+                      asChild
+                      className="w-full rounded-2xl bg-white text-slate-900 hover:bg-white/90"
+                    >
+                      <Link href={APP_ROUTES.LOGIN}>Đăng nhập để tiếp tục</Link>
                     </Button>
                   </div>
                 ) : (
                   <form onSubmit={onSubmit} className="mt-6">
                     <FieldGroup className="gap-5">
                       {form.formState.errors.root?.message ? (
-                        <FieldError>{form.formState.errors.root.message}</FieldError>
+                        <FieldError>
+                          {form.formState.errors.root.message}
+                        </FieldError>
                       ) : null}
 
                       {submitSuccessMessage ? (
@@ -408,32 +425,40 @@ export default function AdoptionPetDetailPage() {
 
                       <Field>
                         <FieldLabel htmlFor="experience" className="text-white">
-                          Kinh nghiem cham soc thu cung
+                          Kinh nghiệm chăm sóc thú cưng
                         </FieldLabel>
                         <Textarea
                           id="experience"
                           rows={5}
                           className="min-h-32 w-full rounded-2xl border border-white/12 bg-white/8 px-4 py-3 text-sm text-white outline-none placeholder:text-white/40 focus:border-white/30 focus:ring-2 focus:ring-white/20"
-                          placeholder="Mo ta kinh nghiem cham soc, dieu ban da tung lam, cach ban xu ly khi thu cung om..."
+                          placeholder="Mô tả kinh nghiệm chăm sóc, điều bạn đã từng làm, cách bạn xử lý khi thú cưng ốm..."
                           {...form.register("experience")}
                         />
-                        <FieldError errors={[form.formState.errors.experience]} />
+                        <FieldError
+                          errors={[form.formState.errors.experience]}
+                        />
                       </Field>
 
                       <Field>
-                        <FieldLabel htmlFor="liveCondition" className="text-white">
-                          Dieu kien song va moi truong nuoi
+                        <FieldLabel
+                          htmlFor="liveCondition"
+                          className="text-white"
+                        >
+                          Điều kiện sống và môi trường nuôi
                         </FieldLabel>
                         <Textarea
                           id="liveCondition"
                           rows={5}
                           className="min-h-32 w-full rounded-2xl border border-white/12 bg-white/8 px-4 py-3 text-sm text-white outline-none placeholder:text-white/40 focus:border-white/30 focus:ring-2 focus:ring-white/20"
-                          placeholder="Chia se ve khong gian song, lich sinh hoat, thanh vien gia dinh, kha nang cham soc lau dai..."
+                          placeholder="Chia sẻ về không gian sống, lịch sinh hoạt, thành viên gia đình, khả năng chăm sóc lâu dài..."
                           {...form.register("liveCondition")}
                         />
-                        <FieldError errors={[form.formState.errors.liveCondition]} />
+                        <FieldError
+                          errors={[form.formState.errors.liveCondition]}
+                        />
                         <FieldDescription className="text-white/60">
-                          Hai truong nay giup trung tam danh gia do phu hop nhanh hon.
+                          Hai trường này giúp trung tâm đánh giá độ phù hợp
+                          nhanh hơn.
                         </FieldDescription>
                       </Field>
 
@@ -443,8 +468,8 @@ export default function AdoptionPetDetailPage() {
                         disabled={createAdoptionMutation.isPending}
                       >
                         {createAdoptionMutation.isPending
-                          ? "Dang gui don..."
-                          : "Gui don nhan nuoi"}
+                          ? "Đang gửi đơn..."
+                          : "Gửi đơn nhận nuôi"}
                       </Button>
                     </FieldGroup>
                   </form>

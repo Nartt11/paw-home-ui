@@ -40,13 +40,13 @@ import { Separator } from "@/components/ui/separator";
 function statusToLabel(status?: string) {
   switch (status) {
     case "ACTIVE":
-      return "Hoat dong";
+      return "Hoạt động";
     case "DISABLED":
-      return "Vo hieu";
+      return "Vô hiệu";
     case "PENDING_VERIFICATION":
-      return "Cho xac minh";
+      return "Chờ xác minh";
     default:
-      return status || "Khong ro";
+      return status || "Không rõ";
   }
 }
 
@@ -56,7 +56,7 @@ function getInitials(name?: string, fallback = "U") {
 }
 
 function readOnlyValue(value?: string) {
-  return value?.trim() ? value : "Chua cap nhat";
+  return value?.trim() ? value : "Chưa cập nhật";
 }
 
 export default function ProfilePage() {
@@ -92,16 +92,20 @@ export default function ProfilePage() {
         avatarUrl: values.avatarUrl?.trim() || undefined,
       }),
     onSuccess: async (user) => {
-      toast.success("Da cap nhat trang ca nhan");
+      toast.success("Đã cập nhật trang cá nhân");
       queryClient.setQueryData(queryKeys.auth.currentUser, user);
       reset({
         userName: user.username ?? "",
         avatarUrl: "",
       });
-      await queryClient.invalidateQueries({ queryKey: queryKeys.auth.currentUser });
+      await queryClient.invalidateQueries({
+        queryKey: queryKeys.auth.currentUser,
+      });
     },
     onError: (error) => {
-      toast.error(error instanceof Error ? error.message : "Khong the cap nhat ho so");
+      toast.error(
+        error instanceof Error ? error.message : "Không thể cập nhật hồ sơ",
+      );
     },
   });
 
@@ -109,9 +113,9 @@ export default function ProfilePage() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Trang ca nhan</h1>
+          <h1 className="text-3xl font-bold text-foreground">Trang cá nhân</h1>
           <p className="font-medium text-muted-foreground">
-            Dang tai thong tin tai khoan...
+            Đang tải thông tin tài khoản...
           </p>
         </div>
         <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
@@ -125,9 +129,9 @@ export default function ProfilePage() {
   if (!currentUser) {
     return (
       <div className="space-y-4">
-        <h1 className="text-3xl font-bold text-foreground">Trang ca nhan</h1>
+        <h1 className="text-3xl font-bold text-foreground">Trang cá nhân</h1>
         <div className="rounded-xl border border-dashed border-border bg-card px-6 py-12 text-center text-sm text-muted-foreground">
-          Khong tai duoc thong tin nguoi dung hien tai.
+          Không tải được thông tin người dùng hiện tại.
         </div>
       </div>
     );
@@ -136,7 +140,7 @@ export default function ProfilePage() {
   const rolesText =
     Array.isArray(currentUser.roles) && currentUser.roles.length > 0
       ? currentUser.roles.join(", ")
-      : "Chua co role";
+      : "Chưa có role";
 
   const avatarFallback = getInitials(
     currentUser.fullName || currentUser.username,
@@ -146,9 +150,9 @@ export default function ProfilePage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-foreground">Trang ca nhan</h1>
+        <h1 className="text-3xl font-bold text-foreground">Trang cá nhân</h1>
         <p className="font-medium text-muted-foreground">
-          Xem thong tin tai khoan hien tai va cap nhat profile tu API user/me.
+          Xem thông tin tài khoản hiện tại và cập nhật profile từ API user/me.
         </p>
       </div>
 
@@ -180,11 +184,15 @@ export default function ProfilePage() {
                   </Badge>
                   <Badge variant="secondary">
                     <UserRound className="mr-1 h-3.5 w-3.5" />
-                    {currentUser.organizationRole || "Khong co vai tro to chuc"}
+                    {currentUser.organizationRole || "Không có vai trò tổ chức"}
                   </Badge>
-                  <Badge variant={currentUser.emailVerified ? "default" : "outline"}>
+                  <Badge
+                    variant={currentUser.emailVerified ? "default" : "outline"}
+                  >
                     <CheckCircle2 className="mr-1 h-3.5 w-3.5" />
-                    {currentUser.emailVerified ? "Da xac minh email" : "Chua xac minh email"}
+                    {currentUser.emailVerified
+                      ? "Đã xác minh email"
+                      : "Chưa xác minh email"}
                   </Badge>
                 </div>
               </div>
@@ -197,7 +205,9 @@ export default function ProfilePage() {
                 <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   User ID
                 </div>
-                <div className="mt-2 break-all font-mono text-sm">{currentUser.userId}</div>
+                <div className="mt-2 break-all font-mono text-sm">
+                  {currentUser.userId}
+                </div>
               </div>
               <div className="rounded-xl border border-border p-4">
                 <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
@@ -214,19 +224,25 @@ export default function ProfilePage() {
                 <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   So dien thoai
                 </div>
-                <div className="mt-2 text-sm">{readOnlyValue(currentUser.phone)}</div>
+                <div className="mt-2 text-sm">
+                  {readOnlyValue(currentUser.phone)}
+                </div>
               </div>
               <div>
                 <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   Gioi tinh
                 </div>
-                <div className="mt-2 text-sm">{readOnlyValue(currentUser.gender)}</div>
+                <div className="mt-2 text-sm">
+                  {readOnlyValue(currentUser.gender)}
+                </div>
               </div>
               <div>
                 <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   To chuc
                 </div>
-                <div className="mt-2 text-sm">{readOnlyValue(currentUser.organizationName)}</div>
+                <div className="mt-2 text-sm">
+                  {readOnlyValue(currentUser.organizationName)}
+                </div>
               </div>
               <div>
                 <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
@@ -245,19 +261,25 @@ export default function ProfilePage() {
                 <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   Dia chi
                 </div>
-                <div className="mt-2 text-sm">{readOnlyValue(currentUser.streetAddress)}</div>
+                <div className="mt-2 text-sm">
+                  {readOnlyValue(currentUser.streetAddress)}
+                </div>
               </div>
               <div>
                 <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  Phuong / Xa
+                  Phường / Xã
                 </div>
-                <div className="mt-2 text-sm">{readOnlyValue(currentUser.wardName)}</div>
+                <div className="mt-2 text-sm">
+                  {readOnlyValue(currentUser.wardName)}
+                </div>
               </div>
               <div>
                 <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  Tinh / Thanh
+                  Tỉnh / Thành
                 </div>
-                <div className="mt-2 text-sm">{readOnlyValue(currentUser.provinceName)}</div>
+                <div className="mt-2 text-sm">
+                  {readOnlyValue(currentUser.provinceName)}
+                </div>
               </div>
             </div>
           </CardContent>
@@ -265,9 +287,9 @@ export default function ProfilePage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Cap nhat profile</CardTitle>
+            <CardTitle>Cập nhật profile</CardTitle>
             <CardDescription>
-              API hien co cho phep cap nhat `userName` va `avatarUrl`.
+              API hiện có cho phép cập nhật `userName` và `avatarUrl`.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -292,7 +314,9 @@ export default function ProfilePage() {
                 </Field>
 
                 <Field>
-                  <FieldLabel htmlFor="profile-avatar-url">Avatar URL</FieldLabel>
+                  <FieldLabel htmlFor="profile-avatar-url">
+                    Avatar URL
+                  </FieldLabel>
                   <FieldContent>
                     <Input
                       id="profile-avatar-url"
@@ -318,15 +342,15 @@ export default function ProfilePage() {
                     })
                   }
                 >
-                  Dat lai
+                  Đặt lại
                 </Button>
                 <Button
                   type="submit"
                   disabled={updateProfileMutation.isPending || !isDirty}
                 >
                   {updateProfileMutation.isPending
-                    ? "Dang cap nhat..."
-                    : "Luu thay doi"}
+                    ? "Đang cập nhật..."
+                    : "Lưu thay đổi"}
                 </Button>
               </div>
             </form>

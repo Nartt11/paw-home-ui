@@ -13,7 +13,7 @@ export default function PublicLayout({
         <Header />
       </div>
 
-      <main className="flex-1">{children}</main>
+      <main className="flex-1 bg-muted text-foreground">{children}</main>
       <Footer />
     </div>
   );

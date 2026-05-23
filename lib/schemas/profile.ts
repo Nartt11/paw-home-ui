@@ -4,8 +4,8 @@ export const profileSchema = z.object({
   userName: z
     .string()
     .trim()
-    .min(3, "Username phai co it nhat 3 ky tu")
-    .max(50, "Username khong duoc vuot qua 50 ky tu"),
+    .min(3, "Username phải có ít nhất 3 ký tự")
+    .max(50, "Username không được vượt quá 50 ký tự"),
   avatarUrl: z
     .string()
     .trim()
@@ -13,7 +13,7 @@ export const profileSchema = z.object({
     .or(z.literal(""))
     .refine(
       (value) => !value || /^https?:\/\/\S+$/i.test(value),
-      "Avatar URL phai la lien ket hop le",
+      "Avatar URL phải là liên kết hợp lệ",
     ),
 });
 

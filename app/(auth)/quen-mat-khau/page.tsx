@@ -21,7 +21,10 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { forgotPasswordSchema, type ForgotPasswordSchema } from "@/lib/schemas/auth";
+import {
+  forgotPasswordSchema,
+  type ForgotPasswordSchema,
+} from "@/lib/schemas/auth";
 import { getAuthErrorMessage, useForgotPassword } from "@/hooks/use-auth";
 import { APP_ROUTES } from "@/constants/routes";
 
@@ -50,7 +53,10 @@ export default function ForgotPasswordPage() {
     } catch (error) {
       setError("root", {
         type: "server",
-        message: getAuthErrorMessage(error, "Khong gui duoc email dat lai mat khau."),
+        message: getAuthErrorMessage(
+          error,
+          "Không gửi được email đặt lại mật khẩu.",
+        ),
       });
     }
   });
@@ -58,23 +64,23 @@ export default function ForgotPasswordPage() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Quen mat khau</CardTitle>
+        <CardTitle>Quên mật khẩu</CardTitle>
         <CardDescription>
-          Nhap email de nhan huong dan dat lai mat khau.
+          Nhập email để nhận hướng dẫn đặt lại mật khẩu.
         </CardDescription>
       </CardHeader>
       <CardContent>
         {isSent ? (
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Neu email ton tai trong he thong, ban se nhan duoc lien ket dat
-              lai mat khau trong it phut.
+              Nếu email tồn tại trong hệ thống, bạn sẽ nhận được liên kết đặt
+              lại mật khẩu trong ít phút.
             </p>
             <Button asChild className="w-full">
-              <Link href="/dang-nhap">Quay lai dang nhap</Link>
+              <Link href="/dang-nhap">Quay lại đăng nhập</Link>
             </Button>
             <Button asChild variant="outline" className="w-full">
-              <Link href={APP_ROUTES.HOME}>Ve trang chu</Link>
+              <Link href={APP_ROUTES.HOME}>Về trang chủ</Link>
             </Button>
           </div>
         ) : (
@@ -87,7 +93,9 @@ export default function ForgotPasswordPage() {
                 <Field>
                   <FieldLabel htmlFor="email">Email</FieldLabel>
                   <Input id="email" type="email" {...register("email")} />
-                  {errors.email ? <FieldError>{errors.email.message}</FieldError> : null}
+                  {errors.email ? (
+                    <FieldError>{errors.email.message}</FieldError>
+                  ) : null}
                 </Field>
 
                 <Field>
@@ -96,13 +104,15 @@ export default function ForgotPasswordPage() {
                     className="w-full"
                     disabled={forgotPasswordMutation.isPending}
                   >
-                    {forgotPasswordMutation.isPending ? "Dang gui..." : "Gui lien ket"}
+                    {forgotPasswordMutation.isPending
+                      ? "Đang gửi..."
+                      : "Gửi liên kết"}
                   </Button>
                   <Button asChild variant="outline" className="w-full">
-                    <Link href={APP_ROUTES.HOME}>Ve trang chu</Link>
+                    <Link href={APP_ROUTES.HOME}>Về trang chủ</Link>
                   </Button>
                   <FieldDescription className="text-center">
-                    Nho mat khau roi? <Link href="/dang-nhap">Dang nhap</Link>
+                    Nhớ mật khẩu rồi? <Link href="/dang-nhap">Đăng nhập</Link>
                   </FieldDescription>
                 </Field>
               </FieldGroup>

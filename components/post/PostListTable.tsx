@@ -52,7 +52,7 @@ export interface PostListTableProps {
 }
 
 function formatDateTime(value?: string) {
-  if (!value) return "Chua co";
+  if (!value) return "Chưa có";
 
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) return value;
@@ -65,7 +65,7 @@ function formatDateTime(value?: string) {
 }
 
 function getContentPreview(value?: string) {
-  if (!value?.trim()) return "Khong co noi dung";
+  if (!value?.trim()) return "Không có nội dung";
   return value.length > 120 ? `${value.slice(0, 120)}...` : value;
 }
 
@@ -115,7 +115,7 @@ const columns: ColumnDef<Post>[] = [
   },
   {
     accessorKey: "content",
-    header: "Noi dung",
+    header: "Nội dung",
     cell: ({ row }) => (
       <div className="min-w-72">
         <div className="line-clamp-3 text-sm text-foreground">
@@ -147,16 +147,16 @@ const columns: ColumnDef<Post>[] = [
           {row.original.rescueCaseId}
         </Badge>
       ) : (
-        <span className="text-sm text-muted-foreground">Chua lien ket</span>
+        <span className="text-sm text-muted-foreground">Chưa liên kết</span>
       ),
   },
   {
     accessorKey: "stats",
-    header: "Tuong tac",
+    header: "Tương tác",
     cell: ({ row }) => (
       <div className="space-y-1 text-sm text-muted-foreground">
-        <div>{row.original.likeCount} luot thich</div>
-        <div>{row.original.commentCount} binh luan</div>
+        <div>{row.original.likeCount} lượt thích</div>
+        <div>{row.original.commentCount} bình luận</div>
       </div>
     ),
   },
@@ -286,8 +286,8 @@ export function PostListTable({
             ) : table.getRowModel().rows.length === 0 ? (
               <AdminTableEmptyRow
                 colSpan={columnsWithActions.length}
-                title="Chua co bai dang"
-                description="Bai dang moi se xuat hien tai day sau khi duoc tao."
+                title="Chưa có bài đăng"
+                description="Bài đăng mới sẽ xuất hiện tại đây sau khi được tạo."
                 cellClassName="px-3 py-12"
               />
             ) : (
@@ -386,7 +386,9 @@ export function PostListTable({
               variant="outline"
               size="sm"
               disabled={!canNext || Boolean(loading)}
-              onClick={() => onPageChange(Math.min(safeTotalPages, safePage + 1))}
+              onClick={() =>
+                onPageChange(Math.min(safeTotalPages, safePage + 1))
+              }
             >
               Sau
               <ChevronRightIcon className="ml-1 size-4" />
