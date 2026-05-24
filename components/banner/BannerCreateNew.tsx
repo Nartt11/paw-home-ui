@@ -1,8 +1,21 @@
 "use client";
 
 import * as React from "react";
+import Image from "next/image";
+
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Controller, useForm, useWatch } from "react-hook-form";
+
+import {
+  BANNER_LINK_TYPES,
+  BANNER_TARGET_PAGES,
+  createBannerDefaultValues,
+  createBannerFormSchema,
+  type CreateBannerFormValues,
+} from "@/lib/schemas/banner";
 
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -11,8 +24,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Field,
+  FieldContent,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -21,235 +40,301 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { Checkbox } from "@/components/ui/checkbox";
-
-import type { CreateBannerPayloadDto } from "@/services/banner/banner-dto";
-
-export type BannerCreateNewValues = CreateBannerPayloadDto;
 
 export interface BannerCreateNewProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   submitting?: boolean;
-  onSubmit?: (values: BannerCreateNewValues) => void;
+  onSubmit?: (values: CreateBannerFormValues) => void;
 }
-
-const DEFAULT_VALUES: BannerCreateNewValues = {
-  title: "",
-  subtitle: "",
-  mediaId: "",
-  linkUrl: "",
-  linkType: "EXTERNAL",
-  displayOrder: 1,
-  startDate: "",
-  endDate: "",
-  active: true,
-  targetPage: "HOME",
-};
-
-const LINK_TYPES: Array<{ value: string; label: string }> = [
-  { value: "EXTERNAL", label: "External" },
-  { value: "INTERNAL", label: "Internal" },
-];
-
-const TARGET_PAGES: Array<{ value: string; label: string }> = [
-  { value: "HOME", label: "Trang chủ" },
-  { value: "ADOPTION", label: "Nhận nuôi" },
-  { value: "RESCUE", label: "Cứu hộ" },
-  { value: "DONATE", label: "Ủng hộ" },
-];
 
 export function BannerCreateNew({
   open,
   onOpenChange,
-  submitting,
+  submitting = false,
   onSubmit,
 }: BannerCreateNewProps) {
-  const [values, setValues] =
-    React.useState<BannerCreateNewValues>(DEFAULT_VALUES);
+  const form = useForm<CreateBannerFormValues>({
+    resolver: zodResolver(createBannerFormSchema),
+    defaultValues: createBannerDefaultValues,
+  });
+
+  const imageInputRef = React.useRef<HTMLInputElement | null>(null);
+  const imageFile = useWatch({
+    control: form.control,
+    name: "imageFile",
+  });
+
+  const [previewUrl, setPreviewUrl] = React.useState("");
 
   React.useEffect(() => {
-    if (!open) setValues(DEFAULT_VALUES);
-  }, [open]);
+    if (!open) {
+      form.reset(createBannerDefaultValues);
 
-  const update = React.useCallback(
-    <K extends keyof BannerCreateNewValues>(
-      key: K,
-      value: BannerCreateNewValues[K],
-    ) => {
-      setValues((p) => ({ ...p, [key]: value }));
-    },
-    [],
-  );
+      if (imageInputRef.current) {
+        imageInputRef.current.value = "";
+      }
+    }
+  }, [form, open]);
 
-  const canSubmit = React.useMemo(() => {
-    return Boolean(values.title.trim()) && Boolean(values.mediaId.trim());
-  }, [values.mediaId, values.title]);
+  React.useEffect(() => {
+    if (!imageFile) {
+      setPreviewUrl("");
+      return;
+    }
+
+    const objectUrl = URL.createObjectURL(imageFile);
+    setPreviewUrl(objectUrl);
+
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [imageFile]);
+
+  const {
+    control,
+    formState: { errors },
+    handleSubmit,
+    register,
+  } = form;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-full p-0 sm:max-w-4xl">
+      <DialogContent className="w-full p-0 sm:max-w-3xl">
         <DialogHeader className="px-6 pt-6">
-          <DialogTitle>Thêm banner</DialogTitle>
-          <DialogDescription>
-            Nhập thông tin banner. Trường bắt buộc: <b>Tiêu đề</b>,{" "}
-            <b>Media ID</b>.
-          </DialogDescription>
+          <DialogTitle>Them banner</DialogTitle>
+          <DialogDescription>Nhap thong tin banner moi.</DialogDescription>
         </DialogHeader>
 
         <div className="max-h-[calc(100vh-12rem)] overflow-y-auto px-6 pb-6">
           <Separator className="my-4" />
 
-          <div className="grid gap-5 md:grid-cols-2">
-            <div className="space-y-2 md:col-span-2">
-              <Label>Tiêu đề</Label>
-              <Input
-                placeholder="Banner khuyến mãi tháng 5"
-                value={values.title}
-                onChange={(e) => update("title", e.target.value)}
-              />
-            </div>
+          <form
+            className="space-y-5"
+            onSubmit={handleSubmit((values) => onSubmit?.(values))}
+          >
+            <FieldGroup className="grid gap-5 md:grid-cols-2">
+              <Field className="md:col-span-2">
+                <FieldLabel htmlFor="banner-title">Tieu de</FieldLabel>
+                <FieldContent>
+                  <Input
+                    id="banner-title"
+                    placeholder="Banner khuyen mai thang 5"
+                    disabled={submitting}
+                    aria-invalid={Boolean(errors.title)}
+                    {...register("title")}
+                  />
+                  <FieldError errors={[errors.title]} />
+                </FieldContent>
+              </Field>
 
-            <div className="space-y-2 md:col-span-2">
-              <Label>Phụ đề</Label>
-              <Input
-                placeholder="Mô tả ngắn..."
-                value={values.subtitle}
-                onChange={(e) => update("subtitle", e.target.value)}
-              />
-            </div>
+              <Field className="md:col-span-2">
+                <FieldLabel htmlFor="banner-subtitle">Phu de</FieldLabel>
+                <FieldContent>
+                  <Input
+                    id="banner-subtitle"
+                    placeholder="Mo ta ngan..."
+                    disabled={submitting}
+                    aria-invalid={Boolean(errors.subtitle)}
+                    {...register("subtitle")}
+                  />
+                  <FieldError errors={[errors.subtitle]} />
+                </FieldContent>
+              </Field>
 
-            <div className="space-y-2">
-              <Label>Target page</Label>
-              <Select
-                value={values.targetPage}
-                onValueChange={(v) => update("targetPage", v)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Chọn trang" />
-                </SelectTrigger>
-                <SelectContent>
-                  {TARGET_PAGES.map((it) => (
-                    <SelectItem key={it.value} value={it.value}>
-                      {it.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+              <Field>
+                <FieldLabel>Target page</FieldLabel>
+                <FieldContent>
+                  <Controller
+                    control={control}
+                    name="targetPage"
+                    render={({ field }) => (
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        disabled={submitting}
+                      >
+                        <SelectTrigger aria-invalid={Boolean(errors.targetPage)}>
+                          <SelectValue placeholder="Chon trang" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {BANNER_TARGET_PAGES.map((item) => (
+                            <SelectItem key={item} value={item}>
+                              {item}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                  <FieldError errors={[errors.targetPage]} />
+                </FieldContent>
+              </Field>
 
-            <div className="space-y-2">
-              <Label>Thứ tự hiển thị</Label>
-              <Input
-                type="number"
-                min={1}
-                value={values.displayOrder}
-                onChange={(e) =>
-                  update("displayOrder", Number(e.target.value) || 1)
-                }
-              />
-            </div>
-          </div>
+              <Field>
+                <FieldLabel htmlFor="banner-order">
+                  Thu tu hien thi
+                </FieldLabel>
+                <FieldContent>
+                  <Input
+                    id="banner-order"
+                    type="number"
+                    min={1}
+                    disabled={submitting}
+                    aria-invalid={Boolean(errors.displayOrder)}
+                    {...register("displayOrder", { valueAsNumber: true })}
+                  />
+                  <FieldError errors={[errors.displayOrder]} />
+                </FieldContent>
+              </Field>
 
-          <Separator className="my-5" />
+              <Field className="md:col-span-2">
+                <FieldLabel htmlFor="banner-image">Anh banner</FieldLabel>
+                <FieldContent>
+                  <Controller
+                    control={control}
+                    name="imageFile"
+                    render={({ field }) => (
+                      <Input
+                        id="banner-image"
+                        ref={imageInputRef}
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        disabled={submitting}
+                        onChange={(event) =>
+                          field.onChange(event.target.files?.[0] ?? null)
+                        }
+                      />
+                    )}
+                  />
+                  <FieldError errors={[errors.imageFile]} />
+                  {previewUrl ? (
+                    <div className="overflow-hidden rounded-lg border">
+                      <div className="relative h-48 w-full">
+                        <Image
+                          src={previewUrl}
+                          alt="Banner preview"
+                          fill
+                          className="object-cover"
+                          unoptimized
+                        />
+                      </div>
+                    </div>
+                  ) : null}
+                </FieldContent>
+              </Field>
+            </FieldGroup>
 
-          <div className="grid gap-5 md:grid-cols-2">
-            <div className="space-y-2 md:col-span-2">
-              <Label>Media ID</Label>
-              <Input
-                placeholder="media_123"
-                value={values.mediaId}
-                onChange={(e) => update("mediaId", e.target.value)}
-              />
-              <p className="text-xs text-muted-foreground">
-                Mẹo: hiện tại hệ thống chưa có upload media trong UI, bạn nhập
-                mediaId có sẵn.
-              </p>
-            </div>
+            <Separator className="my-5" />
 
-            <div className="space-y-2 md:col-span-2">
-              <Label>Link URL</Label>
-              <Input
-                placeholder="https://example.com"
-                value={values.linkUrl}
-                onChange={(e) => update("linkUrl", e.target.value)}
-              />
-            </div>
+            <FieldGroup className="grid gap-5 md:grid-cols-2">
+              <Field className="md:col-span-2">
+                <FieldLabel htmlFor="banner-link-url">Link URL</FieldLabel>
+                <FieldContent>
+                  <Input
+                    id="banner-link-url"
+                    placeholder="https://example.com"
+                    disabled={submitting}
+                    aria-invalid={Boolean(errors.linkUrl)}
+                    {...register("linkUrl")}
+                  />
+                  <FieldError errors={[errors.linkUrl]} />
+                </FieldContent>
+              </Field>
 
-            <div className="space-y-2">
-              <Label>Link type</Label>
-              <Select
-                value={values.linkType}
-                onValueChange={(v) => update("linkType", v)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Chọn loại link" />
-                </SelectTrigger>
-                <SelectContent>
-                  {LINK_TYPES.map((it) => (
-                    <SelectItem key={it.value} value={it.value}>
-                      {it.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+              <Field>
+                <FieldLabel>Link type</FieldLabel>
+                <FieldContent>
+                  <Controller
+                    control={control}
+                    name="linkType"
+                    render={({ field }) => (
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        disabled={submitting}
+                      >
+                        <SelectTrigger aria-invalid={Boolean(errors.linkType)}>
+                          <SelectValue placeholder="Chon loai link" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {BANNER_LINK_TYPES.map((item) => (
+                            <SelectItem key={item} value={item}>
+                              {item}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                  <FieldError errors={[errors.linkType]} />
+                </FieldContent>
+              </Field>
 
-            <div className="flex items-end gap-2">
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  id="active"
-                  checked={values.active}
-                  onCheckedChange={(v) => update("active", Boolean(v))}
-                  disabled={Boolean(submitting)}
+              <Field orientation="horizontal" className="items-end gap-3">
+                <Controller
+                  control={control}
+                  name="active"
+                  render={({ field }) => (
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={(checked) =>
+                        field.onChange(Boolean(checked))
+                      }
+                      disabled={submitting}
+                    />
+                  )}
                 />
-                <Label htmlFor="active" className="text-sm">
-                  Đang bật
-                </Label>
-              </div>
-            </div>
-          </div>
+                <FieldLabel>Hoat dong</FieldLabel>
+              </Field>
+            </FieldGroup>
 
-          <Separator className="my-5" />
+            <Separator className="my-5" />
 
-          <div className="grid gap-5 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label>Start date</Label>
-              <Input
-                type="date"
-                value={values.startDate}
-                onChange={(e) => update("startDate", e.target.value)}
-              />
-            </div>
+            <FieldGroup className="grid gap-5 md:grid-cols-2">
+              <Field>
+                <FieldLabel htmlFor="banner-start-date">Start date</FieldLabel>
+                <FieldContent>
+                  <Input
+                    id="banner-start-date"
+                    type="datetime-local"
+                    disabled={submitting}
+                    aria-invalid={Boolean(errors.startDate)}
+                    {...register("startDate")}
+                  />
+                  <FieldError errors={[errors.startDate]} />
+                </FieldContent>
+              </Field>
 
-            <div className="space-y-2">
-              <Label>End date</Label>
-              <Input
-                type="date"
-                value={values.endDate}
-                onChange={(e) => update("endDate", e.target.value)}
-              />
-            </div>
-          </div>
+              <Field>
+                <FieldLabel htmlFor="banner-end-date">End date</FieldLabel>
+                <FieldContent>
+                  <Input
+                    id="banner-end-date"
+                    type="datetime-local"
+                    disabled={submitting}
+                    aria-invalid={Boolean(errors.endDate)}
+                    {...register("endDate")}
+                  />
+                  <FieldError errors={[errors.endDate]} />
+                </FieldContent>
+              </Field>
+            </FieldGroup>
+
+            <DialogFooter className="px-0 pb-0 pt-6">
+              <Button
+                variant="secondary"
+                type="button"
+                onClick={() => onOpenChange(false)}
+                disabled={submitting}
+              >
+                Huy
+              </Button>
+
+              <Button type="submit" disabled={submitting}>
+                {submitting ? "Dang tao..." : "Tao banner"}
+              </Button>
+            </DialogFooter>
+          </form>
         </div>
-
-        <DialogFooter className="px-6 pb-6">
-          <Button
-            variant="secondary"
-            type="button"
-            onClick={() => onOpenChange(false)}
-            disabled={Boolean(submitting)}
-          >
-            Huỷ
-          </Button>
-          <Button
-            type="button"
-            onClick={() => onSubmit?.(values)}
-            disabled={Boolean(submitting) || !canSubmit}
-          >
-            {submitting ? "Đang tạo..." : "Tạo banner"}
-          </Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

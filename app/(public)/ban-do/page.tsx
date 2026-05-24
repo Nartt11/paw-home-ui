@@ -1,142 +1,419 @@
 "use client";
-import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+
+import { useCallback, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
-import rescueService from "@/services/rescue-case/rescue-case";
+import { Plus } from "lucide-react";
+
 import type {
-  BoundingBoxConfigDto,
-  RescueCaseMapMarkersConfigDto,
-} from "@/services/rescue-case/rescue-case-dto";
-import type { RescueCaseSummary } from "@/types/rescue-case.type";
+  OrganizationMapMarker,
+  RescueMapMarker,
+} from "@/components/map-rescue/MapRescue";
+import { OrganizationViewDetail } from "@/components/organization/OrganizationViewDetail";
+import {
+  RescueCaseCreate,
+  type RescueCaseCreateValues,
+} from "@/components/rescue-case/RescueCaseCreate";
+import { RescueCaseViewDetail } from "@/components/rescue-case/RescueCaseViewDetail";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  useOrganizationDetail,
+  useOrganizationMapMarkers,
+  useOrganizationsInBoundingBox,
+} from "@/hooks/use-organization";
+import {
+  useCreateRescueCase,
+  useRescueCaseDetail,
+  useRescueCasesInBoundingBox,
+  useRescueMapMarkers,
+} from "@/hooks/use-rescue-case";
+import type { OrganizationSummary } from "@/types/organization.type";
+import type {
+  RescueCaseBoundingBoxParams,
+  RescueCaseMarkers,
+  RescueCasePayload,
+  RescueCaseSummary,
+} from "@/types/rescue-case.type";
 
 const Map = dynamic(() => import("@/components/map-rescue/MapRescue"), {
   ssr: false,
   loading: () => (
     <div className="flex h-screen w-full items-center justify-center bg-gray-100">
-      <p className="text-gray-600">Đang tải bản đồ...</p>
+      <p className="text-gray-600">Dang tai ban do...</p>
     </div>
   ),
 });
 
+const VIETNAM_BOUNDS: RescueCaseBoundingBoxParams = {
+  minLat: 8.5,
+  maxLat: 23.5,
+  minLng: 102.1,
+  maxLng: 109.5,
+  page: 0,
+  size: 100,
+};
+
+const VIETNAM_MARKER_BOUNDS: RescueCaseMarkers = {
+  minLat: 8.5,
+  maxLat: 23.5,
+  minLng: 102.1,
+  maxLng: 109.5,
+};
+
+function toCreateRescuePayload(
+  values: RescueCaseCreateValues,
+): RescueCasePayload {
+  return {
+    ...values,
+    imageUrls: [],
+    mediaIds: [],
+    contactPhone: "",
+  };
+}
+
 export default function MapRescuePage() {
-  const [boundsBox] = useState<BoundingBoxConfigDto>({
-    minLat: 8.5,
-    maxLat: 23.5,
-    minLng: 102.1,
-    maxLng: 109.5,
-    page: 1,
-    size: 100,
-  });
+  const [createOpen, setCreateOpen] = useState(false);
+  const [rescueViewOpen, setRescueViewOpen] = useState(false);
+  const [organizationViewOpen, setOrganizationViewOpen] = useState(false);
+  const [selectedRescueId, setSelectedRescueId] = useState<string | null>(null);
+  const [selectedOrganizationId, setSelectedOrganizationId] = useState<
+    string | null
+  >(null);
 
-  const [boundsMarkers] = useState<RescueCaseMapMarkersConfigDto>({
-    minLat: 8.5,
-    maxLat: 23.5,
-    minLng: 102.1,
-    maxLng: 109.5,
+  const rescueMarkersQuery = useRescueMapMarkers(VIETNAM_MARKER_BOUNDS);
+  const rescueBoundingBoxQuery = useRescueCasesInBoundingBox(VIETNAM_BOUNDS);
+  const organizationMarkersQuery = useOrganizationMapMarkers({
+    minLat: VIETNAM_BOUNDS.minLat,
+    maxLat: VIETNAM_BOUNDS.maxLat,
+    minLng: VIETNAM_BOUNDS.minLng,
+    maxLng: VIETNAM_BOUNDS.maxLng,
   });
-
-  // Query 1: Map markers (lightweight - just lat/lng/priority)
-  const { data: mapMarkers = [], isPending: isLoadingMarkers } = useQuery({
-    queryKey: ["rescue-case-markers", boundsMarkers],
-    queryFn: () => rescueService.getRescueMapMarkers(boundsMarkers),
-    staleTime: 5 * 60 * 1000,
-    refetchInterval: 2 * 60 * 1000,
+  const organizationBoundingBoxQuery = useOrganizationsInBoundingBox({
+    ...VIETNAM_BOUNDS,
   });
+  const rescueDetailQuery = useRescueCaseDetail(
+    rescueViewOpen ? selectedRescueId ?? undefined : undefined,
+  );
+  const organizationDetailQuery = useOrganizationDetail(
+    organizationViewOpen ? selectedOrganizationId ?? undefined : undefined,
+  );
+  const createRescueCaseMutation = useCreateRescueCase();
 
-  // Query 2: Sidebar data (full details)
-  const { data: paginatedData, isPending: isLoadingSidebar } = useQuery({
-    queryKey: ["rescue-cases-bbox", boundsBox],
-    queryFn: () => rescueService.getRescueCasesInBoundingBox(boundsBox),
-    staleTime: 5 * 60 * 1000,
-    refetchInterval: 2 * 60 * 1000,
-  });
-
-  const rescueCases: RescueCaseSummary[] = useMemo(
-    () => paginatedData?.content ?? [],
-    [paginatedData],
+  const rescueCases = useMemo(
+    () => rescueBoundingBoxQuery.data?.content ?? [],
+    [rescueBoundingBoxQuery.data],
+  );
+  const organizations = useMemo(
+    () => organizationBoundingBoxQuery.data?.content ?? [],
+    [organizationBoundingBoxQuery.data],
+  );
+  const rescueMarkers: RescueMapMarker[] = useMemo(
+    () => (rescueMarkersQuery.data ?? []).map((marker) => ({ ...marker })),
+    [rescueMarkersQuery.data],
+  );
+  const organizationMarkers: OrganizationMapMarker[] = useMemo(
+    () =>
+      (organizationMarkersQuery.data ?? []).map((item) => ({
+        organizationId: item.organizationId,
+        name: item.name,
+        latitude: item.latitude,
+        longitude: item.longitude,
+        type: item.type,
+        provinceName: item.provinceName,
+        wardName: item.wardName,
+      })),
+    [organizationMarkersQuery.data],
+  );
+  const rescueCasesNeedingSupport = useMemo(
+    () =>
+      rescueCases.filter(
+        (item) => item.status === "REPORTED" || item.status === "IN_PROGRESS",
+      ),
+    [rescueCases],
   );
 
-  const isLoadingCases = isLoadingMarkers || isLoadingSidebar;
+  const totalRescueCases = rescueBoundingBoxQuery.data?.totalElements ?? 0;
+  const totalOrganizations =
+    organizationBoundingBoxQuery.data?.totalElements ??
+    organizationMarkersQuery.data?.length ??
+    0;
+  const isLoadingMap =
+    rescueMarkersQuery.isPending ||
+    rescueBoundingBoxQuery.isPending ||
+    organizationMarkersQuery.isPending ||
+    organizationBoundingBoxQuery.isPending;
+
+  const handleOpenRescueDetail = useCallback((caseId: string) => {
+    setSelectedRescueId(caseId);
+    setRescueViewOpen(true);
+  }, []);
+
+  const handleOpenOrganizationDetail = useCallback((organizationId: string) => {
+    setSelectedOrganizationId(organizationId);
+    setOrganizationViewOpen(true);
+  }, []);
+
+  const handleRescueViewOpenChange = useCallback((open: boolean) => {
+    setRescueViewOpen(open);
+    if (!open) {
+      setSelectedRescueId(null);
+    }
+  }, []);
+
+  const handleOrganizationViewOpenChange = useCallback((open: boolean) => {
+    setOrganizationViewOpen(open);
+    if (!open) {
+      setSelectedOrganizationId(null);
+    }
+  }, []);
+
+  const handleCreateRescueCase = useCallback(
+    async (values: RescueCaseCreateValues) => {
+      await createRescueCaseMutation.mutateAsync(toCreateRescuePayload(values));
+      setCreateOpen(false);
+    },
+    [createRescueCaseMutation],
+  );
+
+  const renderRescueList = useCallback(
+    (items: RescueCaseSummary[], emptyMessage: string) => {
+      if (isLoadingMap) {
+        return [...Array(4)].map((_, index) => (
+          <div
+            key={index}
+            className="h-24 animate-pulse rounded-xl bg-gray-200"
+          />
+        ));
+      }
+
+      if (items.length === 0) {
+        return (
+          <div className="rounded-xl border border-dashed p-6 text-center text-sm text-gray-500">
+            {emptyMessage}
+          </div>
+        );
+      }
+
+      return items.map((caseItem) => (
+        <button
+          key={caseItem.caseId}
+          type="button"
+          onClick={() => handleOpenRescueDetail(caseItem.caseId)}
+          className="w-full rounded-xl border border-gray-200 p-4 text-left transition hover:border-orange-400 hover:bg-orange-50"
+        >
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="font-mono text-xs text-gray-500">
+                {caseItem.caseCode || caseItem.caseId}
+              </p>
+              <p className="mt-1 font-medium text-gray-900">
+                {caseItem.species}
+              </p>
+              <p className="mt-1 line-clamp-2 text-sm text-gray-500">
+                {caseItem.locationText}
+              </p>
+            </div>
+            <span className="rounded-full bg-gray-100 px-2 py-1 text-xs font-semibold text-gray-700">
+              {caseItem.priority}
+            </span>
+          </div>
+          <div className="mt-3 flex items-center justify-between text-xs text-gray-500">
+            <span>{caseItem.status}</span>
+            <span>
+              {new Date(caseItem.reportedAt).toLocaleDateString("vi-VN")}
+            </span>
+          </div>
+        </button>
+      ));
+    },
+    [handleOpenRescueDetail, isLoadingMap],
+  );
+
+  const renderOrganizationList = useCallback(
+    (items: OrganizationSummary[]) => {
+      if (isLoadingMap) {
+        return [...Array(4)].map((_, index) => (
+          <div
+            key={index}
+            className="h-24 animate-pulse rounded-xl bg-gray-200"
+          />
+        ));
+      }
+
+      if (items.length === 0) {
+        return (
+          <div className="rounded-xl border border-dashed p-6 text-center text-sm text-gray-500">
+            Chua co trung tam nao trong vung hien thi.
+          </div>
+        );
+      }
+
+      return items.map((organization) => (
+        <button
+          key={organization.organizationId}
+          type="button"
+          onClick={() =>
+            handleOpenOrganizationDetail(organization.organizationId)
+          }
+          className="w-full rounded-xl border border-gray-200 p-4 text-left transition hover:border-teal-500 hover:bg-teal-50"
+        >
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="line-clamp-1 font-medium text-gray-900">
+                {organization.name}
+              </p>
+              <p className="mt-1 text-xs text-gray-500">
+                {organization.type}
+              </p>
+              <p className="mt-1 line-clamp-2 text-sm text-gray-500">
+                {[
+                  organization.streetAddress,
+                  organization.wardName,
+                  organization.provinceName,
+                ]
+                  .filter(Boolean)
+                  .join(", ")}
+              </p>
+            </div>
+            <span className="rounded-full bg-gray-100 px-2 py-1 text-xs font-semibold text-gray-700">
+              {organization.status}
+            </span>
+          </div>
+          <div className="mt-3 flex items-center justify-between gap-3 text-xs text-gray-500">
+            <span className="truncate">
+              {organization.phone || "Chua co so dien thoai"}
+            </span>
+            <span className="truncate text-right">
+              {organization.email || "Chua co email"}
+            </span>
+          </div>
+        </button>
+      ));
+    },
+    [handleOpenOrganizationDetail, isLoadingMap],
+  );
 
   return (
     <div className="flex h-screen">
-      {/* Map */}
-      <main className="flex-1 overflow-hidden">
-        <Map markers={mapMarkers} loading={isLoadingCases} />
+      <main className="relative flex-1 overflow-hidden">
+        <Map
+          rescueMarkers={rescueMarkers}
+          organizationMarkers={organizationMarkers}
+          loading={isLoadingMap}
+          onRescueMarkerClick={handleOpenRescueDetail}
+          onOrganizationMarkerClick={handleOpenOrganizationDetail}
+        />
+        <Button
+          type="button"
+          size="lg"
+          className="absolute bottom-6 right-6 z-20 rounded-full shadow-lg"
+          onClick={() => setCreateOpen(true)}
+        >
+          <Plus className="size-4" />
+          Tao ca cuu ho
+        </Button>
       </main>
 
-      {/* Sidebar */}
       <aside className="w-80 border-l bg-white shadow-xl">
-        <div className="h-full overflow-y-auto">
-          <div className="space-y-4 p-4">
-            <h2 className="text-lg font-bold">Ca cứu hộ</h2>
+        <div className="flex h-full min-h-0 flex-col pt-16">
+          <div className="border-b px-5 py-4">
+            <h2 className="text-base font-semibold text-gray-900">
+              Tong quan khu vuc
+            </h2>
             <p className="text-sm text-gray-500">
-              {rescueCases.length} ca cứu hộ được tìm thấy
+              Xem nhanh ca cuu ho va trung tam ho tro tren ban do.
             </p>
-
-            {isLoadingCases && (
-              <div className="space-y-2">
-                {[...Array(3)].map((_, i) => (
-                  <div
-                    key={i}
-                    className="animate-pulse rounded-lg bg-gray-200 h-16"
-                  />
-                ))}
-              </div>
-            )}
-
-            {!isLoadingCases && rescueCases.length === 0 && (
-              <p className="py-4 text-center text-gray-400">
-                Không có ca cứu hộ
-              </p>
-            )}
-
-            {/* Rescue cases list */}
-            <div className="space-y-2">
-              {rescueCases.map((caseItem) => (
-                <div
-                  key={caseItem.caseId}
-                  className="rounded-lg border border-gray-200 p-3 hover:border-orange-400 hover:bg-orange-50 cursor-pointer transition"
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <p className="font-mono text-xs text-gray-600">
-                        {caseItem.caseId}
-                      </p>
-                      <p className="mt-1 text-sm font-medium text-gray-900">
-                        {caseItem.species}
-                      </p>
-                      <p className="mt-1 text-xs text-gray-500">
-                        {caseItem.locationText}
-                      </p>
-                    </div>
-                    <div
-                      className={`shrink-0 rounded-full px-2 py-1 text-xs font-semibold text-white ${
-                        caseItem.priority === "CRITICAL" ||
-                        caseItem.priority === "HIGH"
-                          ? "bg-red-500"
-                          : caseItem.priority === "NORMAL"
-                            ? "bg-amber-500"
-                            : "bg-blue-500"
-                      }`}
-                    >
-                      {caseItem.priority}
-                    </div>
-                  </div>
-                  <div className="mt-2 flex items-center justify-between">
-                    <p className="text-xs text-gray-500">{caseItem.status}</p>
-                    <p className="text-xs text-gray-400">
-                      {new Date(caseItem.reportedAt).toLocaleDateString(
-                        "vi-VN",
-                      )}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
           </div>
+
+          <Tabs defaultValue="all" className="min-h-0 flex-1 gap-0">
+            <TabsList className="mx-4 mt-4 grid w-auto grid-cols-3">
+              <TabsTrigger value="all">Tat ca</TabsTrigger>
+              <TabsTrigger value="rescue">Can ho tro</TabsTrigger>
+              <TabsTrigger value="organizations">Trung tam</TabsTrigger>
+            </TabsList>
+
+            <TabsContent
+              value="all"
+              className="min-h-0 overflow-y-auto p-4"
+            >
+              <div className="space-y-5">
+                <section className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-semibold text-gray-900">
+                      Ca cuu ho
+                    </h3>
+                    <span className="text-xs text-gray-500">
+                      {totalRescueCases} muc
+                    </span>
+                  </div>
+                  <div className="space-y-3">
+                    {renderRescueList(
+                      rescueCases,
+                      "Chua co ca cuu ho trong vung hien thi.",
+                    )}
+                  </div>
+                </section>
+
+                <section className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-semibold text-gray-900">
+                      Trung tam ho tro
+                    </h3>
+                    <span className="text-xs text-gray-500">
+                      {totalOrganizations} muc
+                    </span>
+                  </div>
+                  <div className="space-y-3">
+                    {renderOrganizationList(organizations)}
+                  </div>
+                </section>
+              </div>
+            </TabsContent>
+
+            <TabsContent
+              value="rescue"
+              className="min-h-0 overflow-y-auto p-4"
+            >
+              <div className="space-y-3">
+                {renderRescueList(
+                  rescueCasesNeedingSupport,
+                  "Chua co ca nao dang can ho tro trong vung hien thi.",
+                )}
+              </div>
+            </TabsContent>
+
+            <TabsContent
+              value="organizations"
+              className="min-h-0 overflow-y-auto p-4"
+            >
+              <div className="space-y-3">
+                {renderOrganizationList(organizations)}
+              </div>
+            </TabsContent>
+          </Tabs>
         </div>
       </aside>
+
+      <RescueCaseCreate
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        submitting={createRescueCaseMutation.isPending}
+        onSubmit={handleCreateRescueCase}
+      />
+
+      <RescueCaseViewDetail
+        open={rescueViewOpen}
+        onOpenChange={handleRescueViewOpenChange}
+        rescueCase={rescueDetailQuery.data ?? null}
+      />
+
+      {organizationDetailQuery.data ? (
+        <OrganizationViewDetail
+          open={organizationViewOpen}
+          onOpenChange={handleOrganizationViewOpenChange}
+          organization={organizationDetailQuery.data}
+        />
+      ) : null}
     </div>
   );
 }

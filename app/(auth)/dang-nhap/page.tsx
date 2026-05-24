@@ -59,7 +59,6 @@ export default function LoginForm() {
       console.log("Login successful:", getPostLoginRedirectPath(auth));
 
       router.replace(getPostLoginRedirectPath(auth));
-      debugger;
     } catch (error) {
       setError("root", {
         type: "server",

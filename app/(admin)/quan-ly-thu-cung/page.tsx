@@ -3,15 +3,14 @@
 import * as React from "react";
 
 import TitlePerPage from "@/components/common/admin/TitlePerPage";
+import { PageControls } from "@/components/common/PageControl";
 import KPICardPet from "@/components/pet/KPICardPet";
-import { PetListTable } from "@/components/pet/PetListTable";
 import { PetCreateNew } from "@/components/pet/PetCreateNew";
-import type { CreateNewPetValues } from "@/components/pet/PetCreateNew";
+import { PetListTable } from "@/components/pet/PetListTable";
 import { useListUrlState } from "@/hooks/use-list-url-state";
-
-import petService from "@/services/pet/pet";
-
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useOrganizations } from "@/hooks/use-organization";
+import { useCreatePet, useCreatePetByShelter, usePets } from "@/hooks/use-pet";
+import type { PetCreatePayload, PetSummary } from "@/types/pet.type";
 import {
   AlertTriangle,
   CheckCircle2,
@@ -19,31 +18,65 @@ import {
   PawPrint,
   ShieldAlert,
 } from "lucide-react";
+import { toast } from "sonner";
+
+function getErrorMessage(error: unknown) {
+  return error instanceof Error ? error.message : "Có lỗi xảy ra";
+}
+
+function getKpis(pets: PetSummary[], totalItems: number) {
+  return pets.reduce(
+    (acc, pet) => {
+      if (pet.status === "PENDING") acc.pending += 1;
+      if (pet.status === "ADOPTED") acc.adopted += 1;
+      if (pet.status === "FOSTERED") acc.fostered += 1;
+      if (pet.healthStatus !== "HEALTHY") acc.healthAlert += 1;
+      return acc;
+    },
+    {
+      total: totalItems,
+      pending: 0,
+      adopted: 0,
+      fostered: 0,
+      healthAlert: 0,
+    },
+  );
+}
 
 export default function PetManagementPage() {
   const { page, size, setPage, setSize } = useListUrlState();
-  const queryClient = useQueryClient();
-
   const [createOpen, setCreateOpen] = React.useState(false);
 
-  const listQuery = useQuery({
-    queryKey: ["pets", { page, size }],
-    queryFn: () => petService.getAllPets({ page, size }),
-  });
-
-  const createMutation = useMutation({
-    mutationFn: (payload: CreateNewPetValues) => petService.createPet(payload),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["pets"] });
-      setCreateOpen(false);
-    },
+  const listQuery = usePets({ page, size });
+  const createPetMutation = useCreatePetByShelter();
+  const organizationsQuery = useOrganizations({
+    page: 0,
+    size: 100,
+    status: ["ACTIVE"],
   });
 
   const data = listQuery.data;
+  const pets = React.useMemo(() => data?.content ?? [], [data?.content]);
+  const kpis = React.useMemo(
+    () => getKpis(pets, data?.totalElements ?? 0),
+    [data?.totalElements, pets],
+  );
+
+  const handleCreatePet = React.useCallback(
+    async (payload: Partial<PetCreatePayload>) => {
+      try {
+        await createPetMutation.mutateAsync(payload);
+        setCreateOpen(false);
+        toast.success("Tạo thú cưng thành công");
+      } catch (error) {
+        toast.error(getErrorMessage(error));
+      }
+    },
+    [createPetMutation],
+  );
 
   return (
     <div className="space-y-6">
-      {/* Top Header */}
       <TitlePerPage
         title="Quản lý thú cưng"
         description="Quản trị toàn bộ dữ liệu thú cưng trong hệ thống"
@@ -51,56 +84,56 @@ export default function PetManagementPage() {
         handleOpenModal={() => setCreateOpen(true)}
       />
 
-      {/* KPI Cards */}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-5">
         <KPICardPet
           title="Tổng số thú cưng"
-          value={15}
+          value={kpis.total}
           icon={PawPrint}
           color="text-blue-600 bg-blue-50"
         />
         <KPICardPet
           title="Chờ nhận nuôi"
-          value={15}
+          value={kpis.pending}
           icon={Heart}
           color="text-primary bg-primary/5"
         />
         <KPICardPet
           title="Đã có chủ"
-          value={15}
+          value={kpis.adopted}
           icon={CheckCircle2}
           color="text-green-600 bg-green-50"
         />
         <KPICardPet
           title="Đang cứu trợ"
-          value={15}
+          value={kpis.fostered}
           icon={ShieldAlert}
           color="text-amber-600 bg-amber-50"
         />
         <KPICardPet
           title="Cảnh báo sức khỏe"
-          value={15}
+          value={kpis.healthAlert}
           icon={AlertTriangle}
           color="text-red-600 bg-red-50"
         />
       </div>
 
-      <PetListTable
-        data={data?.content ?? []}
-        loading={listQuery.isPending}
+      <PetListTable data={pets} loading={listQuery.isPending} />
+
+      <PageControls
         page={data?.page ?? page}
-        size={data?.size ?? size}
+        pageSize={data?.size ?? size}
         totalPages={data?.totalPages ?? 1}
-        totalElements={data?.totalElements ?? 0}
+        totalItems={data?.totalElements ?? 0}
         onPageChange={setPage}
-        onSizeChange={setSize}
+        onPageSizeChange={setSize}
       />
 
       <PetCreateNew
         open={createOpen}
         onOpenChange={setCreateOpen}
-        submitting={createMutation.isPending}
-        onSubmit={(values: CreateNewPetValues) => createMutation.mutate(values)}
+        submitting={createPetMutation.isPending}
+        organizations={organizationsQuery.data?.content ?? []}
+        onSubmit={handleCreatePet}
       />
     </div>
   );

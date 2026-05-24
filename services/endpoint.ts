@@ -39,6 +39,7 @@ export const apiEndpoints = {
   },
   pets: {
     root: "/pets",
+    createByShelter: "/pets/shelter",
     byId: (id: string) => byId("/pets", id),
     available: "/pets/available",
     byOrganization: (organizationId: string) =>

@@ -67,12 +67,19 @@ const petService = {
   },
 
   // POST /api/v1/pets - Create a pet as a regular user (user-owned)
-  async createPet(payload: PetCreatePayload): Promise<Pet> {
+  async createPet(payload: Partial<PetCreatePayload>): Promise<Pet> {
     return await http.post<Pet>(apiEndpoints.pets.root, payload);
   },
 
+  async createPetByShelter(payload: Partial<PetCreatePayload>): Promise<Pet> {
+    return await http.post<Pet>(apiEndpoints.pets.createByShelter, payload);
+  },
+
   // PUT /api/v1/pets/{id} - Update an existing pet
-  async updatePet(petId: string, payload: PetUpdatePayload): Promise<Pet> {
+  async updatePet(
+    petId: string,
+    payload: Partial<PetUpdatePayload>,
+  ): Promise<Pet> {
     return await http.put<Pet>(apiEndpoints.pets.byId(petId), payload);
   },
 

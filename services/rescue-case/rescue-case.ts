@@ -1,5 +1,6 @@
 import http from "@/lib/http";
 import apiEndpoints from "@/services/endpoint";
+import type { RescueCaseMarkerDto } from "@/services/rescue-case/rescue-case-dto";
 import {
   RescueCase,
   RescueCaseSummary,
@@ -7,7 +8,6 @@ import {
   RescueCaseMarkers,
   RescueCaseBoundingBoxParams,
   RescueCasePayload,
-  RescueCaseMarkers as RescueCaseMarkerDto,
 } from "@/types/rescue-case.type";
 import { ListParams, PaginatedResponse } from "@/types/api.type";
 
@@ -42,8 +42,8 @@ const rescueService = {
   // GET /api/v1/rescue-cases/map/markers - Get map markers in bounding box
   async getRescueMapMarkers(
     params: RescueCaseMarkers,
-  ): Promise<RescueCaseSummary[]> {
-    return await http.get<RescueCaseSummary[]>(
+  ): Promise<RescueCaseMarkerDto[]> {
+    return await http.get<RescueCaseMarkerDto[]>(
       apiEndpoints.rescueCases.map.markers,
       {
         params,
@@ -72,9 +72,9 @@ const rescueService = {
   // PUT /api/v1/rescue-cases/{id} - Update a rescue case
   async updateRescueCase(
     id: string,
-    payload: RescueCasePayload,
+    payload: Partial<RescueCasePayload>,
   ): Promise<RescueCase> {
-    return await http.put<RescueCase, RescueCasePayload>(
+    return await http.put<RescueCase, Partial<RescueCasePayload>>(
       apiEndpoints.rescueCases.byId(id),
       payload,
     );

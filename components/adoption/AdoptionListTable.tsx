@@ -1,13 +1,14 @@
 "use client";
 
 import * as React from "react";
+import Image from "next/image";
 import {
   flexRender,
   getCoreRowModel,
-  useReactTable,
   type ColumnDef,
+  useReactTable,
 } from "@tanstack/react-table";
-import { EllipsisVerticalIcon } from "lucide-react";
+import { Check, EllipsisVerticalIcon, X } from "lucide-react";
 
 import type { AdoptionSummary } from "@/types/adoption.type";
 
@@ -15,6 +16,7 @@ import {
   AdminTableEmptyRow,
   AdminTableSkeletonRows,
 } from "@/components/common/admin/AdminTableState";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -23,6 +25,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 export interface AdoptionListTableProps {
   data: AdoptionSummary[];
@@ -43,95 +53,115 @@ function formatDateVi(value?: string) {
   });
 }
 
-function StatusBadge({ status }: { status?: string }) {
-  const s = status ?? "PENDING";
-
-  const labelMap: Record<string, string> = {
-    PENDING: "Đang chờ",
-    APPROVED: "Đã duyệt",
-    REJECTED: "Từ chối",
-    CANCELED: "Đã huỷ",
+function adoptionStatusBadge(status: AdoptionSummary["status"]) {
+  const map: Record<string, { label: string; className?: string }> = {
+    PENDING: {
+      label: "Cho xet duyet",
+      className: "bg-amber-50 text-amber-700 hover:bg-amber-50",
+    },
+    APPROVED: {
+      label: "Da duyet",
+      className: "bg-emerald-50 text-emerald-700 hover:bg-emerald-50",
+    },
+    REJECTED: {
+      label: "Tu choi",
+      className: "bg-rose-50 text-rose-700 hover:bg-rose-50",
+    },
+    CANCELLED: {
+      label: "Da huy",
+      className: "bg-slate-100 text-slate-700 hover:bg-slate-100",
+    },
   };
 
-  // Prefer design tokens via classes; keep minimal hard-coded hues.
-  const classMap: Record<string, string> = {
-    PENDING: "bg-muted text-foreground",
-    APPROVED: "bg-secondary text-secondary-foreground",
-    REJECTED: "bg-destructive/10 text-destructive",
-    CANCELED: "bg-muted text-muted-foreground",
-  };
+  const item = map[status] ?? { label: status };
 
-  return (
-    <span
-      className={[
-        "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
-        classMap[s] ?? "bg-muted text-muted-foreground",
-      ].join(" ")}
-    >
-      {labelMap[s] ?? s}
-    </span>
+  return item.className ? (
+    <Badge className={item.className}>{item.label}</Badge>
+  ) : (
+    <Badge variant="secondary">{item.label}</Badge>
   );
 }
 
 const columns: ColumnDef<AdoptionSummary>[] = [
   {
-    accessorKey: "applicationId",
-    header: "Mã đơn",
+    accessorKey: "adoptionCode",
+    header: "Ma don",
     cell: ({ row }) => (
-      <span className="font-mono text-xs text-foreground">
-        {row.original.applicationId}
+      <span className="font-mono text-xs text-slate-600">
+        {row.original.adoptionCode || "-"}
       </span>
     ),
   },
   {
     accessorKey: "petName",
-    header: "Thú cưng",
+    header: "Thu cung",
     cell: ({ row }) => (
-      <span className="truncate font-medium text-foreground">
-        {row.original.petName || "—"}
-      </span>
+      <div className="flex min-w-60 items-center gap-3">
+        {row.original.petPrimaryImageUrl ? (
+          <div className="size-10 overflow-hidden rounded-md border border-slate-200 bg-slate-50">
+            <Image
+              src={row.original.petPrimaryImageUrl}
+              alt={row.original.petName || "Pet image"}
+              width={40}
+              height={40}
+              className="h-full w-full object-cover"
+            />
+          </div>
+        ) : (
+          <div className="flex size-10 items-center justify-center rounded-md border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-500">
+            PET
+          </div>
+        )}
+        <div className="min-w-0">
+          <div className="truncate font-medium text-slate-900">
+            {row.original.petName || "-"}
+          </div>
+        </div>
+      </div>
     ),
   },
   {
     accessorKey: "applicantUsername",
-    header: "Người nộp đơn",
+    header: "Nguoi nop don",
     cell: ({ row }) => (
-      <span className="truncate text-foreground">
-        {row.original.applicantUsername || "—"}
-      </span>
+      <div className="min-w-44">
+        <div className="truncate font-medium text-slate-900">
+          {row.original.applicantUsername || "-"}
+        </div>
+      </div>
     ),
   },
   {
     accessorKey: "experience",
-    header: "Kinh nghiệm",
+    header: "Kinh nghiem",
     cell: ({ row }) => (
-      <span className="line-clamp-2 min-w-55 text-muted-foreground">
-        {row.original.experience || "—"}
-      </span>
+      <p className="line-clamp-2 min-w-56 text-sm text-slate-600">
+        {row.original.experience || "Chua cap nhat"}
+      </p>
     ),
   },
   {
     accessorKey: "liveCondition",
-    header: "Điều kiện sống",
+    header: "Dieu kien song",
     cell: ({ row }) => (
-      <span className="line-clamp-2 min-w-55 text-muted-foreground">
-        {row.original.liveCondition || "—"}
+      <p className="line-clamp-2 min-w-56 text-sm text-slate-600">
+        {row.original.liveCondition || "Chua cap nhat"}
+      </p>
+    ),
+  },
+  {
+    accessorKey: "createdAt",
+    header: "Ngay tao",
+    cell: ({ row }) => (
+      <span className="text-sm text-slate-600">
+        {formatDateVi(row.original.createdAt)}
       </span>
     ),
   },
   {
     accessorKey: "status",
-    header: "Trạng thái",
-    cell: ({ row }) => <StatusBadge status={row.original.status} />,
-  },
-  {
-    accessorKey: "createdAt",
-    header: "Ngày tạo",
-    cell: ({ row }) => (
-      <span className="text-sm text-muted-foreground">
-        {formatDateVi(row.original.createdAt)}
-      </span>
-    ),
+    header: "Trang thai",
+    cell: ({ row }) => adoptionStatusBadge(row.original.status),
   },
   {
     id: "actions",
@@ -142,51 +172,73 @@ const columns: ColumnDef<AdoptionSummary>[] = [
 
 export function AdoptionListTable({
   data,
-  loading,
+  loading = false,
   onViewDetail,
   onApprove,
   onReject,
 }: AdoptionListTableProps) {
   const columnsWithActions = React.useMemo<ColumnDef<AdoptionSummary>[]>(() => {
-    return columns.map((c) => {
-      if (c.id !== "actions") return c;
+    return columns.map((column) => {
+      if (column.id !== "actions") {
+        return column;
+      }
 
       return {
-        ...c,
+        ...column,
         cell: ({ row }) => {
-          const id = row.original.applicationId;
-          const status = row.original.status ?? "PENDING";
-          const canDecide = status === "PENDING";
+          const applicationId = row.original.applicationId;
+          const canDecide = row.original.status === "PENDING";
 
           return (
-            <div className="flex justify-end">
+            <div
+              className="flex items-center justify-end gap-2"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="size-8"
+                onClick={() => onApprove?.(applicationId)}
+                disabled={!onApprove || !canDecide}
+              >
+                <Check className="size-4" />
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="size-8"
+                onClick={() => onReject?.(applicationId)}
+                disabled={!onReject || !canDecide}
+              >
+                <X className="size-4" />
+              </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-8 w-8">
-                    <EllipsisVerticalIcon className="h-4 w-4" />
+                  <Button variant="ghost" size="icon" className="size-8">
+                    <EllipsisVerticalIcon className="size-4" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="min-w-44">
+                <DropdownMenuContent align="end">
                   <DropdownMenuItem
-                    onClick={() => onViewDetail?.(id)}
+                    onClick={() => onViewDetail?.(applicationId)}
                     disabled={!onViewDetail}
                   >
-                    Xem chi tiết
+                    Xem chi tiet
                   </DropdownMenuItem>
-
                   <DropdownMenuSeparator />
-
                   <DropdownMenuItem
-                    onClick={() => onApprove?.(id)}
+                    onClick={() => onApprove?.(applicationId)}
                     disabled={!onApprove || !canDecide}
                   >
-                    Duyệt
+                    Duyet don
                   </DropdownMenuItem>
                   <DropdownMenuItem
-                    onClick={() => onReject?.(id)}
+                    onClick={() => onReject?.(applicationId)}
                     disabled={!onReject || !canDecide}
                   >
-                    Từ chối
+                    Tu choi
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -197,6 +249,8 @@ export function AdoptionListTable({
     });
   }, [onApprove, onReject, onViewDetail]);
 
+  // TanStack Table uses function-returning APIs that React Compiler warns about.
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data,
     columns: columnsWithActions,
@@ -204,59 +258,62 @@ export function AdoptionListTable({
   });
 
   return (
-    <div className="w-full overflow-x-auto rounded-lg border border-border bg-card">
-      <table className="min-w-full border-collapse text-sm">
-        <thead className="bg-muted/40">
-          {table.getHeaderGroups().map((headerGroup) => (
-            <tr key={headerGroup.id} className="border-b border-border">
-              {headerGroup.headers.map((header) => (
-                <th
-                  key={header.id}
-                  className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground"
-                >
-                  {header.isPlaceholder
-                    ? null
-                    : flexRender(
-                        header.column.columnDef.header,
-                        header.getContext(),
-                      )}
-                </th>
-              ))}
-            </tr>
-          ))}
-        </thead>
-
-        <tbody>
-          {loading ? (
-            <AdminTableSkeletonRows
-              columnCount={columnsWithActions.length}
-              rowCount={5}
-              cellClassName="px-3 py-2 align-top"
-              rowClassName="border-b border-border last:border-0"
-            />
-          ) : table.getRowModel().rows.length === 0 ? (
-            <AdminTableEmptyRow
-              colSpan={columnsWithActions.length}
-              title="Chưa có đơn nhận nuôi"
-              description="Các yêu cầu nhận nuôi phù hợp sẽ xuất hiện tại đây."
-              cellClassName="px-3 py-12"
-            />
-          ) : (
-            table.getRowModel().rows.map((row) => (
-              <tr
-                key={row.id}
-                className="border-b border-border last:border-0 hover:bg-muted/30"
-              >
-                {row.getVisibleCells().map((cell) => (
-                  <td key={cell.id} className="px-3 py-2 align-top">
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
+    <div className="overflow-hidden rounded-lg border">
+      <div className="overflow-x-auto min-w-full">
+        <Table>
+          <TableHeader className="sticky top-0 bg-muted">
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <TableHead key={header.id}>
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext(),
+                        )}
+                  </TableHead>
                 ))}
-              </tr>
-            ))
-          )}
-        </tbody>
-      </table>
+              </TableRow>
+            ))}
+          </TableHeader>
+
+          <TableBody>
+            {loading ? (
+              <AdminTableSkeletonRows
+                columnCount={columnsWithActions.length}
+                rowCount={5}
+                cellClassName="px-3 py-2 align-middle"
+                rowClassName="border-b last:border-0"
+              />
+            ) : table.getRowModel().rows.length === 0 ? (
+              <AdminTableEmptyRow
+                colSpan={columnsWithActions.length}
+                title="Chua co don nhan nuoi"
+                description="Danh sach don nhan nuoi se xuat hien tai day khi co du lieu."
+                cellClassName="px-3 py-12"
+              />
+            ) : (
+              table.getRowModel().rows.map((row) => (
+                <TableRow
+                  key={row.id}
+                  onClick={() => onViewDetail?.(row.original.applicationId)}
+                  className={onViewDetail ? "cursor-pointer hover:bg-muted/50" : ""}
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id}>
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext(),
+                      )}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 }

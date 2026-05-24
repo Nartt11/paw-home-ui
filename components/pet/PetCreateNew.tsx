@@ -29,17 +29,24 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { useUploadTempMedia } from "@/hooks/use-media";
 import {
   ACCEPTED_PET_IMAGE_TYPES,
   createPetDefaultValues,
   createPetSchema,
-  type CreatePetFormValues,
   MAX_PET_IMAGE_SIZE,
+  PET_HEALTH_STATUS_VALUES,
+  toCreatePetPayload,
+  type CreatePetFormInput,
+  type CreatePetFormValues,
 } from "@/lib/schemas/create-pet.schema";
-import cloudinaryService from "@/services/media/cloudinary";
-import type { PetGender } from "@/types/pet.type";
+import type { OrganizationSummary } from "@/types/organization.type";
+import type {
+  PetCreatePayload,
+  PetGender,
+  PetHealthStatus,
+} from "@/types/pet.type";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -49,13 +56,21 @@ export interface CreateNewPetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   submitting?: boolean;
-  onSubmit?: (values: CreateNewPetValues) => void;
+  organizations?: OrganizationSummary[];
+  onSubmit?: (values: Partial<PetCreatePayload>) => void;
 }
 
 const GENDERS: Array<{ value: PetGender; label: string }> = [
   { value: "MALE", label: "Đực" },
   { value: "FEMALE", label: "Cái" },
   { value: "UNKNOWN", label: "Không rõ" },
+];
+
+const HEALTH_STATUSES: Array<{ value: PetHealthStatus; label: string }> = [
+  { value: "HEALTHY", label: "Khỏe mạnh" },
+  { value: "UNDER_TREATMENT", label: "Đang điều trị" },
+  { value: "RECOVERING", label: "Đang hồi phục" },
+  { value: "SPECIAL_NEEDS", label: "Chăm sóc đặc biệt" },
 ];
 
 function validatePetImages(files: File[]) {
@@ -85,13 +100,16 @@ export function PetCreateNew({
   open,
   onOpenChange,
   submitting,
+  organizations = [],
   onSubmit,
 }: CreateNewPetProps) {
   const imageInputRef = React.useRef<HTMLInputElement | null>(null);
+  const uploadTempMediaMutation = useUploadTempMedia();
 
- const form = useForm({
-   resolver: zodResolver(createPetSchema),
- });
+  const form = useForm<CreatePetFormInput, unknown, CreatePetFormValues>({
+    resolver: zodResolver(createPetSchema),
+    defaultValues: createPetDefaultValues,
+  });
 
   const {
     control,
@@ -107,30 +125,9 @@ export function PetCreateNew({
     name: "imageUrls",
   });
 
-  const uploadMutation = useMutation({
-    mutationFn: async (files: File[]) => {
-      const uploads = await Promise.all(
-        files.map((file) => cloudinaryService.uploadPetTempImage(file)),
-      );
-
-      return uploads.map((upload) => upload.secure_url);
-    },
-    onSuccess: (uploadedUrls) => {
-      const nextImageUrls = [...(imageUrls ?? []), ...uploadedUrls];
-
-      setValue("imageUrls", nextImageUrls, {
-        shouldDirty: true,
-        shouldTouch: true,
-        shouldValidate: true,
-      });
-
-      toast.success(`Tải lên thành công ${uploadedUrls.length} ảnh`);
-    },
-    onError: (error) => {
-      toast.error(
-        error instanceof Error ? error.message : "Không thể tải ảnh lên",
-      );
-    },
+  const mediaIds = useWatch({
+    control,
+    name: "mediaIds",
   });
 
   React.useEffect(() => {
@@ -153,17 +150,61 @@ export function PetCreateNew({
         return;
       }
 
-      await uploadMutation.mutateAsync(files);
+      try {
+        const uploads = await Promise.all(
+          files.map((file) =>
+            uploadTempMediaMutation.mutateAsync({
+              file,
+            }),
+          ),
+        );
+
+        setValue(
+          "imageUrls",
+          [...(imageUrls ?? []), ...uploads.map((upload) => upload.url)],
+          {
+            shouldDirty: true,
+            shouldTouch: true,
+            shouldValidate: true,
+          },
+        );
+        setValue(
+          "mediaIds",
+          [...(mediaIds ?? []), ...uploads.map((upload) => upload.mediaId)],
+          {
+            shouldDirty: true,
+            shouldTouch: true,
+            shouldValidate: true,
+          },
+        );
+
+        toast.success(`Tải lên thành công ${uploads.length} ảnh`);
+      } catch (error) {
+        toast.error(
+          error instanceof Error ? error.message : "Không thể tải ảnh lên",
+        );
+      }
+
       event.target.value = "";
     },
-    [uploadMutation],
+    [imageUrls, mediaIds, setValue, uploadTempMediaMutation],
   );
 
   const removeImage = React.useCallback(
     (index: number) => {
-      const nextImageUrls = imageUrls.filter((_, currentIndex) => currentIndex !== index);
+      const nextImageUrls = (imageUrls ?? []).filter(
+        (_, currentIndex) => currentIndex !== index,
+      );
+      const nextMediaIds = (mediaIds ?? []).filter(
+        (_, currentIndex) => currentIndex !== index,
+      );
 
       setValue("imageUrls", nextImageUrls, {
+        shouldDirty: true,
+        shouldTouch: true,
+        shouldValidate: true,
+      });
+      setValue("mediaIds", nextMediaIds, {
         shouldDirty: true,
         shouldTouch: true,
         shouldValidate: true,
@@ -173,11 +214,16 @@ export function PetCreateNew({
         imageInputRef.current.value = "";
       }
     },
-    [imageUrls, setValue],
+    [imageUrls, mediaIds, setValue],
   );
 
   const clearImages = React.useCallback(() => {
     setValue("imageUrls", [], {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: true,
+    });
+    setValue("mediaIds", [], {
       shouldDirty: true,
       shouldTouch: true,
       shouldValidate: true,
@@ -188,7 +234,7 @@ export function PetCreateNew({
     }
   }, [setValue]);
 
-  const isBusy = Boolean(submitting) || uploadMutation.isPending;
+  const isBusy = Boolean(submitting) || uploadTempMediaMutation.isPending;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -199,11 +245,12 @@ export function PetCreateNew({
         </DialogHeader>
 
         <div className="max-h-[calc(100vh-12rem)] overflow-y-auto px-6 pb-6">
-          <Separator className="my-4" />
 
           <form
             className="space-y-5"
-            onSubmit={handleSubmit((values) => onSubmit?.(values))}
+            onSubmit={handleSubmit((values) =>
+              onSubmit?.(toCreatePetPayload(values)),
+            )}
           >
             <FieldGroup className="grid gap-5 md:grid-cols-2">
               <Field className="md:col-span-2">
@@ -325,6 +372,41 @@ export function PetCreateNew({
               </Field>
 
               <Field>
+                <FieldLabel>Tình trạng sức khỏe</FieldLabel>
+                <FieldContent>
+                  <Controller
+                    control={control}
+                    name="healthStatus"
+                    render={({ field }) => (
+                      <Select
+                        value={field.value}
+                        onValueChange={(value) =>
+                          field.onChange(
+                            value as (typeof PET_HEALTH_STATUS_VALUES)[number],
+                          )
+                        }
+                        disabled={isBusy}
+                      >
+                        <SelectTrigger
+                          aria-invalid={Boolean(errors.healthStatus)}
+                        >
+                          <SelectValue placeholder="Chọn tình trạng sức khỏe" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {HEALTH_STATUSES.map((status) => (
+                            <SelectItem key={status.value} value={status.value}>
+                              {status.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                  <FieldError errors={[errors.healthStatus]} />
+                </FieldContent>
+              </Field>
+
+              <Field>
                 <FieldLabel htmlFor="pet-rescue-date">Ngày cứu hộ</FieldLabel>
                 <FieldContent>
                   <Input
@@ -355,14 +437,32 @@ export function PetCreateNew({
               </Field>
 
               <Field className="md:col-span-2">
-                <FieldLabel htmlFor="pet-shelter-id">Shelter ID</FieldLabel>
+                <FieldLabel>Trung tâm</FieldLabel>
                 <FieldContent>
-                  <Input
-                    id="pet-shelter-id"
-                    placeholder="shelter_123"
-                    disabled={isBusy}
-                    aria-invalid={Boolean(errors.shelterId)}
-                    {...register("shelterId")}
+                  <Controller
+                    control={control}
+                    name="shelterId"
+                    render={({ field }) => (
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        disabled={isBusy || organizations.length === 0}
+                      >
+                        <SelectTrigger aria-invalid={Boolean(errors.shelterId)}>
+                          <SelectValue placeholder="Chọn trung tâm quản lý" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {organizations.map((organization) => (
+                            <SelectItem
+                              key={organization.organizationId}
+                              value={organization.organizationId}
+                            >
+                              {organization.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
                   />
                   <FieldError errors={[errors.shelterId]} />
                 </FieldContent>
@@ -370,7 +470,7 @@ export function PetCreateNew({
 
               <Field className="md:col-span-2">
                 <FieldLabel htmlFor="pet-rescue-case-id">
-                  Rescue case ID (tuỳ chọn)
+                  Rescue case ID (tùy chọn)
                 </FieldLabel>
                 <FieldContent>
                   <Input
@@ -397,12 +497,12 @@ export function PetCreateNew({
                     onChange={handleImageChange}
                   />
                   <FieldError errors={[errors.imageUrls]} />
-                  {uploadMutation.isPending && (
+                  {uploadTempMediaMutation.isPending && (
                     <p className="text-sm text-muted-foreground">
-                      Đang tải ảnh lên Cloudinary...
+                      Đang tải ảnh lên...
                     </p>
                   )}
-                  {imageUrls && imageUrls?.length > 0 ? (
+                  {imageUrls && imageUrls.length > 0 ? (
                     <div className="space-y-3">
                       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                         {imageUrls.map((imageUrl, index) => (
@@ -420,7 +520,6 @@ export function PetCreateNew({
                               />
                             </div>
                             <div className="space-y-2 p-3">
-                              <Input value={imageUrl} readOnly disabled />
                               <Button
                                 type="button"
                                 variant="secondary"
@@ -428,7 +527,7 @@ export function PetCreateNew({
                                 onClick={() => removeImage(index)}
                                 disabled={isBusy}
                               >
-                                Xoá ảnh này
+                                Xóa ảnh này
                               </Button>
                             </div>
                           </div>
@@ -440,7 +539,7 @@ export function PetCreateNew({
                         onClick={clearImages}
                         disabled={isBusy}
                       >
-                        Xoá tất cả ảnh
+                        Xóa tất cả ảnh
                       </Button>
                     </div>
                   ) : null}
@@ -508,10 +607,10 @@ export function PetCreateNew({
                 onClick={() => onOpenChange(false)}
                 disabled={isBusy}
               >
-                Huỷ
+                Hủy
               </Button>
               <Button type="submit" disabled={isBusy}>
-                {uploadMutation.isPending
+                {uploadTempMediaMutation.isPending
                   ? "Đang tải ảnh..."
                   : submitting
                     ? "Đang tạo..."

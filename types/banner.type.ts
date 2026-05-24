@@ -22,4 +22,4 @@ export interface BannerListParams {
   status?: boolean;
 }
 
-export type BannerPayload = Omit<Banner, "bannerId" | "createdAt" | "updatedAt">;
+export type BannerPayload = Omit<Banner, "bannerId" | "createdAt" | "updatedAt" | "mediaUrl">;

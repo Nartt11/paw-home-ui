@@ -133,7 +133,26 @@ export function useCreatePet() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (payload: PetCreatePayload) => petService.createPet(payload),
+    mutationFn: (payload: Partial<PetCreatePayload>) =>
+      petService.createPet(payload),
+
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: petKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: petKeys.availableLists() });
+      queryClient.invalidateQueries({ queryKey: petKeys.byUserLists() });
+      queryClient.invalidateQueries({
+        queryKey: petKeys.byOrganizationLists(),
+      });
+    },
+  });
+}
+
+export function useCreatePetByShelter() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: Partial<PetCreatePayload>) =>
+      petService.createPetByShelter(payload),
 
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: petKeys.lists() });
@@ -155,7 +174,7 @@ export function useUpdatePet() {
       payload,
     }: {
       petId: string;
-      payload: PetUpdatePayload;
+      payload: Partial<PetUpdatePayload>;
     }) => petService.updatePet(petId, payload),
 
     onSuccess: (data, variables) => {

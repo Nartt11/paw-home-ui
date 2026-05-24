@@ -2,29 +2,55 @@
 
 import * as React from "react";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
-import TitlePerPage from "@/components/common/admin/TitlePerPage";
-import { BannerListTable } from "@/components/banner/BannerListTable";
 import { BannerCreateNew } from "@/components/banner/BannerCreateNew";
-import type { BannerCreateNewValues } from "@/components/banner/BannerCreateNew";
-import { BannerViewDetail } from "@/components/banner/BannerViewDetail";
+import { BannerListTable } from "@/components/banner/BannerListTable";
 import { BannerUpdate } from "@/components/banner/BannerUpdate";
-import type { BannerUpdateValues } from "@/components/banner/BannerUpdate";
-
-import { useListUrlState } from "@/hooks/use-list-url-state";
-import bannerService from "@/services/banner/banner";
-import type { Banner } from "@/types/banner.type";
+import { BannerViewDetail } from "@/components/banner/BannerViewDetail";
 import { DeleteModal } from "@/components/common/admin/DeleteModal";
+import TitlePerPage from "@/components/common/admin/TitlePerPage";
+import { PageControls } from "@/components/common/PageControl";
+import {
+  toBannerPayload,
+  type CreateBannerFormValues,
+  type UpdateBannerFormValues,
+} from "@/lib/schemas/banner";
+import {
+  useBannerDetail,
+  useBanners,
+  useCreateBanner,
+  useDeleteBanner,
+  useToggleBannerActive,
+  useUpdateBanner,
+} from "@/hooks/use-banner";
+import { useListUrlState } from "@/hooks/use-list-url-state";
+import { useUploadTempMedia } from "@/hooks/use-media";
+
+function getErrorMessage(error: unknown) {
+  return error instanceof Error ? error.message : "Co loi xay ra";
+}
+
+async function resolveBannerMedia(
+  values: CreateBannerFormValues | UpdateBannerFormValues,
+  uploadTempMedia: ReturnType<typeof useUploadTempMedia>["mutateAsync"],
+) {
+  if (values.imageFile) {
+    return uploadTempMedia({
+      file: values.imageFile,
+      folder: "temp/banners",
+    });
+  }
+
+  return {
+    mediaId: values.mediaId,
+  };
+}
 
 export default function BannerManagementPage() {
   const { page, size, setPage, setSize } = useListUrlState();
-  const queryClient = useQueryClient();
 
-  const listQuery = useQuery({
-    queryKey: ["banners", { page, size }],
-    queryFn: () => bannerService.getAllBanners({ page, size }),
-  });
+  const listQuery = useBanners({ page, size });
 
   const [deleteOpen, setDeleteOpen] = React.useState(false);
   const [deleteId, setDeleteId] = React.useState<string | null>(null);
@@ -33,67 +59,99 @@ export default function BannerManagementPage() {
   const [editOpen, setEditOpen] = React.useState(false);
   const [selectedId, setSelectedId] = React.useState<string | null>(null);
 
-  const detailQuery = useQuery({
-    queryKey: ["banner", selectedId],
-    queryFn: () => bannerService.getBannerById(selectedId as string),
-    enabled: Boolean(selectedId) && (viewOpen || editOpen),
-  });
-
-  const selectedBanner: Banner = detailQuery.data as Banner;
-
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => bannerService.deleteBanner(id),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["banners"] });
-      setDeleteOpen(false);
-      setDeleteId(null);
-    },
-  });
-
-  const toggleMutation = useMutation({
-    mutationFn: (id: string) => bannerService.toggleBannerActive(id),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["banners"] });
-    },
-  });
-
-  const createMutation = useMutation({
-    mutationFn: (payload: BannerCreateNewValues) =>
-      bannerService.createBanner(payload),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["banners"] });
-      setCreateOpen(false);
-    },
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: ({
-      id,
-      payload,
-    }: {
-      id: string;
-      payload: BannerUpdateValues;
-    }) => bannerService.updateBanner(id, payload),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["banners"] });
-      // also refresh detail if user reopens quickly
-      await queryClient.invalidateQueries({ queryKey: ["banner"] });
-      setEditOpen(false);
-      setSelectedId(null);
-    },
-  });
+  const detailQuery = useBannerDetail(selectedId ?? undefined);
+  const createBannerMutation = useCreateBanner();
+  const updateBannerMutation = useUpdateBanner();
+  const deleteBannerMutation = useDeleteBanner();
+  const toggleBannerMutation = useToggleBannerActive();
+  const uploadTempMediaMutation = useUploadTempMedia();
 
   const data = listQuery.data;
+  const selectedBanner = detailQuery.data ?? null;
 
-  if (data === undefined) {
-    return <div className="space-y-6">rỗng</div>;
-  }
+  const handleCreateBanner = React.useCallback(
+    async (values: CreateBannerFormValues) => {
+      try {
+        const media = await resolveBannerMedia(
+          values,
+          uploadTempMediaMutation.mutateAsync,
+        );
+
+        await createBannerMutation.mutateAsync(
+          toBannerPayload({
+            ...values,
+            mediaId: media.mediaId,
+          }),
+        );
+
+        setCreateOpen(false);
+        toast.success("Tao banner thanh cong");
+      } catch (error) {
+        toast.error(getErrorMessage(error));
+      }
+    },
+    [createBannerMutation, uploadTempMediaMutation],
+  );
+
+  const handleUpdateBanner = React.useCallback(
+    async (values: UpdateBannerFormValues) => {
+      if (!selectedId) return;
+
+      try {
+        const media = await resolveBannerMedia(
+          values,
+          uploadTempMediaMutation.mutateAsync,
+        );
+
+        await updateBannerMutation.mutateAsync({
+          id: selectedId,
+          payload: toBannerPayload({
+            ...values,
+            mediaId: media.mediaId,
+          }),
+        });
+
+        setEditOpen(false);
+        setSelectedId(null);
+        toast.success("Cap nhat banner thanh cong");
+      } catch (error) {
+        toast.error(getErrorMessage(error));
+      }
+    },
+    [selectedId, updateBannerMutation, uploadTempMediaMutation],
+  );
+
+  const handleDeleteBanner = React.useCallback(async () => {
+    if (!deleteId) return;
+
+    try {
+      await deleteBannerMutation.mutateAsync(deleteId);
+      setDeleteOpen(false);
+      setDeleteId(null);
+      toast.success("Xoa banner thanh cong");
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    }
+  }, [deleteBannerMutation, deleteId]);
+
+  const handleToggleStatus = React.useCallback(
+    async (id: string) => {
+      try {
+        await toggleBannerMutation.mutateAsync(id);
+        toast.success("Cap nhat trang thai thanh cong");
+      } catch (error) {
+        toast.error(getErrorMessage(error));
+      }
+    },
+    [toggleBannerMutation],
+  );
+
   return (
     <div className="space-y-6">
       <TitlePerPage
-        title="Quản lý banner"
-        description="Danh sách banner hiển thị trên trang chủ"
-        buttonText="Thêm banner"
+        title="Quan ly banner"
+        description="Danh sach banner hien thi tren trang chu"
+        buttonText="Them banner"
         handleOpenModal={() => {
           setCreateOpen(true);
         }}
@@ -102,12 +160,6 @@ export default function BannerManagementPage() {
       <BannerListTable
         data={data?.content ?? []}
         loading={listQuery.isPending}
-        page={data?.page ?? page}
-        size={data?.size ?? size}
-        totalPages={data?.totalPages ?? 1}
-        totalElements={data?.totalElements ?? 0}
-        onPageChange={setPage}
-        onSizeChange={setSize}
         onViewDetail={(id) => {
           setSelectedId(id);
           setViewOpen(true);
@@ -116,55 +168,73 @@ export default function BannerManagementPage() {
           setSelectedId(id);
           setEditOpen(true);
         }}
-        onToggleActive={(id) => toggleMutation.mutate(id)}
+        onToggleActive={handleToggleStatus}
         onDelete={(id) => {
           setDeleteId(id);
           setDeleteOpen(true);
         }}
       />
 
+      <PageControls
+        page={data?.page ?? page}
+        pageSize={data?.size ?? size}
+        totalPages={data?.totalPages ?? 1}
+        totalItems={data?.totalElements ?? 0}
+        onPageChange={setPage}
+        onPageSizeChange={setSize}
+      />
+
       <BannerCreateNew
         open={createOpen}
         onOpenChange={setCreateOpen}
-        submitting={createMutation.isPending}
-        onSubmit={(values) => createMutation.mutate(values)}
+        submitting={
+          createBannerMutation.isPending || uploadTempMediaMutation.isPending
+        }
+        onSubmit={handleCreateBanner}
       />
 
       <BannerViewDetail
         open={viewOpen}
-        onOpenChange={(v) => {
-          setViewOpen(v);
-          if (!v) setSelectedId(null);
+        onOpenChange={(open) => {
+          setViewOpen(open);
+
+          if (!open) {
+            setSelectedId(null);
+          }
         }}
         banner={selectedBanner}
       />
 
       <BannerUpdate
         open={editOpen}
-        onOpenChange={(v) => {
-          setEditOpen(v);
-          if (!v) setSelectedId(null);
+        onOpenChange={(open) => {
+          setEditOpen(open);
+
+          if (!open) {
+            setSelectedId(null);
+          }
         }}
-        submitting={updateMutation.isPending}
+        loading={detailQuery.isPending}
+        submitting={
+          updateBannerMutation.isPending || uploadTempMediaMutation.isPending
+        }
         banner={selectedBanner}
-        onSubmit={(values) => {
-          if (!selectedId) return;
-          updateMutation.mutate({ id: selectedId, payload: values });
-        }}
+        onSubmit={handleUpdateBanner}
       />
 
       <DeleteModal
         open={deleteOpen}
-        onOpenChange={(v: boolean) => {
-          setDeleteOpen(v);
-          if (!v) setDeleteId(null);
+        onOpenChange={(open: boolean) => {
+          setDeleteOpen(open);
+
+          if (!open) {
+            setDeleteId(null);
+          }
         }}
-        title="Xoá banner"
-        description="Bạn có chắc muốn xoá banner này không? Hành động không thể hoàn tác."
-        confirming={deleteMutation.isPending}
-        onConfirm={() => {
-          if (deleteId) deleteMutation.mutate(deleteId);
-        }}
+        title="Xoa banner"
+        description="Ban co chac muon xoa banner nay khong? Hanh dong khong the hoan tac."
+        confirming={deleteBannerMutation.isPending}
+        onConfirm={handleDeleteBanner}
       />
     </div>
   );

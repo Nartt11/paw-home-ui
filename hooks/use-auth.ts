@@ -56,7 +56,7 @@ export function getPostAuthRedirectPath(user: Pick<User, "roles" | "organization
 async function hydrateCurrentUser(queryClient: ReturnType<typeof useQueryClient>) {
   return queryClient.fetchQuery({
     queryKey: queryKeys.auth.currentUser,
-    queryFn: () => userService.getCurrentUser(),
+    queryFn: () => userService.getMe(),
     staleTime: 5 * 60 * 1000,
   });
 }

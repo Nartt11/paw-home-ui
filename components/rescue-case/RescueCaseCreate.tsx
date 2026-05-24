@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import dynamic from "next/dynamic";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -24,6 +25,18 @@ import { Separator } from "@/components/ui/separator";
 
 import type { CreateRescueCasePayloadDto } from "@/services/rescue-case/rescue-case-dto";
 import type { RescueCasePriority } from "@/types/rescue-case.type";
+
+const LocationPickerMap = dynamic(
+  () => import("@/components/map/LocationPickerMap"),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex h-72 w-full items-center justify-center rounded-lg border bg-muted/30 text-sm text-muted-foreground">
+        Đang tải bản đồ...
+      </div>
+    ),
+  },
+);
 
 export type RescueCaseCreateValues = CreateRescueCasePayloadDto;
 
@@ -66,10 +79,15 @@ export function RescueCaseCreate({
 }: RescueCaseCreateProps) {
   const [values, setValues] =
     React.useState<RescueCaseCreateValues>(DEFAULT_VALUES);
-
-  React.useEffect(() => {
-    if (!open) setValues(DEFAULT_VALUES);
-  }, [open]);
+  const handleOpenChange = React.useCallback(
+    (nextOpen: boolean) => {
+      if (!nextOpen) {
+        setValues(DEFAULT_VALUES);
+      }
+      onOpenChange(nextOpen);
+    },
+    [onOpenChange],
+  );
 
   const update = React.useCallback(
     <K extends keyof RescueCaseCreateValues>(
@@ -96,7 +114,7 @@ export function RescueCaseCreate({
   ]);
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="w-full p-0 sm:max-w-4xl">
         <DialogHeader className="px-6 pt-6">
           <DialogTitle>Báo cáo ca cứu hộ mới</DialogTitle>
@@ -196,15 +214,29 @@ export function RescueCaseCreate({
               />
             </div>
 
+            <div className="space-y-2 md:col-span-2">
+              <Label>Chọn vị trí trên bản đồ</Label>
+              <div className="overflow-hidden rounded-lg border">
+                <LocationPickerMap
+                  latitude={values.latitude || undefined}
+                  longitude={values.longitude || undefined}
+                  disabled={Boolean(submitting)}
+                  onChange={({ latitude, longitude }) => {
+                    update("latitude", latitude);
+                    update("longitude", longitude);
+                  }}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Nhấn lên bản đồ hoặc kéo marker để chọn tọa độ.
+              </p>
+            </div>
+
             <div className="space-y-2">
               <Label>Latitude</Label>
               <Input
-                type="number"
-                step="0.000001"
                 value={String(values.latitude)}
-                onChange={(e) =>
-                  update("latitude", Number(e.target.value) || 0)
-                }
+                readOnly
                 disabled={Boolean(submitting)}
               />
             </div>
@@ -212,12 +244,8 @@ export function RescueCaseCreate({
             <div className="space-y-2">
               <Label>Longitude</Label>
               <Input
-                type="number"
-                step="0.000001"
                 value={String(values.longitude)}
-                onChange={(e) =>
-                  update("longitude", Number(e.target.value) || 0)
-                }
+                readOnly
                 disabled={Boolean(submitting)}
               />
             </div>
@@ -282,7 +310,7 @@ export function RescueCaseCreate({
           <Button
             variant="secondary"
             type="button"
-            onClick={() => onOpenChange(false)}
+            onClick={() => handleOpenChange(false)}
             disabled={Boolean(submitting)}
           >
             Huỷ

@@ -32,7 +32,7 @@ export interface PostFeedParams{
 
 export interface PostCreatePayload {
   content: string;
-  rescueCaseId: string;
+  rescueCaseId?: string;
   mediaIds: string[];
   tagCodes: string[];
 }

@@ -1,9 +1,13 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
 import { ArrowRight } from "lucide-react";
 
 import { PageHero } from "@/components/marketing/PageHero";
 import { PrimaryCta } from "@/components/marketing/PrimaryCta";
 import { APP_ROUTES } from "@/constants/routes";
-import { getBannerHref } from "@/lib/banner";
+import { useActiveBanners } from "@/hooks/use-banner";
+import { PUBLIC_BANNER_TARGETS, getBannerHref } from "@/lib/banner";
 import type { Banner } from "@/types/banner.type";
 import type { PublicPageData } from "@/types/public-page.type";
 
@@ -23,12 +27,40 @@ export default function HeroSection({
   onSearchChange,
   banner,
 }: HeroSectionProps) {
-  const primaryHref = getBannerHref(banner, APP_ROUTES.ADOPTION);
+  const activeBannersQuery = useActiveBanners(PUBLIC_BANNER_TARGETS.HOME);
+  const activeHomeBanners = useMemo(
+    () =>
+      (activeBannersQuery.data ?? [])
+        .filter((item) => item.targetPage === PUBLIC_BANNER_TARGETS.HOME)
+        .sort((left, right) => left.displayOrder - right.displayOrder),
+    [activeBannersQuery.data],
+  );
+  const heroBanners = activeHomeBanners.length > 0
+    ? activeHomeBanners
+    : banner
+      ? [banner]
+      : [];
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    if (heroBanners.length <= 1) return;
+
+    const timer = window.setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % heroBanners.length);
+    }, 5000);
+
+    return () => window.clearInterval(timer);
+  }, [heroBanners.length]);
+
+  const normalizedIndex =
+    heroBanners.length > 0 ? currentIndex % heroBanners.length : 0;
+  const currentBanner = heroBanners[normalizedIndex];
+  const primaryHref = getBannerHref(currentBanner, APP_ROUTES.ADOPTION);
 
   return (
     <PageHero
-      imageSrc={banner?.mediaUrl || HERO_IMG}
-      imageAlt={banner?.title || hero.titleHighlight}
+      imageSrc={currentBanner?.mediaUrl || HERO_IMG}
+      imageAlt={currentBanner?.title || hero.titleHighlight}
       className="bg-slate-950"
       minHeightClassName="min-h-screen"
       imageClassName="object-[50%_30%]"
@@ -38,13 +70,13 @@ export default function HeroSection({
       badge={
         <div className="inline-flex items-center gap-2 rounded-full border border-orange-400/50 bg-orange-400/15 px-4 py-1.5 text-[12px] font-semibold text-orange-300">
           <span className="inline-flex h-2 w-2 animate-pulse rounded-full bg-orange-400" />
-          {hero.emergencyCases} ca cứu hộ khẩn cấp đang cần hỗ trợ hôm nay
+          {hero.emergencyCases} ca cuu ho khan cap dang can ho tro hom nay
         </div>
       }
       title={
-        banner?.title ? (
+        currentBanner?.title ? (
           <h1 className="max-w-3xl whitespace-pre-line text-balance text-4xl font-black leading-tight text-white sm:text-5xl md:text-6xl lg:text-7xl">
-            {banner.title}
+            {currentBanner.title}
           </h1>
         ) : (
           <h1 className="text-balance text-4xl font-black leading-tight text-white sm:text-5xl md:text-6xl lg:text-7xl">
@@ -58,13 +90,13 @@ export default function HeroSection({
       }
       description={
         <p className="max-w-xl text-[15px] leading-relaxed text-white/80 md:text-[17px]">
-          {banner?.subtitle || hero.description}
+          {currentBanner?.subtitle || hero.description}
         </p>
       }
       actions={
         <>
           <PrimaryCta href={primaryHref} variant="warm">
-            {banner ? "Kham pha ngay" : "Nhan nuoi ngay"}
+            {currentBanner ? "Kham pha ngay" : "Nhan nuoi ngay"}
             <ArrowRight size={18} />
           </PrimaryCta>
           <PrimaryCta href={APP_ROUTES.MAP} variant="glass">
@@ -73,6 +105,24 @@ export default function HeroSection({
         </>
       }
     >
+      {heroBanners.length > 1 ? (
+        <div className="mt-6 flex items-center gap-2">
+          {heroBanners.map((item, index) => (
+            <button
+              key={item.bannerId}
+              type="button"
+              aria-label={`Xem banner ${index + 1}`}
+              onClick={() => setCurrentIndex(index)}
+              className={`h-2.5 rounded-full transition-all ${
+                index === normalizedIndex
+                  ? "w-10 bg-white"
+                  : "w-2.5 bg-white/40 hover:bg-white/70"
+              }`}
+            />
+          ))}
+        </div>
+      ) : null}
+
       <div className="mb-8 mt-9 flex max-w-xl overflow-hidden rounded-2xl bg-white shadow-[0_20px_60px_rgba(0,0,0,0.35)]">
         <div className="flex flex-1 items-center gap-3 px-4 py-3.5">
           <span className="text-slate-400">
@@ -99,7 +149,7 @@ export default function HeroSection({
           variant="ocean"
           className="rounded-none px-5 py-3.5 shadow-none"
         >
-          Tìm kiếm
+          Tim kiem
           <ArrowRight size={16} />
         </PrimaryCta>
       </div>

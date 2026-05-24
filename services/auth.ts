@@ -1,5 +1,4 @@
 import http from "@/lib/http";
-import { mapAuth } from "@/mappers/auth";
 import apiEndpoints from "@/services/endpoint";
 import { Auth } from "@/types/auth.type";
 
@@ -55,8 +54,8 @@ export interface UserDto {
 export const authService = {
   // done
   async login(data: LoginPayload): Promise<Auth> {
-    const res = await http.post<AuthResponseDto>(apiEndpoints.auth.login, data);
-    return mapAuth(res);
+    const res = await http.post<Auth>(apiEndpoints.auth.login, data);
+    return res;
   },
 
   // POST /api/v1/auth/logout - Logout — revoke all refresh tokens
@@ -66,8 +65,8 @@ export const authService = {
 
   // POST /api/v1/auth/refresh - Refresh access token (silent refresh)
   async refresh(): Promise<Auth> {
-    const res = await http.post<AuthResponseDto>(apiEndpoints.auth.refresh, {});
-    return mapAuth(res);
+    const res = await http.post<Auth>(apiEndpoints.auth.refresh, {});
+    return res;
   },
 
   // POST /api/v1/auth/register - Register a new account
