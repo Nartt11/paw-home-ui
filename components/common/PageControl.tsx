@@ -1,5 +1,7 @@
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeftIcon, ChevronRightIcon, ChevronsLeftIcon, ChevronsRightIcon } from "lucide-react";
 import { Button } from "../ui/button";
+import { Label } from "../ui/label";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 
 export function PageControls({
   page,
@@ -18,53 +20,93 @@ export function PageControls({
   onPageChange: (page: number) => void;
   onPageSizeChange?: (pageSize: number) => void;
 }) {
+  const resolvedPageSize = pageSize ?? pageSizeOptions?.[0] ?? 10;
+  const resolvedPageSizeOptions =
+    pageSizeOptions && pageSizeOptions.length > 0
+      ? pageSizeOptions
+      : [10, 20, 30, 40, 50];
+  const safeTotalPages = Math.max(totalPages, 1);
+  const safePageIndex = Math.min(Math.max(page, 0), safeTotalPages - 1);
+  const displayPage = safePageIndex + 1;
+  const canPreviousPage = safePageIndex > 0;
+  const canNextPage = safePageIndex < safeTotalPages - 1;
+
   return (
-    <div className="flex items-center justify-between border-t border-border px-4 py-3">
-      <div className="flex items-center gap-3">
-        <span className="text-sm text-muted-foreground">
-          Page {page} of {Math.max(totalPages, 1)}
-          {typeof totalItems === "number"
-            ? ` · ${totalItems.toLocaleString()} items`
-            : ""}
-        </span>
-        {onPageSizeChange && pageSize ? (
-          <label className="flex items-center gap-2 text-sm text-muted-foreground">
-            <span>Rows</span>
-            <select
-              value={pageSize}
-              onChange={(event) => onPageSizeChange(Number(event.target.value))}
-              className="h-9 rounded-lg border border-border bg-background px-2 text-sm text-foreground outline-none transition-all hover:border-primary/20 focus:border-primary/35"
-            >
-              {(pageSizeOptions ?? [10, 20, 50, 100]).map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
-          </label>
-        ) : null}
+    <div className="flex items-center justify-between px-4">
+      <div className="hidden flex-1 text-sm text-muted-foreground lg:flex">
+        Tổng số: {" "}
+        {typeof totalItems === "number" ? `${totalItems} items` : null}
       </div>
-      <div className="flex items-center gap-2">
-        <Button
-          disabled={page <= 1}
-          onClick={() => onPageChange(page - 1)}
-          size="sm"
-          type="button"
-          variant="outline"
-        >
-          <ChevronLeft className="h-4 w-4" />
-          Trước
-        </Button>
-        <Button
-          disabled={page >= totalPages}
-          onClick={() => onPageChange(page + 1)}
-          size="sm"
-          type="button"
-          variant="outline"
-        >
-          Sau
-          <ChevronRight className="h-4 w-4" />
-        </Button>
+      <div className="flex w-full items-center gap-8 lg:w-fit">
+        <div className="hidden items-center gap-2 lg:flex">
+          <Label htmlFor="rows-per-page" className="text-sm font-medium">
+            Rows per page
+          </Label>
+          <Select
+            value={`${resolvedPageSize}`}
+            onValueChange={(value) => {
+              onPageSizeChange?.(Number(value));
+            }}
+            disabled={!onPageSizeChange}
+          >
+            <SelectTrigger size="sm" className="w-20" id="rows-per-page">
+              <SelectValue placeholder={resolvedPageSize} />
+            </SelectTrigger>
+            <SelectContent side="top">
+              <SelectGroup>
+                {resolvedPageSizeOptions.map((option) => (
+                  <SelectItem key={option} value={`${option}`}>
+                    {option}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex w-fit items-center justify-center text-sm font-medium">
+          Page {displayPage} of {safeTotalPages}
+        </div>
+        <div className="ml-auto flex items-center gap-2 lg:ml-0">
+          <Button
+            variant="outline"
+            className="hidden h-8 w-8 p-0 lg:flex"
+            onClick={() => onPageChange(0)}
+            disabled={!canPreviousPage}
+          >
+            <span className="sr-only">Go to first page</span>
+            <ChevronsLeftIcon />
+          </Button>
+          <Button
+            variant="outline"
+            className="size-8"
+            size="icon"
+            onClick={() => onPageChange(safePageIndex - 1)}
+            disabled={!canPreviousPage}
+          >
+            <span className="sr-only">Go to previous page</span>
+            <ChevronLeftIcon />
+          </Button>
+          <Button
+            variant="outline"
+            className="size-8"
+            size="icon"
+            onClick={() => onPageChange(safePageIndex + 1)}
+            disabled={!canNextPage}
+          >
+            <span className="sr-only">Go to next page</span>
+            <ChevronRightIcon />
+          </Button>
+          <Button
+            variant="outline"
+            className="hidden size-8 lg:flex"
+            size="icon"
+            onClick={() => onPageChange(safeTotalPages - 1)}
+            disabled={!canNextPage}
+          >
+            <span className="sr-only">Go to last page</span>
+            <ChevronsRightIcon />
+          </Button>
+        </div>
       </div>
     </div>
   );

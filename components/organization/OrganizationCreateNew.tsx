@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import dynamic from "next/dynamic";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -21,6 +22,18 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+
+const LocationPickerMap = dynamic(
+  () => import("@/components/map/LocationPickerMap"),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex h-72 w-full items-center justify-center rounded-lg border bg-muted/30 text-sm text-muted-foreground">
+        Đang tải bản đồ...
+      </div>
+    ),
+  },
+);
 
 export type OrganizationTypeValue = "SHELTER" | "VET_CENTER";
 
@@ -67,13 +80,18 @@ export function OrganizationCreateNew({
 }: OrganizationCreateNewProps) {
   const [values, setValues] =
     React.useState<OrganizationCreateNewValues>(DEFAULT_VALUES);
-
-  React.useEffect(() => {
-    if (!open) setValues(DEFAULT_VALUES);
-  }, [open]);
+  const handleOpenChange = React.useCallback(
+    (nextOpen: boolean) => {
+      if (!nextOpen) {
+        setValues(DEFAULT_VALUES);
+      }
+      onOpenChange(nextOpen);
+    },
+    [onOpenChange],
+  );
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="w-full sm:max-w-4xl p-0">
         <DialogHeader className="px-6 pt-6">
           <DialogTitle>Tạo mới trung tâm</DialogTitle>
@@ -202,24 +220,43 @@ export function OrganizationCreateNew({
           <Separator className="my-5" />
 
           <div className="grid gap-5 md:grid-cols-2">
+            <div className="space-y-2 md:col-span-2">
+              <Label>Chọn vị trí trên bản đồ</Label>
+              <div className="overflow-hidden rounded-lg border">
+                <LocationPickerMap
+                  latitude={
+                    values.latitude.trim() ? Number(values.latitude) : undefined
+                  }
+                  longitude={
+                    values.longitude.trim() ? Number(values.longitude) : undefined
+                  }
+                  disabled={Boolean(submitting)}
+                  onChange={({ latitude, longitude }) =>
+                    setValues((p) => ({
+                      ...p,
+                      latitude: String(latitude),
+                      longitude: String(longitude),
+                    }))
+                  }
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Nhấn lên bản đồ hoặc kéo marker để chọn tọa độ.
+              </p>
+            </div>
+
             <div className="space-y-2">
               <Label>Latitude</Label>
               <Input
-                placeholder="10.762622"
                 value={values.latitude}
-                onChange={(e) =>
-                  setValues((p) => ({ ...p, latitude: e.target.value }))
-                }
+                readOnly
               />
             </div>
             <div className="space-y-2">
               <Label>Longitude</Label>
               <Input
-                placeholder="106.660172"
                 value={values.longitude}
-                onChange={(e) =>
-                  setValues((p) => ({ ...p, longitude: e.target.value }))
-                }
+                readOnly
               />
             </div>
           </div>
@@ -229,7 +266,7 @@ export function OrganizationCreateNew({
           <Button
             variant="secondary"
             type="button"
-            onClick={() => onOpenChange(false)}
+            onClick={() => handleOpenChange(false)}
             disabled={Boolean(submitting)}
           >
             Huỷ

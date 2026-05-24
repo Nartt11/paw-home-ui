@@ -1,86 +1,472 @@
 "use client";
 
 import * as React from "react";
+import dynamic from "next/dynamic";
+import { Building2, MapPinned, Siren, TriangleAlert } from "lucide-react";
 
 import TitlePerPage from "@/components/common/admin/TitlePerPage";
-import { RescueCaseListTable } from "@/components/rescue-case/RescueCaseListTable";
-import { RescueCaseCreate } from "@/components/rescue-case/RescueCaseCreate";
-import type { RescueCaseCreateValues } from "@/components/rescue-case/RescueCaseCreate";
+import type {
+  OrganizationMapMarker,
+  RescueMapMarker,
+} from "@/components/map-rescue/MapRescue";
+import { OrganizationViewDetail } from "@/components/organization/OrganizationViewDetail";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { RescueCaseCreate, type RescueCaseCreateValues } from "@/components/rescue-case/RescueCaseCreate";
 import { RescueCaseViewDetail } from "@/components/rescue-case/RescueCaseViewDetail";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useCreateRescueCase, useRescueCaseDetail, useRescueCasesInBoundingBox, useRescueMapMarkers } from "@/hooks/use-rescue-case";
+import {
+  useOrganizationDetail,
+  useOrganizationMapMarkers,
+  useOrganizationsInBoundingBox,
+} from "@/hooks/use-organization";
+import type { OrganizationSummary } from "@/types/organization.type";
+import type { RescueCaseBoundingBoxParams, RescueCaseMarkers, RescueCasePayload, RescueCaseSummary } from "@/types/rescue-case.type";
 
-import { useListUrlState } from "@/hooks/use-list-url-state";
-import rescueService from "@/services/rescue-case/rescue-case";
-import type { RescueCase } from "@/types/rescue-case.type";
+const Map = dynamic(() => import("@/components/map-rescue/MapRescue"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex h-full w-full items-center justify-center bg-muted/20">
+      <p className="text-muted-foreground">Đang tải bản đồ...</p>
+    </div>
+  ),
+});
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+const VIETNAM_BOUNDS: RescueCaseBoundingBoxParams = {
+  minLat: 8.5,
+  maxLat: 23.5,
+  minLng: 102.1,
+  maxLng: 109.5,
+  page: 0,
+  size: 100,
+};
 
-export default function CenterManagementPage() {
-  const { page, size, setPage, setSize } = useListUrlState();
-  const queryClient = useQueryClient();
+const VIETNAM_MARKER_BOUNDS: RescueCaseMarkers = {
+  minLat: 8.5,
+  maxLat: 23.5,
+  minLng: 102.1,
+  maxLng: 109.5,
+};
 
+function toCreateRescuePayload(
+  values: RescueCaseCreateValues,
+): RescueCasePayload {
+  return {
+    ...values,
+    imageUrls: [],
+    mediaIds: [],
+    contactPhone: "",
+  };
+}
+
+export default function RescueCaseManagementPage() {
   const [createOpen, setCreateOpen] = React.useState(false);
-  const [viewOpen, setViewOpen] = React.useState(false);
-  const [selectedId, setSelectedId] = React.useState<string | null>(null);
+  const [rescueViewOpen, setRescueViewOpen] = React.useState(false);
+  const [organizationViewOpen, setOrganizationViewOpen] = React.useState(false);
+  const [selectedRescueId, setSelectedRescueId] = React.useState<string | null>(null);
+  const [selectedOrganizationId, setSelectedOrganizationId] = React.useState<string | null>(null);
 
-  const listQuery = useQuery({
-    queryKey: ["rescue-cases", { page, size }],
-    queryFn: () => rescueService.getAllRescueCases({ page, size }),
+  const rescueMarkersQuery = useRescueMapMarkers(VIETNAM_MARKER_BOUNDS);
+  const rescueBoundingBoxQuery = useRescueCasesInBoundingBox(VIETNAM_BOUNDS);
+  const organizationMarkersQuery = useOrganizationMapMarkers({
+    minLat: VIETNAM_BOUNDS.minLat,
+    maxLat: VIETNAM_BOUNDS.maxLat,
+    minLng: VIETNAM_BOUNDS.minLng,
+    maxLng: VIETNAM_BOUNDS.maxLng,
   });
-
-  const detailQuery = useQuery({
-    queryKey: ["rescue-case", selectedId],
-    queryFn: () => rescueService.getRescueCaseById(selectedId as string),
-    enabled: Boolean(selectedId) && viewOpen,
+  const organizationBoundingBoxQuery = useOrganizationsInBoundingBox({
+    ...VIETNAM_BOUNDS,
   });
+  const detailQuery = useRescueCaseDetail(
+    rescueViewOpen ? selectedRescueId ?? undefined : undefined,
+  );
+  const organizationDetailQuery = useOrganizationDetail(
+    organizationViewOpen ? selectedOrganizationId ?? undefined : undefined,
+  );
+  const createRescueCaseMutation = useCreateRescueCase();
 
-  const selectedCase: RescueCase | null = detailQuery.data ?? null;
+  const rescueCases = React.useMemo(
+    () => rescueBoundingBoxQuery.data?.content ?? [],
+    [rescueBoundingBoxQuery.data],
+  );
+  const organizations = React.useMemo(
+    () => organizationBoundingBoxQuery.data?.content ?? [],
+    [organizationBoundingBoxQuery.data],
+  );
+  const rescueMarkers: RescueMapMarker[] = React.useMemo(
+    () => (rescueMarkersQuery.data ?? []).map((marker) => ({ ...marker })),
+    [rescueMarkersQuery.data],
+  );
+  const organizationMarkers: OrganizationMapMarker[] = React.useMemo(
+    () =>
+      (organizationMarkersQuery.data ?? []).map((item) => ({
+        organizationId: item.organizationId,
+        name: item.name,
+        latitude: item.latitude,
+        longitude: item.longitude,
+        type: item.type,
+        provinceName: item.provinceName,
+        wardName: item.wardName,
+      })),
+    [organizationMarkersQuery.data],
+  );
+  const totalRescueCases = rescueBoundingBoxQuery.data?.totalElements ?? 0;
+  const totalOrganizations =
+    organizationBoundingBoxQuery.data?.totalElements ??
+    organizationMarkersQuery.data?.length ??
+    0;
+  const criticalCases = rescueCases.filter(
+    (item) => item.priority === "CRITICAL" || item.priority === "HIGH",
+  ).length;
+  const activeCases = rescueCases.filter(
+    (item) => item.status === "REPORTED" || item.status === "IN_PROGRESS",
+  ).length;
+  const rescueCasesNeedingSupport = React.useMemo(
+    () =>
+      rescueCases.filter(
+        (item) => item.status === "REPORTED" || item.status === "IN_PROGRESS",
+      ),
+    [rescueCases],
+  );
 
-  const createMutation = useMutation({
-    mutationFn: (payload: RescueCaseCreateValues) =>
-      rescueService.createRescueCase(payload),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["rescue-cases"] });
+  const handleOpenDetail = React.useCallback((caseId: string) => {
+    setSelectedRescueId(caseId);
+    setRescueViewOpen(true);
+  }, []);
+
+  const handleOpenOrganizationDetail = React.useCallback(
+    (organizationId: string) => {
+      setSelectedOrganizationId(organizationId);
+      setOrganizationViewOpen(true);
+    },
+    [],
+  );
+
+  const handleRescueViewOpenChange = React.useCallback((open: boolean) => {
+    setRescueViewOpen(open);
+    if (!open) {
+      setSelectedRescueId(null);
+    }
+  }, []);
+
+  const handleOrganizationViewOpenChange = React.useCallback(
+    (open: boolean) => {
+      setOrganizationViewOpen(open);
+      if (!open) {
+        setSelectedOrganizationId(null);
+      }
+    },
+    [],
+  );
+
+  const handleCreateRescueCase = React.useCallback(
+    async (values: RescueCaseCreateValues) => {
+      await createRescueCaseMutation.mutateAsync(toCreateRescuePayload(values));
       setCreateOpen(false);
     },
-  });
+    [createRescueCaseMutation],
+  );
 
-  const data = listQuery.data;
+  const isLoadingMap =
+    rescueMarkersQuery.isPending ||
+    rescueBoundingBoxQuery.isPending ||
+    organizationMarkersQuery.isPending ||
+    organizationBoundingBoxQuery.isPending;
+
+  const renderRescueList = React.useCallback(
+    (items: RescueCaseSummary[], emptyMessage: string) => {
+      if (isLoadingMap) {
+        return [...Array(4)].map((_, index) => (
+          <div
+            key={index}
+            className="h-24 animate-pulse rounded-xl bg-muted"
+          />
+        ));
+      }
+
+      if (items.length === 0) {
+        return (
+          <div className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">
+            {emptyMessage}
+          </div>
+        );
+      }
+
+      return items.map((caseItem) => (
+        <button
+          key={caseItem.caseId}
+          type="button"
+          onClick={() => handleOpenDetail(caseItem.caseId)}
+          className="w-full rounded-xl border p-4 text-left transition hover:border-primary hover:bg-muted/40"
+        >
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="font-mono text-xs text-muted-foreground">
+                {caseItem.caseCode || caseItem.caseId}
+              </p>
+              <p className="mt-1 font-medium text-foreground">
+                {caseItem.species}
+              </p>
+              <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
+                {caseItem.locationText}
+              </p>
+            </div>
+            <span className="rounded-full bg-muted px-2 py-1 text-xs font-semibold">
+              {caseItem.priority}
+            </span>
+          </div>
+          <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
+            <span>{caseItem.status}</span>
+            <span>
+              {new Date(caseItem.reportedAt).toLocaleDateString("vi-VN")}
+            </span>
+          </div>
+        </button>
+      ));
+    },
+    [handleOpenDetail, isLoadingMap],
+  );
+
+  const renderOrganizationList = React.useCallback(
+    (items: OrganizationSummary[]) => {
+      if (isLoadingMap) {
+        return [...Array(4)].map((_, index) => (
+          <div
+            key={index}
+            className="h-24 animate-pulse rounded-xl bg-muted"
+          />
+        ));
+      }
+
+      if (items.length === 0) {
+        return (
+          <div className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">
+            Chưa có trung tâm nào trong vùng hiển thị.
+          </div>
+        );
+      }
+
+      return items.map((organization) => (
+        <button
+          key={organization.organizationId}
+          type="button"
+          onClick={() => handleOpenOrganizationDetail(organization.organizationId)}
+          className="w-full rounded-xl border p-4 text-left transition hover:border-primary hover:bg-muted/40"
+        >
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="line-clamp-1 font-medium text-foreground">
+                {organization.name}
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {organization.type}
+              </p>
+              <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
+                {[
+                  organization.streetAddress,
+                  organization.wardName,
+                  organization.provinceName,
+                ]
+                  .filter(Boolean)
+                  .join(", ")}
+              </p>
+            </div>
+            <span className="rounded-full bg-muted px-2 py-1 text-xs font-semibold">
+              {organization.status}
+            </span>
+          </div>
+          <div className="mt-3 flex items-center justify-between gap-3 text-xs text-muted-foreground">
+            <span className="truncate">
+              {organization.phone || "Chưa có số điện thoại"}
+            </span>
+            <span className="truncate text-right">
+              {organization.email || "Chưa có email"}
+            </span>
+          </div>
+        </button>
+      ));
+    },
+    [handleOpenOrganizationDetail, isLoadingMap],
+  );
 
   return (
     <div className="space-y-6">
       <TitlePerPage
-        title="Quản lý ca cứu hộ"
-        description="Xem danh sách các ca cứu hộ đã được báo cáo, quản lý thông tin và trạng thái của từng ca cứu hộ."
-        buttonText="Báo cáo ca cứu hộ mới"
+        title="Quản lý ca cứu trợ"
+        description="Theo dõi trực quan các ca cứu trợ và tổ chức hỗ trợ trên bản đồ."
+        buttonText="Báo cáo ca cứu trợ mới"
         handleOpenModal={() => setCreateOpen(true)}
       />
 
-      <RescueCaseListTable
-        data={data?.content ?? []}
-        loading={listQuery.isPending}
-        page={data?.page ?? page}
-        size={data?.size ?? size}
-        totalPages={data?.totalPages ?? 1}
-        totalElements={data?.totalElements ?? 0}
-        onPageChange={setPage}
-        onSizeChange={setSize}
-      />
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Ca trong khu vực
+            </CardTitle>
+            <MapPinned className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{totalRescueCases}</div>
+            <p className="text-xs text-muted-foreground">
+              Lấy từ bounding-box rescue cases
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Tổ chức hỗ trợ
+            </CardTitle>
+            <Building2 className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{totalOrganizations}</div>
+            <p className="text-xs text-muted-foreground">Tổ chức</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Cần ưu tiên cao
+            </CardTitle>
+            <TriangleAlert className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{criticalCases}</div>
+            <p className="text-xs text-muted-foreground">
+              HIGH hoặc CRITICAL trong vùng hiện tại
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Đang cần xử lý
+            </CardTitle>
+            <Siren className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{activeCases}</div>
+            <p className="text-xs text-muted-foreground">
+              REPORTED và IN_PROGRESS
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid h-[70vh] gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="h-full overflow-hidden rounded-2xl border bg-card">
+          <Map
+            className="h-full w-full"
+            rescueMarkers={rescueMarkers}
+            organizationMarkers={organizationMarkers}
+            loading={isLoadingMap}
+            onRescueMarkerClick={handleOpenDetail}
+            onOrganizationMarkerClick={handleOpenOrganizationDetail}
+          />
+        </div>
+
+        <div className="flex h-full min-h-0 flex-col rounded-2xl border bg-card">
+          <div className="border-b px-5 py-4">
+            <h2 className="text-base font-semibold">Ca cứu trợ trong vùng</h2>
+            <p className="text-sm text-muted-foreground">
+              Chọn một ca để xem chi tiết nhanh.
+            </p>
+          </div>
+
+          <Tabs defaultValue="all" className="min-h-0 flex-1 gap-0">
+            <TabsList className="mx-4 mt-4 grid w-auto grid-cols-3">
+              <TabsTrigger value="all">Tất cả</TabsTrigger>
+              <TabsTrigger value="rescue">Ca cần hỗ trợ</TabsTrigger>
+              <TabsTrigger value="organizations">Trung tâm</TabsTrigger>
+            </TabsList>
+
+            <TabsContent
+              value="all"
+              className="min-h-0 overflow-y-auto p-4"
+            >
+              <div className="space-y-5">
+                <section className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-semibold text-foreground">
+                      Ca cứu trợ
+                    </h3>
+                    <span className="text-xs text-muted-foreground">
+                      {totalRescueCases} mục
+                    </span>
+                  </div>
+                  <div className="space-y-3">
+                    {renderRescueList(
+                      rescueCases,
+                      "Chưa có ca cứu trợ trong vùng hiển thị.",
+                    )}
+                  </div>
+                </section>
+
+                <section className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-semibold text-foreground">
+                      Trung tâm hỗ trợ
+                    </h3>
+                    <span className="text-xs text-muted-foreground">
+                      {totalOrganizations} mục
+                    </span>
+                  </div>
+                  <div className="space-y-3">
+                    {renderOrganizationList(organizations)}
+                  </div>
+                </section>
+              </div>
+            </TabsContent>
+
+            <TabsContent
+              value="rescue"
+              className="min-h-0 overflow-y-auto p-4"
+            >
+              <div className="space-y-3">
+                {renderRescueList(
+                  rescueCasesNeedingSupport,
+                  "Chưa có ca nào đang cần hỗ trợ trong vùng hiển thị.",
+                )}
+              </div>
+            </TabsContent>
+
+            <TabsContent
+              value="organizations"
+              className="min-h-0 overflow-y-auto p-4"
+            >
+              <div className="space-y-3">
+                {renderOrganizationList(organizations)}
+              </div>
+            </TabsContent>
+          </Tabs>
+        </div>
+      </div>
 
       <RescueCaseCreate
         open={createOpen}
         onOpenChange={setCreateOpen}
-        submitting={createMutation.isPending}
-        onSubmit={(values) => createMutation.mutate(values)}
+        submitting={createRescueCaseMutation.isPending}
+        onSubmit={handleCreateRescueCase}
       />
 
       <RescueCaseViewDetail
-        open={viewOpen}
-        onOpenChange={(v) => {
-          setViewOpen(v);
-          if (!v) setSelectedId(null);
-        }}
-        rescueCase={selectedCase}
+        open={rescueViewOpen}
+        onOpenChange={handleRescueViewOpenChange}
+        rescueCase={detailQuery.data ?? null}
       />
+
+      {organizationDetailQuery.data ? (
+        <OrganizationViewDetail
+          open={organizationViewOpen}
+          onOpenChange={handleOrganizationViewOpenChange}
+          organization={organizationDetailQuery.data}
+        />
+      ) : null}
     </div>
   );
 }

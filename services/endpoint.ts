@@ -1,3 +1,5 @@
+import { create } from "domain";
+
 type Id = string | number;
 
 const byId = (basePath: string, id: Id) => `${basePath}/${id}`;
@@ -37,6 +39,7 @@ export const apiEndpoints = {
   },
   pets: {
     root: "/pets",
+    createByShelter: "/pets/shelter",
     byId: (id: string) => byId("/pets", id),
     available: "/pets/available",
     byOrganization: (organizationId: string) =>
@@ -48,6 +51,13 @@ export const apiEndpoints = {
     medicalRecords: (petId: string) => `/pets/${petId}/medical-records`,
     ownerships: (petId: string) => `/pets/${petId}/ownerships`,
     media: (petId: string) => `/pets/${petId}/media`,
+    deleteMedia: (petId: string, mediaId: string) =>
+      `/pets/${petId}/media/${mediaId}`,
+    createMedia: (petId: string, primary?: boolean) => `/pets/${petId}/media`,
+    createMedicalRecord: (petId: string, primary?: boolean) =>
+      `/pets/${petId}/medical-records${primary ? "?primary=true" : ""}`,
+    updateMediaPrimary: (petId: string, mediaId: string) =>
+      `/pets/${petId}/media/${mediaId}/primary`,
   },
   rescueCases: {
     root: "/rescue-cases",

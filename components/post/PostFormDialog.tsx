@@ -94,8 +94,9 @@ export function PostFormDialog({
             {isCreate ? "Thêm bài đăng" : "Cập nhật bài đăng"}
           </DialogTitle>
           <DialogDescription>
-            Nhập đúng payload post gồm nội dung, rescue case, media IDs và tag
-            codes.
+            {isCreate
+              ? "Nhập nội dung, rescue case, media IDs và tag codes cho bài đăng mới."
+              : "Cập nhật nội dung, media IDs và tag codes cho bài đăng."}
           </DialogDescription>
         </DialogHeader>
 
@@ -126,23 +127,25 @@ export function PostFormDialog({
                   </FieldContent>
                 </Field>
 
-                <Field>
-                  <FieldLabel htmlFor="post-rescue-case-id">
-                    Rescue case ID
-                  </FieldLabel>
-                  <FieldContent>
-                    <Input
-                      id="post-rescue-case-id"
-                      placeholder="case_123"
-                      disabled={isBusy}
-                      aria-invalid={Boolean(errors.rescueCaseId)}
-                      {...register("rescueCaseId")}
-                    />
-                    <FieldError errors={[errors.rescueCaseId]} />
-                  </FieldContent>
-                </Field>
+                {isCreate ? (
+                  <Field>
+                    <FieldLabel htmlFor="post-rescue-case-id">
+                      Rescue case ID
+                    </FieldLabel>
+                    <FieldContent>
+                      <Input
+                        id="post-rescue-case-id"
+                        placeholder="case_123"
+                        disabled={isBusy}
+                        aria-invalid={Boolean(errors.rescueCaseId)}
+                        {...register("rescueCaseId")}
+                      />
+                      <FieldError errors={[errors.rescueCaseId]} />
+                    </FieldContent>
+                  </Field>
+                ) : null}
 
-                <Field>
+                <Field className={isCreate ? "" : "md:col-span-2"}>
                   <FieldLabel htmlFor="post-media-ids">Media IDs</FieldLabel>
                   <FieldContent>
                     <Textarea
@@ -178,7 +181,7 @@ export function PostFormDialog({
                   onClick={() => onOpenChange(false)}
                   disabled={isBusy}
                 >
-                  Huy
+                  Hủy
                 </Button>
                 <Button type="submit" disabled={isBusy}>
                   {submitting

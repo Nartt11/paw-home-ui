@@ -7,7 +7,7 @@ import HowItWorksSection from "@/components/HomePage/HowItWorksSection";
 import RescueMapSection from "@/components/HomePage/RescueMapSection";
 import StatsSection from "@/components/HomePage/StatsSection";
 import VolunteerSection from "@/components/HomePage/VolunteerSection";
-import { useActiveBanners } from "@/hooks/use-active-banners";
+import { useActiveBanners } from "@/hooks/use-banner";
 import { pickBannerForTargetPage, PUBLIC_BANNER_TARGETS } from "@/lib/banner";
 import type { PublicPageData } from "@/types/public-page.type";
 
@@ -17,13 +17,9 @@ const DATA = landingData as PublicPageData;
 
 export default function LandingPage() {
   const [searchQuery, setSearchQuery] = useState("");
-  const activeBannersQuery = useActiveBanners();
+  const activeBannersQuery = useActiveBanners(PUBLIC_BANNER_TARGETS.HOME);
   const banners = useMemo(() => activeBannersQuery.data ?? [], [activeBannersQuery.data]);
 
-  const homeHeroBanner = useMemo(
-    () => pickBannerForTargetPage(banners, PUBLIC_BANNER_TARGETS.HOME, 0),
-    [banners],
-  );
   const volunteerBanner = useMemo(
     () => pickBannerForTargetPage(banners, PUBLIC_BANNER_TARGETS.HOME, 1),
     [banners],
@@ -35,7 +31,6 @@ export default function LandingPage() {
         hero={DATA.hero}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
-        banner={homeHeroBanner}
       />
       <StatsSection stats={DATA.stats} />
       <HowItWorksSection steps={DATA.howItWorksSteps} />

@@ -2,11 +2,11 @@
 
 import * as React from "react";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-import TitlePerPage from "@/components/common/admin/TitlePerPage";
 import { DeleteModal } from "@/components/common/admin/DeleteModal";
+import { PageControls } from "@/components/common/PageControl";
+import TitlePerPage from "@/components/common/admin/TitlePerPage";
 import {
   PostFormDialog,
   type PostFormValues,
@@ -14,11 +14,14 @@ import {
 import { PostListTable } from "@/components/post/PostListTable";
 import { PostViewDetail } from "@/components/post/PostViewDetail";
 import { useListUrlState } from "@/hooks/use-list-url-state";
-import postService from "@/services/post/post";
-import type {
-  CreatePostPayload,
-  UpdatePostPayload,
-} from "@/services/post/post";
+import {
+  useCreatePost,
+  useDeletePost,
+  usePostDetail,
+  usePosts,
+  useUpdatePost,
+} from "@/hooks/use-post";
+import type { PostCreatePayload, PostUpdatePayload } from "@/types/post.type";
 
 function parseCommaSeparatedValues(value: string | undefined) {
   if (!value) return [];
@@ -29,7 +32,9 @@ function parseCommaSeparatedValues(value: string | undefined) {
     .filter(Boolean);
 }
 
-function buildCreatePostPayload(values: PostFormValues): CreatePostPayload {
+function buildCreatePostPayload(
+  values: PostFormValues,
+): PostCreatePayload {
   const rescueCaseId = values.rescueCaseId?.trim();
 
   return {
@@ -40,7 +45,9 @@ function buildCreatePostPayload(values: PostFormValues): CreatePostPayload {
   };
 }
 
-function buildUpdatePostPayload(values: PostFormValues): UpdatePostPayload {
+function buildUpdatePostPayload(
+  values: PostFormValues,
+): PostUpdatePayload {
   return {
     content: values.content.trim(),
     mediaIds: parseCommaSeparatedValues(values.mediaIdsText),
@@ -53,11 +60,10 @@ function getErrorMessage(error: unknown, fallback: string) {
 }
 
 export default function PostManagementPage() {
-  const { page, size, setParams } = useListUrlState({
+  const { page, size, setPage, setSize } = useListUrlState({
     defaultPage: 0,
     defaultSize: 10,
   });
-  const queryClient = useQueryClient();
 
   const [selectedId, setSelectedId] = React.useState<string | null>(null);
   const [createOpen, setCreateOpen] = React.useState(false);
@@ -66,69 +72,64 @@ export default function PostManagementPage() {
   const [deleteOpen, setDeleteOpen] = React.useState(false);
   const [deleteId, setDeleteId] = React.useState<string | null>(null);
 
-  const listQuery = useQuery({
-    queryKey: ["posts", { page, size }],
-    queryFn: () => postService.getAllPosts({ page, size }),
-  });
+  const listQuery = usePosts({ page, size });
+  const detailQuery = usePostDetail(
+    selectedId && (viewOpen || editOpen) ? selectedId : undefined,
+  );
+  const createPostMutation = useCreatePost();
+  const updatePostMutation = useUpdatePost();
+  const deletePostMutation = useDeletePost();
 
-  const detailQuery = useQuery({
-    queryKey: ["post", selectedId],
-    queryFn: () => postService.getPostById(selectedId as string),
-    enabled: Boolean(selectedId) && (viewOpen || editOpen),
-  });
+  const data = listQuery.data;
+  const selectedPost = detailQuery.data ?? null;
 
-  const createMutation = useMutation({
-    mutationFn: (values: PostFormValues) =>
-      postService.createPost(buildCreatePostPayload(values)),
-    onSuccess: async () => {
-      toast.success("Đã tạo bài đăng thành công");
-      setCreateOpen(false);
-      await queryClient.invalidateQueries({ queryKey: ["posts"] });
+  const handleCreatePost = React.useCallback(
+    async (values: PostFormValues) => {
+      try {
+        await createPostMutation.mutateAsync(buildCreatePostPayload(values));
+        toast.success("Đã tạo bài đăng thành công");
+        setCreateOpen(false);
+      } catch (error) {
+        toast.error(getErrorMessage(error, "Không thể tạo bài đăng"));
+      }
     },
-    onError: (error) => {
-      toast.error(getErrorMessage(error, "Không thể tạo bài đăng"));
-    },
-  });
+    [createPostMutation],
+  );
 
-  const updateMutation = useMutation({
-    mutationFn: (values: PostFormValues) => {
+  const handleUpdatePost = React.useCallback(
+    async (values: PostFormValues) => {
       if (!selectedId) {
-        throw new Error("Không tìm thấy bài đăng cần cập nhật");
+        toast.error("Không tìm thấy bài đăng cần cập nhật");
+        return;
       }
 
-      return postService.updatePost(selectedId, buildUpdatePostPayload(values));
+      try {
+        await updatePostMutation.mutateAsync({
+          id: selectedId,
+          payload: buildUpdatePostPayload(values),
+        });
+        toast.success("Đã cập nhật bài đăng thành công");
+        setEditOpen(false);
+        setSelectedId(null);
+      } catch (error) {
+        toast.error(getErrorMessage(error, "Không thể cập nhật bài đăng"));
+      }
     },
-    onSuccess: async () => {
-      toast.success("Đã cập nhật bài đăng thành công");
-      setEditOpen(false);
-      setSelectedId(null);
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["posts"] }),
-        queryClient.invalidateQueries({ queryKey: ["post"] }),
-      ]);
-    },
-    onError: (error) => {
-      toast.error(getErrorMessage(error, "Không thể cập nhật bài đăng"));
-    },
-  });
+    [selectedId, updatePostMutation],
+  );
 
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => postService.deletePost(id),
-    onSuccess: async () => {
+  const handleDeletePost = React.useCallback(async () => {
+    if (!deleteId) return;
+
+    try {
+      await deletePostMutation.mutateAsync(deleteId);
       toast.success("Đã xóa bài đăng thành công");
       setDeleteOpen(false);
       setDeleteId(null);
-      await queryClient.invalidateQueries({ queryKey: ["posts"] });
-    },
-    onError: (error) => {
+    } catch (error) {
       toast.error(getErrorMessage(error, "Không thể xóa bài đăng"));
-    },
-  });
-
-  const data = listQuery.data;
-  const selectedPost = detailQuery.data;
-  const apiPage = data?.page ?? page;
-  const uiPage = apiPage + 1;
+    }
+  }, [deleteId, deletePostMutation]);
 
   return (
     <div className="space-y-6">
@@ -142,12 +143,6 @@ export default function PostManagementPage() {
       <PostListTable
         data={data?.content ?? []}
         loading={listQuery.isPending}
-        page={uiPage}
-        size={data?.size ?? size}
-        totalPages={data?.totalPages ?? 1}
-        totalElements={data?.totalElements ?? 0}
-        onPageChange={(nextPage) => setParams({ page: nextPage - 1 })}
-        onSizeChange={(nextSize) => setParams({ page: 0, size: nextSize })}
         onViewDetail={(id) => {
           setSelectedId(id);
           setViewOpen(true);
@@ -162,18 +157,27 @@ export default function PostManagementPage() {
         }}
       />
 
+      <PageControls
+        page={data?.page ?? page}
+        pageSize={data?.size ?? size}
+        totalPages={data?.totalPages ?? 1}
+        totalItems={data?.totalElements ?? 0}
+        onPageChange={setPage}
+        onPageSizeChange={setSize}
+      />
+
       <PostFormDialog
         mode="create"
         open={createOpen}
         onOpenChange={setCreateOpen}
-        submitting={createMutation.isPending}
-        onSubmit={(values) => createMutation.mutate(values)}
+        submitting={createPostMutation.isPending}
+        onSubmit={handleCreatePost}
       />
 
       <PostViewDetail
         open={viewOpen}
         post={selectedPost}
-        loading={detailQuery.isFetching}
+        loading={detailQuery.isPending}
         onOpenChange={(nextOpen) => {
           setViewOpen(nextOpen);
           if (!nextOpen) setSelectedId(null);
@@ -185,12 +189,12 @@ export default function PostManagementPage() {
         open={editOpen}
         post={selectedPost}
         loading={detailQuery.isFetching}
-        submitting={updateMutation.isPending}
+        submitting={updatePostMutation.isPending}
         onOpenChange={(nextOpen) => {
           setEditOpen(nextOpen);
           if (!nextOpen) setSelectedId(null);
         }}
-        onSubmit={(values) => updateMutation.mutate(values)}
+        onSubmit={handleUpdatePost}
       />
 
       <DeleteModal
@@ -201,12 +205,9 @@ export default function PostManagementPage() {
         }}
         title="Xóa bài đăng"
         description="Bạn có chắc chắn muốn xóa bài đăng này không? Hành động này không thể hoàn tác."
-        confirming={deleteMutation.isPending}
+        confirming={deletePostMutation.isPending}
         confirmDisabled={!deleteId}
-        onConfirm={() => {
-          if (!deleteId) return;
-          deleteMutation.mutate(deleteId);
-        }}
+        onConfirm={handleDeletePost}
       />
     </div>
   );

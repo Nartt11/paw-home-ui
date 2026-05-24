@@ -1,4 +1,5 @@
-import { Organization } from "./organization.type,";
+import { ListParams } from "./api.type";
+import { Organization } from "./organization.type";
 
 export type PetStatus =
   | "UNOWNED"
@@ -32,7 +33,6 @@ export interface PetSummary {
   wardCode: string;
   imageUrl: string;
 }
-
 export interface Pet extends Omit<PetSummary, "imageUrl"> {
   color: string;
   weight: number;
@@ -46,7 +46,7 @@ export interface Pet extends Omit<PetSummary, "imageUrl"> {
   updatedAt: string;
 }
 export interface Owner {
-  ownerType: string;
+  ownerType: PetOwnershipType;
   ownerId: string;
   name: string;
   avatarUrl: string;
@@ -58,6 +58,7 @@ export interface Owner {
 }
 
 export type PetOrganization = Pick<Organization, "organizationId" | "name">;
+export type PetOwnershipType = "USER" | "ORGANIZATION";
 export interface PetMedicalRecord {
   recordId: string;
   petId: string;
@@ -67,8 +68,6 @@ export interface PetMedicalRecord {
   recordDate: string;
   createdBy: string;
 }
-
-export type PetOwnershipType = "USER" | "ORGANIZATION";
 export interface PetOwnership {
   petId: string;
   ownerType: PetOwnershipType;
@@ -77,11 +76,85 @@ export interface PetOwnership {
   fromTime: string;
   toTime: string;
 }
-export type PetMediaType = "IMAGE" | "VIDEO";
 export interface PetMedia {
   mediaId: string;
-  uploaderId: string;
+  petId: string;
+  mediaFileId: string;
   url: string;
-  type: PetMediaType;
+  type: string;
+  primaryMedia: boolean;
   createdAt: string;
+}
+
+export interface PetListParams extends ListParams {
+  species?: string;
+  breed?: string;
+  gender?: PetGender;
+  searchName?: string;
+  status?: PetStatus[];
+  userId?: string;
+  organizationId?: string;
+}
+
+export interface PetCreatePayload {
+  name: string;
+  species: string;
+  breed: string;
+  age: number;
+  gender: PetGender;
+  color: string;
+  weight: number;
+  description: string;
+  vaccinated: boolean;
+  neutered: boolean;
+  healthStatus: PetHealthStatus;
+  rescueDate: string;
+  rescueLocation: string;
+  imageUrls: string[];
+  mediaIds: string[];
+  shelterId: string;
+  rescueCaseId?: string;
+}
+
+export interface PetTransferOwnershipPayload {
+  newOwnerType: PetOwnershipType;
+  newOwnerId: string;
+}
+export interface PetUpdatePayload {
+  name: string;
+  species: string;
+  breed: string;
+  age: number;
+  gender: PetGender;
+  color: string;
+  weight: number;
+  description: string;
+  status: PetStatus;
+  healthStatus: PetHealthStatus;
+  vaccinated: boolean;
+  neutered: boolean;
+  imageUrls: string[];
+  mediaIds: string[];
+}
+export interface PetMediaPatchParams {
+  petId: string;
+  mediaId: string;
+}
+export interface PetMedicalRecordCreatePayload {
+  description: string;
+  vaccine: string;
+  diagnosis: string;
+  recordDate: string;
+}
+
+export interface PetMediaCreateParams {
+  petId: string;
+  primary?: boolean;
+}
+export interface PetMediaCreatePayload {
+  file: File;
+}
+
+export interface PetDetailParams extends ListParams {
+  petId?: string;
 }

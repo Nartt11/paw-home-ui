@@ -5,7 +5,25 @@ export interface Props {
   latitude: number;
   longitude: number;
 }
+
+function hasValidCoordinates(latitude: unknown, longitude: unknown) {
+  return (
+    typeof latitude === "number" &&
+    Number.isFinite(latitude) &&
+    typeof longitude === "number" &&
+    Number.isFinite(longitude)
+  );
+}
+
 export default function MapPicker({ title, latitude, longitude }: Props) {
+  if (!hasValidCoordinates(latitude, longitude)) {
+    return (
+      <div className="flex h-64 w-full items-center justify-center bg-muted/20 px-4 text-center text-sm text-muted-foreground">
+        Chua co toa do hop le de hien thi ban do.
+      </div>
+    );
+  }
+
   return (
     <MapContainer
       center={[latitude, longitude]}

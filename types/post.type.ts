@@ -8,17 +8,37 @@ export interface PostMedia {
   createdAt?: string;
 }
 
-export interface Post {
+export interface PostSummary {
   postId: string;
   authorId: string;
-  authorUsername?: string;
-  rescueCaseId?: string;
+  authorUsername: string;
   content: string;
   tags: string[];
-  media: PostMedia[];
   likeCount: number;
   commentCount: number;
-  createdAt?: string;
-  updatedAt?: string;
-  raw: Record<string, unknown>;
+  createdAt: string;
+}
+
+export interface Post extends PostSummary {
+  rescueCaseId?: string;
+  media: PostMedia[];
+  updatedAt: string;
+}
+
+export interface PostFeedParams{
+  size: number;
+  cursor?: string;
+}
+
+export interface PostCreatePayload {
+  content: string;
+  rescueCaseId?: string;
+  mediaIds: string[];
+  tagCodes: string[];
+}
+
+export interface PostUpdatePayload {
+  content: string;
+  mediaIds: string[];
+  tagCodes: string[];
 }

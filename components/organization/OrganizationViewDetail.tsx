@@ -2,7 +2,7 @@
 
 import * as React from "react";
 
-import type { Organization } from "@/types/organization.type,.ts";
+import type { Organization } from "@/types/organization.type";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -19,6 +19,15 @@ import dynamic from "next/dynamic";
 const MapPicker = dynamic(() => import("../map/MapPicker"), {
   ssr: false,
 });
+
+function hasValidCoordinates(latitude: unknown, longitude: unknown) {
+  return (
+    typeof latitude === "number" &&
+    Number.isFinite(latitude) &&
+    typeof longitude === "number" &&
+    Number.isFinite(longitude)
+  );
+}
 
 function FieldRow({
   label,
@@ -48,6 +57,11 @@ export function OrganizationViewDetail({
   open,
   onOpenChange,
 }: OrganizationViewDetailProps) {
+  const canShowMap = hasValidCoordinates(
+    organization.latitude,
+    organization.longitude,
+  );
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-full sm:max-w-4xl p-0">
@@ -105,25 +119,31 @@ export function OrganizationViewDetail({
                 />
                 <FieldRow
                   label="Coordinates"
-                  value={`${organization.latitude}, ${organization.longitude}`}
+                  value={
+                    canShowMap
+                      ? `${organization.latitude}, ${organization.longitude}`
+                      : "—"
+                  }
                   mono
                 />
               </div>
 
               <Separator />
 
-              <div className="space-y-2">
-                <div className="text-xs font-medium text-muted-foreground">
-                  Map
+              {canShowMap ? (
+                <div className="space-y-2">
+                  <div className="text-xs font-medium text-muted-foreground">
+                    Map
+                  </div>
+                  <div className="overflow-hidden rounded-2xl border border-border">
+                    <MapPicker
+                      title={organization.name}
+                      latitude={organization.latitude}
+                      longitude={organization.longitude}
+                    />
+                  </div>
                 </div>
-                <div className="overflow-hidden rounded-2xl border border-border">
-                  <MapPicker
-                    title={organization.name}
-                    latitude={organization.latitude}
-                    longitude={organization.longitude}
-                  />
-                </div>
-              </div>
+              ) : null}
             </CardContent>
           </Card>
         </div>

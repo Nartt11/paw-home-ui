@@ -1,11 +1,11 @@
 "use client";
 
 import * as React from "react";
+import Image from "next/image";
 
 import type { Banner } from "@/types/banner.type";
 
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import {
   Dialog,
   DialogContent,
@@ -13,7 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import Image from "next/image";
+import { Separator } from "@/components/ui/separator";
 
 function FieldRow({
   label,
@@ -33,10 +33,13 @@ function FieldRow({
 }
 
 function formatDateTimeVi(value?: string) {
-  if (!value) return "—";
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return "—";
-  return d.toLocaleString("vi-VN", {
+  if (!value) return "-";
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) return "-";
+
+  return date.toLocaleString("vi-VN", {
     hour12: false,
     day: "2-digit",
     month: "2-digit",
@@ -49,10 +52,10 @@ function formatDateTimeVi(value?: string) {
 function activeToBadge(active?: boolean) {
   return active ? (
     <Badge className="bg-emerald-50 text-emerald-700 hover:bg-emerald-50">
-      Đang bật
+      Dang bat
     </Badge>
   ) : (
-    <Badge variant="secondary">Tắt</Badge>
+    <Badge variant="secondary">Tat</Badge>
   );
 }
 
@@ -68,7 +71,7 @@ export function BannerViewDetail({
   onOpenChange,
 }: BannerViewDetailProps) {
   const title = banner
-    ? `Banner • ${banner.title || banner.bannerId}`
+    ? `Banner - ${banner.title || banner.bannerId}`
     : "Banner";
 
   return (
@@ -80,7 +83,7 @@ export function BannerViewDetail({
             {banner ? (
               <>
                 {activeToBadge(banner.active)}
-                <Badge variant="secondary">{banner.targetPage || "—"}</Badge>
+                <Badge variant="secondary">{banner.targetPage || "-"}</Badge>
               </>
             ) : null}
           </div>
@@ -93,27 +96,35 @@ export function BannerViewDetail({
         <div className="max-h-[calc(100vh-10rem)] space-y-6 overflow-y-auto px-6 pb-6">
           {!banner ? (
             <div className="py-10 text-center text-sm text-muted-foreground">
-              Đang tải chi tiết...
+              Dang tai chi tiet...
             </div>
           ) : (
             <>
               <Separator />
 
-              {/* Media preview */}
               <div className="grid gap-4 md:grid-cols-[240px_1fr]">
                 <div className="overflow-hidden rounded-xl border border-border bg-muted">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <Image
-                    src={banner.mediaUrl}
-                    alt={banner.title}
-                    className="h-40 w-full object-cover"
-                  />
+                  {banner.mediaUrl ? (
+                    <div className="relative h-40 w-full">
+                      <Image
+                        src={banner.mediaUrl}
+                        alt={banner.title}
+                        fill
+                        className="object-cover"
+                        unoptimized
+                      />
+                    </div>
+                  ) : (
+                    <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">
+                      Khong co anh
+                    </div>
+                  )}
                 </div>
 
                 <div className="grid gap-5 md:grid-cols-2">
                   <FieldRow label="Banner ID" value={banner.bannerId} mono />
                   <FieldRow label="Media ID" value={banner.mediaId} mono />
-                  <FieldRow label="Link type" value={banner.linkType || "—"} />
+                  <FieldRow label="Link type" value={banner.linkType || "-"} />
                   <FieldRow
                     label="Link URL"
                     value={
@@ -127,12 +138,12 @@ export function BannerViewDetail({
                           {banner.linkUrl}
                         </a>
                       ) : (
-                        "—"
+                        "-"
                       )
                     }
                   />
                   <FieldRow
-                    label="Thứ tự hiển thị"
+                    label="Thu tu hien thi"
                     value={
                       <span className="font-mono text-xs">
                         {banner.displayOrder}
@@ -144,28 +155,26 @@ export function BannerViewDetail({
 
               <Separator />
 
-              {/* Schedule */}
               <div className="grid gap-5 md:grid-cols-2">
                 <FieldRow
-                  label="Bắt đầu"
+                  label="Bat dau"
                   value={formatDateTimeVi(banner.startDate)}
                 />
                 <FieldRow
-                  label="Kết thúc"
+                  label="Ket thuc"
                   value={formatDateTimeVi(banner.endDate)}
                 />
               </div>
 
               <Separator />
 
-              {/* Audit */}
               <div className="grid gap-5 md:grid-cols-2">
                 <FieldRow
-                  label="Tạo lúc"
+                  label="Tao luc"
                   value={formatDateTimeVi(banner.createdAt)}
                 />
                 <FieldRow
-                  label="Cập nhật lúc"
+                  label="Cap nhat luc"
                   value={formatDateTimeVi(banner.updatedAt)}
                 />
               </div>

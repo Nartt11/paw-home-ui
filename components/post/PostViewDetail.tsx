@@ -2,13 +2,7 @@
 
 import type { Post } from "@/types/post.type";
 
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
 import {
   Card,
   CardContent,
@@ -16,7 +10,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 
 export interface PostViewDetailProps {
@@ -45,13 +45,16 @@ export function PostViewDetail({
   loading,
   onOpenChange,
 }: PostViewDetailProps) {
+  const tags = Array.isArray(post?.tags) ? post.tags : [];
+  const mediaList = Array.isArray(post?.media) ? post.media : [];
+  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-full p-0 sm:max-w-4xl">
         <DialogHeader className="px-6 pt-6">
-          <DialogTitle>Chi tiet bai dang</DialogTitle>
+          <DialogTitle>Chi tiết bài đăng</DialogTitle>
           <DialogDescription>
-            Xem nhanh cac truong da map va raw payload tra ve tu API.
+            Xem nhanh các trường chi tiết của bài đăng từ API.
           </DialogDescription>
         </DialogHeader>
 
@@ -94,20 +97,20 @@ export function PostViewDetail({
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
                     <div className="text-sm font-medium">Nội dung</div>
-                    <div className="rounded-lg bg-muted/50 p-4 text-sm whitespace-pre-wrap">
+                    <div className="whitespace-pre-wrap rounded-lg bg-muted/50 p-4 text-sm">
                       {renderValue(post.content)}
                     </div>
                   </div>
 
                   <div className="grid gap-3 md:grid-cols-2">
                     <div className="rounded-lg border border-border p-4 text-sm">
-                      <div className="mb-1 font-medium">Luot thich</div>
+                      <div className="mb-1 font-medium">Lượt thích</div>
                       <div className="text-muted-foreground">
                         {post.likeCount}
                       </div>
                     </div>
                     <div className="rounded-lg border border-border p-4 text-sm">
-                      <div className="mb-1 font-medium">Binh luan</div>
+                      <div className="mb-1 font-medium">Bình luận</div>
                       <div className="text-muted-foreground">
                         {post.commentCount}
                       </div>
@@ -118,8 +121,8 @@ export function PostViewDetail({
                     <div className="rounded-lg border border-border p-4 text-sm">
                       <div className="mb-2 font-medium">Tags</div>
                       <div className="flex flex-wrap gap-2">
-                        {post.tags.length > 0 ? (
-                          post.tags.map((tag) => (
+                        {tags.length > 0 ? (
+                          tags.map((tag) => (
                             <Badge key={tag} variant="outline">
                               {tag}
                             </Badge>
@@ -134,8 +137,8 @@ export function PostViewDetail({
                     <div className="rounded-lg border border-border p-4 text-sm">
                       <div className="mb-2 font-medium">Media</div>
                       <div className="space-y-2">
-                        {post.media.length > 0 ? (
-                          post.media.map((media) => (
+                        {mediaList.length > 0 ? (
+                          mediaList.map((media) => (
                             <div
                               key={media.mediaId}
                               className="rounded-md bg-muted/50 p-3"
@@ -167,15 +170,24 @@ export function PostViewDetail({
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Raw payload</CardTitle>
+                  <CardTitle>Thông tin bổ sung</CardTitle>
                   <CardDescription>
-                    Giúp đội chịu trách nhiệm khi backend bổ sung thêm trường.
+                    Các trường được trả về trong chi tiết bài đăng.
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <pre className="overflow-x-auto rounded-lg bg-slate-950 p-4 text-xs leading-6 text-slate-100">
-                    {JSON.stringify(post.raw, null, 2)}
-                  </pre>
+                <CardContent className="grid gap-3 md:grid-cols-2">
+                  <div className="rounded-lg border border-border p-4 text-sm">
+                    <div className="mb-1 font-medium">Post ID</div>
+                    <div className="font-mono text-muted-foreground">
+                      {post.postId}
+                    </div>
+                  </div>
+                  <div className="rounded-lg border border-border p-4 text-sm">
+                    <div className="mb-1 font-medium">Rescue case</div>
+                    <div className="text-muted-foreground">
+                      {renderValue(post.rescueCaseId)}
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             </div>

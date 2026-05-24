@@ -85,30 +85,6 @@ export default function ProfilePage() {
     });
   }, [currentUser, reset]);
 
-  const updateProfileMutation = useMutation({
-    mutationFn: (values: ProfileFormValues) =>
-      userService.updateMyProfile({
-        userName: values.userName.trim(),
-        avatarUrl: values.avatarUrl?.trim() || undefined,
-      }),
-    onSuccess: async (user) => {
-      toast.success("Đã cập nhật trang cá nhân");
-      queryClient.setQueryData(queryKeys.auth.currentUser, user);
-      reset({
-        userName: user.username ?? "",
-        avatarUrl: "",
-      });
-      await queryClient.invalidateQueries({
-        queryKey: queryKeys.auth.currentUser,
-      });
-    },
-    onError: (error) => {
-      toast.error(
-        error instanceof Error ? error.message : "Không thể cập nhật hồ sơ",
-      );
-    },
-  });
-
   if (currentUserQuery.isPending) {
     return (
       <div className="space-y-6">
@@ -282,78 +258,6 @@ export default function ProfilePage() {
                 </div>
               </div>
             </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Cập nhật profile</CardTitle>
-            <CardDescription>
-              API hiện có cho phép cập nhật `userName` và `avatarUrl`.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form
-              className="space-y-5"
-              onSubmit={handleSubmit((values) =>
-                updateProfileMutation.mutate(values),
-              )}
-            >
-              <FieldGroup>
-                <Field>
-                  <FieldLabel htmlFor="profile-user-name">Username</FieldLabel>
-                  <FieldContent>
-                    <Input
-                      id="profile-user-name"
-                      disabled={updateProfileMutation.isPending}
-                      aria-invalid={Boolean(errors.userName)}
-                      {...register("userName")}
-                    />
-                    <FieldError errors={[errors.userName]} />
-                  </FieldContent>
-                </Field>
-
-                <Field>
-                  <FieldLabel htmlFor="profile-avatar-url">
-                    Avatar URL
-                  </FieldLabel>
-                  <FieldContent>
-                    <Input
-                      id="profile-avatar-url"
-                      placeholder="https://example.com/avatar.jpg"
-                      disabled={updateProfileMutation.isPending}
-                      aria-invalid={Boolean(errors.avatarUrl)}
-                      {...register("avatarUrl")}
-                    />
-                    <FieldError errors={[errors.avatarUrl]} />
-                  </FieldContent>
-                </Field>
-              </FieldGroup>
-
-              <div className="flex gap-3">
-                <Button
-                  type="button"
-                  variant="secondary"
-                  disabled={updateProfileMutation.isPending}
-                  onClick={() =>
-                    reset({
-                      userName: currentUser.username ?? "",
-                      avatarUrl: "",
-                    })
-                  }
-                >
-                  Đặt lại
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={updateProfileMutation.isPending || !isDirty}
-                >
-                  {updateProfileMutation.isPending
-                    ? "Đang cập nhật..."
-                    : "Lưu thay đổi"}
-                </Button>
-              </div>
-            </form>
           </CardContent>
         </Card>
       </div>

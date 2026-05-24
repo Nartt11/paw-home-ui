@@ -1,11 +1,23 @@
 "use client";
 
 import * as React from "react";
+import dynamic from "next/dynamic";
 
+import { RescueCaseUpdate } from "@/components/rescue-case/RescueCaseUpdate";
+import { useCurrentUser } from "@/hooks/use-current-user";
+import { useUpdateRescueCaseStatus } from "@/hooks/use-rescue-case";
 import type { RescueCase } from "@/types/rescue-case.type";
 
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -13,6 +25,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+
+const MapPicker = dynamic(() => import("@/components/map/MapPicker"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex h-64 w-full items-center justify-center rounded-lg border bg-muted/30 text-sm text-muted-foreground">
+      Đang tải bản đồ...
+    </div>
+  ),
+});
 
 function FieldRow({
   label,
@@ -101,6 +122,25 @@ function statusToBadge(status?: RescueCase["status"]) {
   );
 }
 
+function hasValidCoordinates(latitude: unknown, longitude: unknown) {
+  return (
+    typeof latitude === "number" &&
+    Number.isFinite(latitude) &&
+    typeof longitude === "number" &&
+    Number.isFinite(longitude)
+  );
+}
+
+const RESCUE_CASE_STATUS_OPTIONS: Array<{
+  value: NonNullable<RescueCase["status"]>;
+  label: string;
+}> = [
+  { value: "REPORTED", label: "Da bao cao" },
+  { value: "IN_PROGRESS", label: "Dang xu ly" },
+  { value: "RESCUED", label: "Da cuu" },
+  { value: "CLOSED", label: "Da dong" },
+];
+
 export interface RescueCaseViewDetailProps {
   rescueCase: RescueCase | null;
   open: boolean;
@@ -112,21 +152,51 @@ export function RescueCaseViewDetail({
   open,
   onOpenChange,
 }: RescueCaseViewDetailProps) {
+  const currentUserQuery = useCurrentUser();
+  const updateStatusMutation = useUpdateRescueCaseStatus();
+  const [updateOpen, setUpdateOpen] = React.useState(false);
   const title = rescueCase
     ? `Ca cứu hộ • ${rescueCase.caseId || ""}`
     : "Ca cứu hộ";
+  const canShowMap = rescueCase
+    ? hasValidCoordinates(rescueCase.latitude, rescueCase.longitude)
+    : false;
+  const normalizedRoles = React.useMemo(
+    () =>
+      (currentUserQuery.data?.roles ?? [])
+        .filter((role): role is string => Boolean(role))
+        .map((role) => role.toUpperCase()),
+    [currentUserQuery.data?.roles],
+  );
+  const canUpdateRescueCase =
+    normalizedRoles.length > 0 && !normalizedRoles.includes("USER");
+  const canOpenUpdateForm = normalizedRoles.includes("ADMIN");
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-full p-0 sm:max-w-4xl">
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="w-full p-0 sm:max-w-4xl">
         <DialogHeader className="px-6 pt-6">
-          <div className="flex flex-wrap items-center gap-3">
-            <DialogTitle className="text-base sm:text-lg">{title}</DialogTitle>
-            {rescueCase ? (
-              <>
-                {statusToBadge(rescueCase.status)}
-                {priorityToBadge(rescueCase.priority)}
-              </>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-3">
+              <DialogTitle className="text-base sm:text-lg">{title}</DialogTitle>
+              {rescueCase ? (
+                <>
+                  {statusToBadge(rescueCase.status)}
+                  {priorityToBadge(rescueCase.priority)}
+                </>
+              ) : null}
+            </div>
+
+            {rescueCase && canOpenUpdateForm ? (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setUpdateOpen(true)}
+                disabled={updateStatusMutation.isPending}
+              >
+                Cap nhat rescue-case
+              </Button>
             ) : null}
           </div>
 
@@ -152,6 +222,52 @@ export function RescueCaseViewDetail({
                 <FieldRow label="Color" value={rescueCase.color || "—"} />
                 <FieldRow label="Size" value={rescueCase.size || "—"} />
               </div>
+
+              {canUpdateRescueCase ? (
+                <>
+                  <Separator />
+
+                  <div className="grid gap-4">
+                    <div className="space-y-2">
+                      <div className="text-xs font-medium text-muted-foreground">
+                        Cap nhat trang thai
+                      </div>
+                      <Select
+                        key={`${rescueCase.caseId}-${rescueCase.status ?? "REPORTED"}`}
+                        defaultValue={rescueCase.status ?? "REPORTED"}
+                        onValueChange={async (value) => {
+                          const nextStatus =
+                            value as NonNullable<RescueCase["status"]>;
+
+                          if (nextStatus === rescueCase.status) {
+                            return;
+                          }
+
+                          await updateStatusMutation.mutateAsync({
+                            id: rescueCase.caseId,
+                            status: nextStatus,
+                          });
+                        }}
+                        disabled={updateStatusMutation.isPending}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Chon trang thai" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {RESCUE_CASE_STATUS_OPTIONS.map((statusOption) => (
+                            <SelectItem
+                              key={statusOption.value}
+                              value={statusOption.value}
+                            >
+                              {statusOption.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </>
+              ) : null}
 
               <Separator />
 
@@ -183,16 +299,15 @@ export function RescueCaseViewDetail({
               <Separator />
 
               <div className="grid gap-5 md:grid-cols-2">
-                <FieldRow
-                  label="Province"
-                  value={rescueCase.provinceName || "—"}
-                />
+                <FieldRow label="Province" value={rescueCase.provinceName || "—"} />
                 <FieldRow label="Ward" value={rescueCase.wardName || "—"} />
                 <FieldRow
                   label="Tọa độ"
                   value={
                     <span className="font-mono text-xs">
-                      {rescueCase.latitude}, {rescueCase.longitude}
+                      {canShowMap
+                        ? `${rescueCase.latitude}, ${rescueCase.longitude}`
+                        : "—"}
                     </span>
                   }
                 />
@@ -201,6 +316,21 @@ export function RescueCaseViewDetail({
                   value={rescueCase.locationText || "—"}
                 />
               </div>
+
+              {canShowMap ? (
+              <div className="space-y-2">
+                <div className="text-xs font-medium text-muted-foreground">
+                  Vị trí trên bản đồ
+                </div>
+                <div className="overflow-hidden rounded-lg border">
+                  <MapPicker
+                    title={rescueCase.caseCode || rescueCase.caseId}
+                    latitude={rescueCase.latitude}
+                    longitude={rescueCase.longitude}
+                  />
+                </div>
+              </div>
+              ) : null}
 
               <Separator />
 
@@ -232,7 +362,17 @@ export function RescueCaseViewDetail({
             </>
           )}
         </div>
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+
+      {rescueCase && canOpenUpdateForm && updateOpen ? (
+        <RescueCaseUpdate
+          key={rescueCase.caseId}
+          open={updateOpen}
+          onOpenChange={setUpdateOpen}
+          rescueCase={rescueCase}
+        />
+      ) : null}
+    </>
   );
 }
