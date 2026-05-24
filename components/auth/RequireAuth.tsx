@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { APP_ROUTES } from "@/constants/routes";
 import { tokenStorage } from "@/lib/http";
 import { useCurrentUser } from "@/hooks/use-current-user";
+import LoadingScreen from "@/app/loading";
+
 
 export default function RequireAuth({
   children,
@@ -56,11 +58,7 @@ export default function RequireAuth({
   ]);
 
   if (!hasToken || currentUserQuery.isPending) {
-    return (
-      <div className="flex min-h-[40vh] items-center justify-center text-sm text-muted-foreground">
-        Đang kiểm tra phiên đăng nhập...
-      </div>
-    );
+    return <LoadingScreen/>;
   }
 
   if (currentUserQuery.isError) {

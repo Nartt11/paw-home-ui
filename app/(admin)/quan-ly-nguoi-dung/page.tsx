@@ -1,7 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 
 import TitlePerPage from "@/components/common/admin/TitlePerPage";
 import { UserListTable } from "@/components/user/UserListTable";
@@ -10,7 +9,10 @@ import {
   getOptionalSearchParam,
   useListUrlState,
 } from "@/hooks/use-list-url-state";
-import userService from "@/services/user/user";
+import { useUserDetail, useUsers } from "@/hooks/use-user";
+import { PageControls } from "@/components/common/PageControl";
+import { SearchIcon } from "lucide-react";
+import { Input } from "@/components/ui/input";
 
 export default function UsersManagementPage() {
   const { searchParams, page, size, setParams, setPage, setSize } =
@@ -20,22 +22,11 @@ export default function UsersManagementPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const keyword = getOptionalSearchParam(searchParams.get("keyword")) ?? "";
+  const usersQuery = useUsers({ page, size });
+  const userDetailQuery = useUserDetail(selectedId ?? undefined);
 
-  const queryKey = useMemo(
-    () => ["users", { page, size }],
-    [page, size],
-  );
-
-  const { data, isPending, isError, error } = useQuery({
-    queryKey,
-    queryFn: () => userService.getAllUsers({ page, size }),
-  });
-
-  const { data: userDetail } = useQuery({
-    queryKey: ["user", selectedId],
-    queryFn: () => userService.getUserById(selectedId!),
-    enabled: !!selectedId && openDetail,
-  });
+  const data = usersQuery.data;
+  const userDetail = openDetail ? userDetailQuery.data : undefined;
 
   return (
     <div className="space-y-6">
@@ -48,25 +39,29 @@ export default function UsersManagementPage() {
         }}
       />
 
-      {isError ? (
+      {usersQuery.isError ? (
         <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-          {(error as Error)?.message || "Không thể tải dữ liệu người dùng."}
+          {(usersQuery.error as Error)?.message ||
+            "Không thể tải dữ liệu người dùng."}
         </div>
       ) : null}
 
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div className="relative w-full md:max-w-sm">
+          <SearchIcon className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+          <Input
+            placeholder="Tìm người dùng..."
+            value={keyword}
+            onChange={(e) => setParams({ keyword: e.target.value, page: 1 })}
+            className="pl-9"
+          />
+        </div>
+      </div>
+
       <UserListTable
         data={data?.content ?? []}
-        loading={isPending}
-        page={page}
-        size={size}
-        totalElements={data?.totalElements}
-        totalPages={data?.totalPages}
+        loading={usersQuery.isPending}
         keyword={keyword}
-        onPageChange={setPage}
-        onSizeChange={setSize}
-        onKeywordChange={(nextKeyword) =>
-          setParams({ keyword: nextKeyword.trim(), page: 1 })
-        }
         onViewDetail={(userId) => {
           setSelectedId(userId);
           setOpenDetail(true);
@@ -79,6 +74,15 @@ export default function UsersManagementPage() {
           // TODO: call disable user API
           console.log("disable", userId);
         }}
+      />
+
+      <PageControls
+        page={data?.page ?? page}
+        pageSize={data?.size ?? size}
+        totalPages={data?.totalPages || 0}
+        totalItems={data?.totalElements}
+        onPageChange={setPage}
+        onPageSizeChange={setSize}
       />
 
       {userDetail ? (

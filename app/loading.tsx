@@ -1,63 +1,74 @@
-import { HeartHandshakeIcon, PawPrintIcon } from "lucide-react";
+"use client";
+import { useEffect, useState } from "react";
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+export default function LoadingScreen() {
+  const [progress, setProgress] = useState(0);
 
-export default function PawHomeLoading() {
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setProgress((oldProgress) => {
+        // Nếu đã đạt 99% thì dừng lại, không bao giờ tự nhảy lên 100%
+        if (oldProgress >= 99) {
+          clearInterval(timer);
+          return 99;
+        }
+
+        // Tăng ngẫu nhiên: nếu đã vượt qua 80% thì tăng rất chậm (0-2%)
+        // Nếu chưa tới 80% thì tăng nhanh hơn (0-15%)
+        const increment =
+          oldProgress > 80 ? Math.random() * 2 : Math.random() * 15;
+
+        return Math.min(oldProgress + increment, 99);
+      });
+    }, 400); // Cứ 400ms thì cập nhật thanh tiến trình 1 lần
+
+    return () => clearInterval(timer);
+  }, []);
+
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-4 py-10">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_hsl(var(--primary)/0.12),_transparent_42%),radial-gradient(circle_at_bottom_right,_hsl(var(--accent)/0.18),_transparent_30%)]" />
+    <div className="fixed inset-0 z-50 flex min-h-screen w-full flex-col items-center justify-center bg-background/80 backdrop-blur-sm">
+      <div className="flex w-full max-w-xs flex-col items-center gap-6">
+        {/* Vòng tròn xoay (tuỳ chọn giữ lại để tạo cảm giác hệ thống đang chạy) */}
+        <svg
+          className="h-10 w-10 animate-spin text-primary"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+        >
+          <circle
+            className="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            strokeWidth="4"
+          ></circle>
+          <path
+            className="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+          ></path>
+        </svg>
 
-      <Card className="relative z-10 w-full max-w-xl border border-border/70 bg-card/95 backdrop-blur-sm">
-        <CardHeader className="border-b border-border/60">
-          <div className="flex items-center gap-3">
-            <div className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-              <PawPrintIcon className="size-6" />
-            </div>
-            <div className="space-y-1">
-              <CardTitle>Đang tải dữ liệu</CardTitle>
-              <CardDescription>
-                PawHome đang chuẩn bị nội dung để bạn tiếp tục công việc.
-              </CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-
-        <CardContent className="space-y-6">
-          <div className="grid gap-3 rounded-xl border border-border/60 bg-muted/20 p-4 sm:grid-cols-[1.1fr_0.9fr]">
-            <div className="space-y-3">
-              <Skeleton className="h-5 w-32" />
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-[88%]" />
-              <Skeleton className="h-10 w-[76%]" />
-            </div>
-
-            <div className="space-y-3">
-              <Skeleton className="h-28 w-full rounded-xl" />
-              <div className="grid grid-cols-2 gap-3">
-                <Skeleton className="h-12 w-full rounded-xl" />
-                <Skeleton className="h-12 w-full rounded-xl" />
-              </div>
-            </div>
+        {/* Khu vực Progress Bar */}
+        <div className="w-full space-y-2">
+          {/* Thanh chạy */}
+          <div className="h-1.5 w-full overflow-hidden rounded-full bg-secondary/50">
+            <div
+              className="h-full rounded-full bg-primary transition-all duration-300 ease-out"
+              style={{ width: `${progress}%` }}
+            ></div>
           </div>
 
-          <div className="space-y-3 rounded-xl border border-dashed border-border/70 p-4">
-            <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-              <HeartHandshakeIcon className="size-4 text-primary" />
-              Đồng bộ giao diện và dữ liệu
-            </div>
-            <Skeleton className="h-3 w-full" />
-            <Skeleton className="h-3 w-[92%]" />
-            <Skeleton className="h-3 w-[78%]" />
+          {/* Text hiển thị trạng thái và phần trăm */}
+          <div className="flex items-center justify-between text-xs font-medium text-muted-foreground">
+            <span className="animate-pulse">
+              Đang kiểm tra phiên đăng nhập...
+            </span>
+            <span className="tabular-nums">{Math.round(progress)}%</span>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }
