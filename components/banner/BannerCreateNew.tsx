@@ -4,7 +4,7 @@ import * as React from "react";
 import Image from "next/image";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Controller, useForm, useWatch } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 
 import {
   BANNER_LINK_TYPES,
@@ -13,6 +13,7 @@ import {
   createBannerFormSchema,
   type CreateBannerFormValues,
 } from "@/lib/schemas/banner";
+import { useUploadTempMedia } from "@/hooks/use-media";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -40,6 +41,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { toast } from "sonner";
 
 export interface BannerCreateNewProps {
   open: boolean;
@@ -54,18 +56,14 @@ export function BannerCreateNew({
   submitting = false,
   onSubmit,
 }: BannerCreateNewProps) {
+  const uploadTempMediaMutation = useUploadTempMedia();
   const form = useForm<CreateBannerFormValues>({
     resolver: zodResolver(createBannerFormSchema),
     defaultValues: createBannerDefaultValues,
   });
 
   const imageInputRef = React.useRef<HTMLInputElement | null>(null);
-  const imageFile = useWatch({
-    control: form.control,
-    name: "imageFile",
-  });
-
-  const [previewUrl, setPreviewUrl] = React.useState("");
+  const [uploadedPreviewUrl, setUploadedPreviewUrl] = React.useState("");
 
   React.useEffect(() => {
     if (!open) {
@@ -77,27 +75,83 @@ export function BannerCreateNew({
     }
   }, [form, open]);
 
-  React.useEffect(() => {
-    if (!imageFile) {
-      setPreviewUrl("");
-      return;
-    }
-
-    const objectUrl = URL.createObjectURL(imageFile);
-    setPreviewUrl(objectUrl);
-
-    return () => URL.revokeObjectURL(objectUrl);
-  }, [imageFile]);
-
   const {
     control,
     formState: { errors },
     handleSubmit,
     register,
+    setValue,
   } = form;
 
+  const handleImageChange = React.useCallback(
+    async (
+      event: React.ChangeEvent<HTMLInputElement>,
+      onChange: (value: File | null) => void,
+    ) => {
+      const file = event.target.files?.[0] ?? null;
+
+      onChange(file);
+
+      if (!file) {
+        setValue("mediaId", "", {
+          shouldDirty: true,
+          shouldTouch: true,
+          shouldValidate: true,
+        });
+        setUploadedPreviewUrl("");
+        return;
+      }
+
+      try {
+        const media = await uploadTempMediaMutation.mutateAsync({
+          file,
+          folder: "temp/banners",
+        });
+
+        setValue("mediaId", media.mediaId, {
+          shouldDirty: true,
+          shouldTouch: true,
+          shouldValidate: true,
+        });
+        setUploadedPreviewUrl(media.url);
+        toast.success("Tai anh banner thanh cong");
+      } catch (error) {
+        setValue("mediaId", "", {
+          shouldDirty: true,
+          shouldTouch: true,
+          shouldValidate: true,
+        });
+        setUploadedPreviewUrl("");
+        onChange(null);
+
+        if (imageInputRef.current) {
+          imageInputRef.current.value = "";
+        }
+
+        toast.error(
+          error instanceof Error ? error.message : "Khong the tai anh len",
+        );
+      }
+    },
+    [setValue, uploadTempMediaMutation],
+  );
+
+  const handleDialogOpenChange = React.useCallback(
+    (nextOpen: boolean) => {
+      if (!nextOpen) {
+        setUploadedPreviewUrl("");
+      }
+
+      onOpenChange(nextOpen);
+    },
+    [onOpenChange],
+  );
+
+  const isBusy = submitting || uploadTempMediaMutation.isPending;
+  const previewUrl = uploadedPreviewUrl;
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleDialogOpenChange}>
       <DialogContent className="w-full p-0 sm:max-w-3xl">
         <DialogHeader className="px-6 pt-6">
           <DialogTitle>Them banner</DialogTitle>
@@ -118,7 +172,7 @@ export function BannerCreateNew({
                   <Input
                     id="banner-title"
                     placeholder="Banner khuyen mai thang 5"
-                    disabled={submitting}
+                    disabled={isBusy}
                     aria-invalid={Boolean(errors.title)}
                     {...register("title")}
                   />
@@ -132,7 +186,7 @@ export function BannerCreateNew({
                   <Input
                     id="banner-subtitle"
                     placeholder="Mo ta ngan..."
-                    disabled={submitting}
+                    disabled={isBusy}
                     aria-invalid={Boolean(errors.subtitle)}
                     {...register("subtitle")}
                   />
@@ -150,7 +204,7 @@ export function BannerCreateNew({
                       <Select
                         value={field.value}
                         onValueChange={field.onChange}
-                        disabled={submitting}
+                        disabled={isBusy}
                       >
                         <SelectTrigger aria-invalid={Boolean(errors.targetPage)}>
                           <SelectValue placeholder="Chon trang" />
@@ -178,7 +232,7 @@ export function BannerCreateNew({
                     id="banner-order"
                     type="number"
                     min={1}
-                    disabled={submitting}
+                    disabled={isBusy}
                     aria-invalid={Boolean(errors.displayOrder)}
                     {...register("displayOrder", { valueAsNumber: true })}
                   />
@@ -198,14 +252,19 @@ export function BannerCreateNew({
                         ref={imageInputRef}
                         type="file"
                         accept="image/jpeg,image/png,image/webp"
-                        disabled={submitting}
+                        disabled={isBusy}
                         onChange={(event) =>
-                          field.onChange(event.target.files?.[0] ?? null)
+                          handleImageChange(event, field.onChange)
                         }
                       />
                     )}
                   />
                   <FieldError errors={[errors.imageFile]} />
+                  {uploadTempMediaMutation.isPending ? (
+                    <p className="text-sm text-muted-foreground">
+                      Dang tai anh len...
+                    </p>
+                  ) : null}
                   {previewUrl ? (
                     <div className="overflow-hidden rounded-lg border">
                       <div className="relative h-48 w-full">
@@ -232,7 +291,7 @@ export function BannerCreateNew({
                   <Input
                     id="banner-link-url"
                     placeholder="https://example.com"
-                    disabled={submitting}
+                    disabled={isBusy}
                     aria-invalid={Boolean(errors.linkUrl)}
                     {...register("linkUrl")}
                   />
@@ -250,7 +309,7 @@ export function BannerCreateNew({
                       <Select
                         value={field.value}
                         onValueChange={field.onChange}
-                        disabled={submitting}
+                        disabled={isBusy}
                       >
                         <SelectTrigger aria-invalid={Boolean(errors.linkType)}>
                           <SelectValue placeholder="Chon loai link" />
@@ -279,7 +338,7 @@ export function BannerCreateNew({
                       onCheckedChange={(checked) =>
                         field.onChange(Boolean(checked))
                       }
-                      disabled={submitting}
+                      disabled={isBusy}
                     />
                   )}
                 />
@@ -296,7 +355,7 @@ export function BannerCreateNew({
                   <Input
                     id="banner-start-date"
                     type="datetime-local"
-                    disabled={submitting}
+                    disabled={isBusy}
                     aria-invalid={Boolean(errors.startDate)}
                     {...register("startDate")}
                   />
@@ -310,7 +369,7 @@ export function BannerCreateNew({
                   <Input
                     id="banner-end-date"
                     type="datetime-local"
-                    disabled={submitting}
+                    disabled={isBusy}
                     aria-invalid={Boolean(errors.endDate)}
                     {...register("endDate")}
                   />
@@ -323,14 +382,18 @@ export function BannerCreateNew({
               <Button
                 variant="secondary"
                 type="button"
-                onClick={() => onOpenChange(false)}
-                disabled={submitting}
+                onClick={() => handleDialogOpenChange(false)}
+                disabled={isBusy}
               >
                 Huy
               </Button>
 
-              <Button type="submit" disabled={submitting}>
-                {submitting ? "Dang tao..." : "Tao banner"}
+              <Button type="submit" disabled={isBusy}>
+                {uploadTempMediaMutation.isPending
+                  ? "Dang tai anh..."
+                  : submitting
+                    ? "Dang tao..."
+                    : "Tao banner"}
               </Button>
             </DialogFooter>
           </form>

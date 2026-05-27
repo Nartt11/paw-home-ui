@@ -37,30 +37,37 @@ export function PageHero({
   return (
     <section
       className={cn(
-        "relative flex items-center overflow-hidden",
+        "relative flex w-full items-center justify-center overflow-hidden min-h-[100dvh] bg-slate-950/50",
         minHeightClassName,
         className,
       )}
     >
-      <div className="absolute inset-0">
+      <div className="absolute inset-0 z-0">
         <Image
           src={imageSrc}
           alt={imageAlt}
-          width={1600}
+          width={1200}
           height={900}
           unoptimized
-          className={cn("h-full w-full object-cover", imageClassName)}
+          // Sửa h-max-screen thành h-full, thêm object-cover
+          className={cn(
+            "h-full w-full object-cover object-center",
+            imageClassName,
+          )}
         />
+        {/* Overlay */}
         <div className={cn("absolute inset-0", overlayClassName)} />
       </div>
 
-      <div className={cn("relative z-10 mx-auto w-full px-6", containerClassName)}>
-        <div className={cn("max-w-2xl", contentClassName)}>
+      {/* Content */}
+      <div
+        className={cn("relative z-10 container mx-auto w-full px-6", containerClassName)}
+      >
+        <div className={cn("", contentClassName)}>
           {badge}
           <div className="mt-4">{title}</div>
           {description ? <div className="mt-4">{description}</div> : null}
           {children}
-          {actions ? <div className="mt-8 flex items-center justify-center flex-wrap gap-3">{actions}</div> : null}
         </div>
       </div>
     </section>

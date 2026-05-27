@@ -1,47 +1,75 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import * as React from "react";
+import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
+import { toast } from "sonner";
+import { useParams, useRouter } from "next/navigation";
+import type { LucideIcon } from "lucide-react";
 import {
   Activity,
   ArrowLeft,
-  ArrowRightLeft,
   Building2,
   Calendar,
   ChevronRight,
-  Edit2,
   Eye,
   History,
   Image as ImageIcon,
+  Loader2,
   MapPin,
-  Plus,
-  ShieldAlert,
-  Stethoscope,
+  RefreshCw,
+  Star,
   Trash2,
-  Upload,
 } from "lucide-react";
-import { toast } from "sonner";
-import { useParams, useRouter } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
 
-import petService from "@/services/pet/pet";
-import type { Pet } from "@/types/pet.type";
-
+import {
+  useDeletePet,
+  useDeletePetMedia,
+  usePetDetail,
+  usePetMedia,
+  usePetMedicalRecords,
+  usePetOwnerships,
+  useUpdatePet,
+  useUpdatePetMediaPrimary,
+} from "@/hooks/use-pet";
+import type {
+  Pet,
+  PetHealthStatus,
+  PetMedia,
+  PetMedicalRecord,
+  PetOwnership,
+  PetStatus,
+  PetUpdatePayload,
+} from "@/types/pet.type";
+import { PetUpdateDialog } from "@/components/pet/PetUpdateDialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import Image from "next/image";
 
-// -------- helpers --------
+import {
+  PET_DETAIL_IMAGE_FALLBACK,
+  PET_DETAIL_MEDIA_QUERY,
+  PET_DETAIL_SECTION_QUERY,
+  PET_DETAIL_TABS,
+  PET_GENDER_LABELS,
+  PET_HEALTH_BADGE_CLASSNAMES,
+  PET_HEALTH_LABELS,
+  PET_STATUS_BADGE_CLASSNAMES,
+  PET_STATUS_LABELS,
+} from "./constants";
+import { useState } from "react";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+
 function formatDateVi(value?: string) {
   if (!value) return "—";
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return "—";
-  return d.toLocaleDateString("vi-VN", {
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
+
+  return date.toLocaleDateString("vi-VN", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -50,9 +78,11 @@ function formatDateVi(value?: string) {
 
 function formatDateTimeVi(value?: string) {
   if (!value) return "—";
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return "—";
-  return d.toLocaleString("vi-VN", {
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
+
+  return date.toLocaleString("vi-VN", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -61,77 +91,173 @@ function formatDateTimeVi(value?: string) {
   });
 }
 
-function genderLabel(g?: Pet["gender"]) {
-  if (!g) return "—";
-  const map: Record<string, string> = {
-    MALE: "Đực",
-    FEMALE: "Cái",
-    UNKNOWN: "Không rõ",
-  };
-  return map[g] ?? String(g);
+function getGenderLabel(gender?: Pet["gender"]) {
+  if (!gender) return "—";
+  return PET_GENDER_LABELS[gender] ?? gender;
 }
 
-function petStatusLabel(s?: Pet["status"]) {
-  if (!s) return "—";
-  const map: Record<string, string> = {
-    UNOWNED: "Chưa có chủ",
-    PENDING: "Đang chờ",
-    ADOPTED: "Đã nhận nuôi",
-    FOSTERED: "Đang foster",
-    UNAVAILABLE: "Không khả dụng",
-  };
-  return map[s] ?? String(s);
+function getPetStatusLabel(status?: PetStatus) {
+  if (!status) return "—";
+  return PET_STATUS_LABELS[status] ?? status;
 }
 
-function healthStatusLabel(s?: Pet["healthStatus"]) {
-  if (!s) return "—";
-  const map: Record<string, string> = {
-    HEALTHY: "Khoẻ mạnh",
-    UNDER_TREATMENT: "Đang điều trị",
-    RECOVERING: "Đang hồi phục",
-    SPECIAL_NEEDS: "Cần chăm sóc đặc biệt",
-  };
-  return map[s] ?? String(s);
+function getPetStatusBadgeClassName(status?: PetStatus) {
+  if (!status) return "bg-muted text-muted-foreground hover:bg-muted";
+  return PET_STATUS_BADGE_CLASSNAMES[status];
 }
 
-function pillVariantForPetStatus(status?: Pet["status"]) {
-  const s = status ?? "PENDING";
-  if (s === "UNOWNED") return { className: "bg-emerald-50 text-emerald-700" };
-  if (s === "PENDING") return { className: "bg-amber-50 text-amber-700" };
-  if (s === "ADOPTED") return { className: "bg-sky-50 text-sky-700" };
-  if (s === "FOSTERED") return { className: "bg-violet-50 text-violet-700" };
-  return { className: "bg-muted text-muted-foreground" };
+function getHealthStatusLabel(status?: PetHealthStatus) {
+  if (!status) return "—";
+  return PET_HEALTH_LABELS[status] ?? status;
 }
 
-function pillVariantForHealth(status?: Pet["healthStatus"]) {
-  const s = status ?? "HEALTHY";
-  if (s === "HEALTHY") return { className: "bg-emerald-50 text-emerald-700" };
-  if (s === "UNDER_TREATMENT")
-    return { className: "bg-amber-50 text-amber-700" };
-  if (s === "RECOVERING") return { className: "bg-sky-50 text-sky-700" };
-  if (s === "SPECIAL_NEEDS") return { className: "bg-rose-50 text-rose-700" };
-  return { className: "bg-muted text-muted-foreground" };
+function getHealthStatusBadgeClassName(status?: PetHealthStatus) {
+  if (!status) return "bg-muted text-muted-foreground hover:bg-muted";
+  return PET_HEALTH_BADGE_CLASSNAMES[status];
 }
 
-// -------- page --------
+function getCoverUrl(pet?: Pet, media?: PetMedia[]) {
+  const primaryMedia = media?.find((item) => item.primaryMedia)?.url;
+  return primaryMedia || pet?.imageUrls[0] || PET_DETAIL_IMAGE_FALLBACK;
+}
+
 export default function PetDetailPage() {
   const params = useParams<{ petId: string }>();
   const petId = params?.petId;
   const router = useRouter();
 
-  const petQuery = useQuery({
-    queryKey: ["pet", petId],
-    queryFn: () => petService.getPetById(petId as string),
-    enabled: Boolean(petId),
+  const petQuery = usePetDetail(petId);
+  const medicalRecordsQuery = usePetMedicalRecords(petId, {
+    petId,
+    ...PET_DETAIL_SECTION_QUERY,
+  });
+  const mediaQuery = usePetMedia(petId, {
+    petId,
+    ...PET_DETAIL_MEDIA_QUERY,
+  });
+  const ownershipsQuery = usePetOwnerships(petId, {
+    petId,
+    ...PET_DETAIL_SECTION_QUERY,
   });
 
-  const pet = (petQuery.data ?? null) as Pet | null;
+  const deletePetMutation = useDeletePet();
+  const deleteMediaMutation = useDeletePetMedia();
+  const updatePetMutation = useUpdatePet();
+  const updatePrimaryMediaMutation = useUpdatePetMediaPrimary();
 
+  const pet = petQuery.data ?? null;
+  const medicalRecords = medicalRecordsQuery.data?.content ?? [];
+  const mediaItems = mediaQuery.data?.content ?? [];
+  const ownerships = ownershipsQuery.data?.content ?? [];
   const [activeTab, setActiveTab] = React.useState<
     "medical" | "media" | "logs"
   >("medical");
+  const [updateDialogOpen, setUpdateDialogOpen] = React.useState(false);
 
-  if (petQuery.isPending) return <PetDetailSkeleton />;
+  const coverUrl = getCoverUrl(pet ?? undefined, mediaItems);
+  const images = pet?.imageUrls?.length ? pet.imageUrls : [coverUrl];
+  const [selectedImage, setSelectedImage] = useState(images[0]);
+  const organizationName = pet?.organization?.name || "Cộng đồng";
+  const ownerName = pet?.owner?.name || "Đang cập nhật";
+  const locationText = pet?.rescueLocation || pet?.province || "Đang cập nhật";
+
+  const handleOpenUpdateDialog = React.useCallback(() => {
+    setUpdateDialogOpen(true);
+  }, []);
+
+  const handleUpdatePet = React.useCallback(
+    async (payload: Partial<PetUpdatePayload>) => {
+      if (!petId) return;
+
+      try {
+        await updatePetMutation.mutateAsync({
+          petId,
+          payload,
+        });
+        setUpdateDialogOpen(false);
+        toast.success("Cập nhật thú cưng thành công.");
+      } catch (error) {
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : "Cập nhật thú cưng thất bại.",
+        );
+      }
+    },
+    [petId, updatePetMutation],
+  );
+
+  const handleRefreshDetail = React.useCallback(() => {
+    void Promise.all([
+      petQuery.refetch(),
+      medicalRecordsQuery.refetch(),
+      mediaQuery.refetch(),
+      ownershipsQuery.refetch(),
+    ]);
+    toast.success("Đang làm mới dữ liệu.");
+  }, [mediaQuery, medicalRecordsQuery, ownershipsQuery, petQuery]);
+
+  const handleDeletePet = React.useCallback(async () => {
+    if (!petId) return;
+
+    const confirmed = window.confirm(
+      "Bạn có chắc muốn xóa hồ sơ thú cưng này không?",
+    );
+
+    if (!confirmed) return;
+
+    try {
+      await deletePetMutation.mutateAsync(petId);
+      toast.success("Đã xóa hồ sơ thú cưng.");
+      router.push("/quan-ly-thu-cung");
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Xóa hồ sơ thất bại.",
+      );
+    }
+  }, [deletePetMutation, petId, router]);
+
+  const handleDeleteMedia = React.useCallback(
+    async (mediaId: string) => {
+      if (!petId) return;
+
+      const confirmed = window.confirm("Bạn có chắc muốn xóa media này không?");
+      if (!confirmed) return;
+
+      try {
+        await deleteMediaMutation.mutateAsync({ petId, mediaId });
+        toast.success("Đã xóa media.");
+      } catch (error) {
+        toast.error(
+          error instanceof Error ? error.message : "Xóa media thất bại.",
+        );
+      }
+    },
+    [deleteMediaMutation, petId],
+  );
+
+  const handleSetPrimaryMedia = React.useCallback(
+    async (mediaId: string) => {
+      if (!petId) return;
+
+      try {
+        await updatePrimaryMediaMutation.mutateAsync({ petId, mediaId });
+        toast.success("Đã cập nhật ảnh chính.");
+      } catch (error) {
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : "Cập nhật ảnh chính thất bại.",
+        );
+      }
+    },
+    [petId, updatePrimaryMediaMutation],
+  );
+
+  if (petQuery.isPending) {
+    return <PetDetailSkeleton />;
+  }
+
   if (petQuery.isError) {
     return (
       <div className="space-y-3">
@@ -151,25 +277,26 @@ export default function PetDetailPage() {
     );
   }
 
-  if (!pet) return <div>Pet not found</div>;
-
-  const coverUrl =
-    pet.imageUrls ||
-    (Array.isArray((pet as any).imageUrls)
-      ? (pet as any).imageUrls?.[0]
-      : null);
-
-  const orgName =
-    (pet as any).organizationName ??
-    (pet as any).organization?.name ??
-    (pet as any).shelterName ??
-    "—";
-  const orgId =
-    (pet as any).organizationId ?? (pet as any).organization?.id ?? "—";
+  if (!pet) {
+    return (
+      <EmptyStateCard
+        title="Không tìm thấy hồ sơ thú cưng"
+        description="Hồ sơ có thể đã bị xóa hoặc chưa sẵn sàng để hiển thị."
+        action={
+          <Button
+            variant="outline"
+            className="rounded-xl"
+            onClick={() => router.push("/quan-ly-thu-cung")}
+          >
+            Quay lại danh sách
+          </Button>
+        }
+      />
+    );
+  }
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
-      {/* Top Header */}
       <div className="flex flex-col justify-between gap-6 md:flex-row md:items-center">
         <div className="flex items-center gap-4">
           <Button
@@ -184,109 +311,222 @@ export default function PetDetailPage() {
           <div>
             <div className="flex items-center gap-3">
               <h1 className="text-3xl font-serif font-bold text-foreground">
-                {pet.name ?? "—"}
+                {pet.name || "—"}
               </h1>
-              <Badge
-                variant="outline"
-                className="h-6 px-3 text-[10px] font-bold uppercase tracking-widest"
-              >
-                {pet.petCode ?? pet.petId ?? petId}
-              </Badge>
+              {pet.petCode ? (
+                <Badge
+                  variant="outline"
+                  className="h-6 px-3 text-[10px] font-bold uppercase tracking-widest"
+                >
+                  {pet.petCode}
+                </Badge>
+              ) : null}
             </div>
 
             <p className="mt-1 flex items-center gap-2 font-medium text-muted-foreground">
-              {pet.species ?? "—"} • {pet.breed ?? "—"} •{" "}
-              {pet.ageDisplay ?? "—"}
+              {pet.species || "—"} • {pet.breed || "—"} •{" "}
+              {pet.ageDisplay || "—"}
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <Button
             variant="outline"
             className="h-11 rounded-xl border-border px-6 font-bold text-muted-foreground"
-            onClick={() => {
-              toast("Chức năng chia sẻ đang được phát triển");
-            }}
+            onClick={handleOpenUpdateDialog}
           >
-            Chia sẻ hồ sơ
+            Cập nhật
           </Button>
 
           <Button
-            className="h-11 rounded-xl px-8 font-bold shadow-lg shadow-primary/20"
-            onClick={() => {
-              toast("Chức năng chỉnh sửa đang được phát triển");
-            }}
+            variant="outline"
+            className="h-11 rounded-xl px-6 font-bold"
+            onClick={handleRefreshDetail}
           >
-            <Edit2 className="mr-2 h-4 w-4" /> Chỉnh sửa
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Làm mới
           </Button>
         </div>
       </div>
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-        {/* Left Column */}
         <div className="space-y-8 lg:col-span-2">
-          {/* Hero Card */}
-          <Card className="group overflow-hidden border-none shadow-xl shadow-primary/5">
-            <CardContent className="relative aspect-[21/9] p-0">
-              <Image
-                src={pet.imageUrls[0]}
-                alt={pet.name ?? "pet"}
-                width={1200}
-                height={514}
-                className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+          <Card className="">
+            <CardContent className="grid gap-0 p-0 lg:grid-cols-[420px_minmax(0,1fr)]">
+              {/* LEFT: IMAGE GALLERY */}
+              <div className="space-y-3 bg-muted/40 p-4">
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <button className="relative h-[360px] w-full overflow-hidden rounded-2xl bg-muted">
+                      <Image
+                        src={selectedImage}
+                        alt={pet.name || "Pet image"}
+                        fill
+                        unoptimized
+                        className="object-cover transition-transform hover:scale-105"
+                      />
+                    </button>
+                  </DialogTrigger>
 
-              <div className="absolute bottom-6 left-6 right-6 flex items-end justify-between">
-                <div className="flex gap-2">
-                  <Badge
-                    className={cn(
-                      "rounded-full border-white/20 bg-white/20 px-4 py-1.5 font-bold text-white backdrop-blur-md hover:bg-white/20",
-                      "uppercase",
+                  <DialogContent className="max-w-4xl border-none bg-transparent p-0 shadow-none">
+                    <div className="relative h-[80vh] w-full overflow-hidden rounded-2xl bg-background">
+                      <Image
+                        src={selectedImage}
+                        alt={pet.name || "Pet image"}
+                        fill
+                        unoptimized
+                        className="object-contain"
+                      />
+                    </div>
+                  </DialogContent>
+                </Dialog>
+
+                <div className="flex gap-3 overflow-x-auto pb-1">
+                  {images.map((image, index) => (
+                    <button
+                      key={image}
+                      onClick={() => setSelectedImage(image)}
+                      className={cn(
+                        "relative h-20 w-24 shrink-0 overflow-hidden rounded-xl border-2 bg-muted",
+                        selectedImage === image
+                          ? "border-primary"
+                          : "border-transparent hover:border-primary/40",
+                      )}
+                    >
+                      <Image
+                        src={image}
+                        alt={`${pet.name || "Pet"} image ${index + 1}`}
+                        fill
+                        unoptimized
+                        className="object-cover"
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* RIGHT: PET INFO */}
+              <div className="flex flex-col justify-between gap-6 p-6 md:p-8">
+                <div className="space-y-5">
+                  <div className="space-y-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Badge
+                        className={cn(
+                          "rounded-full px-4 py-1.5 font-bold",
+                          getPetStatusBadgeClassName(pet.status),
+                        )}
+                      >
+                        {getPetStatusLabel(pet.status)}
+                      </Badge>
+
+                      <Badge
+                        className={cn(
+                          "rounded-full px-4 py-1.5 font-bold",
+                          getHealthStatusBadgeClassName(pet.healthStatus),
+                        )}
+                      >
+                        {getHealthStatusLabel(pet.healthStatus)}
+                      </Badge>
+                    </div>
+
+                    <h1 className="text-3xl font-bold tracking-tight text-foreground">
+                      {pet.name || "Chưa có tên"}
+                    </h1>
+
+                    <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
+                      <span>
+                        Mã thú cưng:{" "}
+                        <strong className="text-foreground">
+                          {pet.petCode}
+                        </strong>
+                      </span>
+                      <span>•</span>
+                      <span>
+                        Chủ sở hữu:{" "}
+                        <strong className="text-foreground">
+                          {ownerName || "Chưa cập nhật"}
+                        </strong>
+                      </span>
+                    </div>
+                  </div>
+
+                  <p className="text-sm leading-7 text-muted-foreground">
+                    {pet.description ||
+                      "Chưa có mô tả chi tiết cho thú cưng này trong hệ thống."}
+                  </p>
+
+                  <div className="flex flex-wrap text-sm">
+                    <SummaryStat
+                      label="Tuổi"
+                      value={pet.ageDisplay || `${pet.age} tháng`}
+                    />
+                    <SummaryStat
+                      label="Giới tính"
+                      value={getGenderLabel(pet.gender)}
+                    />
+                    <SummaryStat label="Trung tâm" value={organizationName} />
+                    <SummaryStat label="Vị trí" value={locationText} />
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    {pet.vaccinated && (
+                      <Badge className="rounded-full bg-emerald-50 px-4 py-1.5 font-bold text-emerald-700 hover:bg-emerald-50">
+                        Đã tiêm vaccine
+                      </Badge>
                     )}
-                  >
-                    {petStatusLabel(pet.status)}
-                  </Badge>
-                  <Badge
-                    className={cn(
-                      "rounded-full border-white/20 bg-white/20 px-4 py-1.5 font-bold text-white backdrop-blur-md hover:bg-white/20",
-                      "uppercase",
+
+                    {pet.neutered && (
+                      <Badge className="rounded-full bg-sky-50 px-4 py-1.5 font-bold text-sky-700 hover:bg-sky-50">
+                        Đã triệt sản
+                      </Badge>
                     )}
-                  >
-                    {healthStatusLabel(pet.healthStatus)}
-                  </Badge>
+
+                    <Badge
+                      variant="outline"
+                      className="rounded-full px-4 py-1.5 font-bold"
+                    >
+                      {pet.color || "Đang cập nhật màu sắc"}
+                    </Badge>
+                  </div>
                 </div>
 
-                <Button
-                  className="rounded-xl bg-white font-bold text-primary shadow-xl hover:bg-white/90"
-                  onClick={() => toast("Upload ảnh đang được phát triển")}
-                >
-                  <Upload className="mr-2 h-4 w-4" /> Đổi ảnh bìa
-                </Button>
+                <div className="flex flex-wrap gap-3 border-t pt-5">
+                  <Button
+                    variant="outline"
+                    className="rounded-xl"
+                    onClick={() => setActiveTab("media")}
+                  >
+                    <ImageIcon className="mr-2 h-4 w-4" />
+                    Xem thư viện ảnh
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
-
-          {/* Basic Info Card */}
           <Card className="border-none shadow-xl shadow-primary/5">
-            <CardHeader className="p-8 pb-0">
+            <CardHeader>
               <CardTitle className="flex items-center gap-2 text-xl font-serif font-bold">
-                <Activity className="h-5 w-5 text-primary" /> Thông tin cơ bản
+                <Activity className="h-5 w-5 text-primary" />
+                Thông tin cơ bản
               </CardTitle>
             </CardHeader>
 
             <CardContent className="p-8">
               <div className="grid grid-cols-2 gap-x-12 gap-y-8 md:grid-cols-3">
-                <InfoItem label="Tên gọi" value={pet.name ?? "—"} />
-                <InfoItem label="Pet code" value={pet.petCode ?? "—"} />
-                <InfoItem label="Pet ID" value={pet.petId ?? petId ?? "—"} />
+                <InfoItem label="Tên gọi" value={pet.name || "—"} />
+                <InfoItem
+                  label="Mã hồ sơ"
+                  value={pet.petCode || "Đang cập nhật"}
+                />
+                <InfoItem label="Loài" value={pet.species || "—"} />
 
-                <InfoItem label="Loài" value={pet.species ?? "—"} />
-                <InfoItem label="Giống" value={pet.breed ?? "—"} />
-                <InfoItem label="Tuổi" value={pet.ageDisplay ?? "—"} />
-
-                <InfoItem label="Giới tính" value={genderLabel(pet.gender)} />
+                <InfoItem label="Giống" value={pet.breed || "—"} />
+                <InfoItem label="Tuổi" value={pet.ageDisplay || "—"} />
+                <InfoItem
+                  label="Giới tính"
+                  value={getGenderLabel(pet.gender)}
+                />
 
                 <InfoItem
                   label="Tiêm phòng"
@@ -298,170 +538,122 @@ export default function PetDetailPage() {
                       : "bg-muted text-muted-foreground hover:bg-muted"
                   }
                 />
-
                 <InfoItem
                   label="Trạng thái"
-                  value={petStatusLabel(pet.status)}
+                  value={getPetStatusLabel(pet.status)}
                   isBadge
-                  badgeClassName={pillVariantForPetStatus(pet.status).className}
+                  badgeClassName={getPetStatusBadgeClassName(pet.status)}
                 />
-
                 <InfoItem
                   label="Sức khỏe"
-                  value={healthStatusLabel(pet.healthStatus)}
+                  value={getHealthStatusLabel(pet.healthStatus)}
                   isBadge
-                  badgeClassName={
-                    pillVariantForHealth(pet.healthStatus).className
-                  }
+                  badgeClassName={getHealthStatusBadgeClassName(
+                    pet.healthStatus,
+                  )}
                 />
 
+                <InfoItem label="Chủ hiện tại" value={ownerName} />
+                <InfoItem label="Trung tâm quản lý" value={organizationName} />
+                <InfoItem
+                  label="Ngày tiếp nhận"
+                  value={formatDateVi(pet.rescueDate)}
+                />
                 <InfoItem
                   label="Ngày tạo"
-                  value={formatDateTimeVi((pet as any).createdAt)}
+                  value={formatDateTimeVi(pet.createdAt)}
                 />
                 <InfoItem
                   label="Cập nhật"
-                  value={formatDateTimeVi((pet as any).updatedAt)}
+                  value={formatDateTimeVi(pet.updatedAt)}
+                />
+                <InfoItem
+                  label="Cân nặng"
+                  value={pet.weight ? `${pet.weight} kg` : "Đang cập nhật"}
                 />
               </div>
             </CardContent>
           </Card>
-
-          {/* Internal Notes Card */}
           <Card className="border-l-4 border-primary bg-primary/5 shadow-xl shadow-primary/5">
-            <CardHeader className="p-8 pb-4">
+            <CardHeader>
               <CardTitle className="flex items-center gap-2 text-xl font-serif font-bold">
-                <Calendar className="h-5 w-5 text-primary" /> Ghi chú nội bộ
+                <Calendar className="h-5 w-5 text-primary" />
+                Mô tả thêm
               </CardTitle>
             </CardHeader>
             <CardContent className="p-8 pt-0">
               <p className="text-sm italic leading-relaxed text-muted-foreground">
-                {(pet as any).internalNotes ||
-                  "Chưa có ghi chú nào cho thú cưng này."}
+                {pet.description || "Chưa có ghi chú bổ sung cho thú cưng này."}
               </p>
             </CardContent>
           </Card>
-
-          {/* Bottom Tabs */}
           <div className="space-y-6">
             <div className="flex w-fit items-center gap-1 rounded-2xl border border-border bg-muted/30 p-1">
-              <TabButton
-                active={activeTab === "medical"}
-                onClick={() => setActiveTab("medical")}
-                icon={Stethoscope}
-              >
-                Hồ sơ y tế
-              </TabButton>
-              <TabButton
-                active={activeTab === "media"}
-                onClick={() => setActiveTab("media")}
-                icon={ImageIcon}
-              >
-                Hình ảnh/Video
-              </TabButton>
-              <TabButton
-                active={activeTab === "logs"}
-                onClick={() => setActiveTab("logs")}
-                icon={History}
-              >
-                Nhật ký hoạt động
-              </TabButton>
+              {PET_DETAIL_TABS.map((tab) => (
+                <TabButton
+                  key={tab.value}
+                  active={activeTab === tab.value}
+                  onClick={() => setActiveTab(tab.value)}
+                  icon={tab.icon}
+                >
+                  {tab.label}
+                </TabButton>
+              ))}
             </div>
 
             <AnimatePresence mode="wait">
-              {activeTab === "medical" && (
+              {activeTab === "medical" ? (
                 <motion.div
+                  key="medical"
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.2 }}
                 >
                   <Card className="border-none shadow-xl shadow-primary/5">
-                    <CardHeader className="flex flex-row items-center justify-between p-8">
+                    <CardHeader>
                       <CardTitle className="text-lg font-bold">
-                        Lịch sử khám & tiêm phòng
+                        Lịch sử khám và tiêm phòng
                       </CardTitle>
                       <Button
                         variant="outline"
                         className="h-10 rounded-xl border-primary/20 px-4 font-bold text-primary"
-                        onClick={() =>
-                          toast("Thêm hồ sơ y tế đang được phát triển")
-                        }
+                        onClick={() => void medicalRecordsQuery.refetch()}
+                        disabled={medicalRecordsQuery.isRefetching}
                       >
-                        <Plus className="mr-2 h-4 w-4" /> Thêm hồ sơ
+                        {medicalRecordsQuery.isRefetching ? (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                          <RefreshCw className="mr-2 h-4 w-4" />
+                        )}
+                        Làm mới
                       </Button>
                     </CardHeader>
 
-                    <CardContent className="p-0 overflow-x-auto">
-                      <table className="w-full border-collapse text-left">
-                        <thead>
-                          <tr className="border-y border-border bg-muted/30">
-                            <th className="px-8 py-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                              Ngày
-                            </th>
-                            <th className="px-8 py-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                              Vaccine
-                            </th>
-                            <th className="px-8 py-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                              Chẩn đoán
-                            </th>
-                            <th className="px-8 py-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                              Mô tả
-                            </th>
-                            <th className="px-8 py-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                              Người tạo
-                            </th>
-                          </tr>
-                        </thead>
-
-                        <tbody className="divide-y divide-border">
-                          {Array.isArray((pet as any).medicalRecords) &&
-                          (pet as any).medicalRecords.length > 0 ? (
-                            (pet as any).medicalRecords.map((record: any) => (
-                              <tr
-                                key={record.recordId ?? `${record.recordDate}`}
-                              >
-                                <td className="px-8 py-5 text-sm font-medium">
-                                  {formatDateVi(record.recordDate)}
-                                </td>
-                                <td className="px-8 py-5">
-                                  <Badge
-                                    variant="outline"
-                                    className="border-primary/10 bg-primary/5 text-primary"
-                                  >
-                                    {record.vaccine ?? "—"}
-                                  </Badge>
-                                </td>
-                                <td className="px-8 py-5 text-sm font-bold text-foreground">
-                                  {record.diagnosis ?? "—"}
-                                </td>
-                                <td className="max-w-[200px] truncate px-8 py-5 text-xs text-muted-foreground">
-                                  {record.description ?? "—"}
-                                </td>
-                                <td className="px-8 py-5 text-sm font-medium">
-                                  {record.createdBy ?? "—"}
-                                </td>
-                              </tr>
-                            ))
-                          ) : (
-                            <tr>
-                              <td
-                                colSpan={5}
-                                className="px-8 py-6 text-sm text-muted-foreground"
-                              >
-                                Chưa có hồ sơ y tế.
-                              </td>
-                            </tr>
-                          )}
-                        </tbody>
-                      </table>
+                    <CardContent className="overflow-x-auto p-0">
+                      {medicalRecordsQuery.isPending ? (
+                        <SectionTableSkeleton />
+                      ) : medicalRecordsQuery.isError ? (
+                        <InlineState
+                          title="Không tải được hồ sơ y tế"
+                          description="Thử làm mới lại danh sách hồ sơ y tế."
+                        />
+                      ) : medicalRecords.length ? (
+                        <MedicalRecordsTable records={medicalRecords} />
+                      ) : (
+                        <InlineState
+                          title="Chưa có hồ sơ y tế"
+                          description="Khi backend trả dữ liệu hồ sơ y tế, danh sách sẽ hiển thị tại đây."
+                        />
+                      )}
                     </CardContent>
                   </Card>
                 </motion.div>
-              )}
+              ) : null}
 
-              {activeTab === "media" && (
+              {activeTab === "media" ? (
                 <motion.div
+                  key="media"
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
@@ -470,64 +662,65 @@ export default function PetDetailPage() {
                   <Card className="border-none shadow-xl shadow-primary/5">
                     <CardHeader className="flex flex-row items-center justify-between p-8">
                       <CardTitle className="text-lg font-bold">
-                        Thư viện phương tiện
+                        Thư viện media
                       </CardTitle>
                       <Button
-                        variant="default"
-                        className="h-10 rounded-xl px-6 shadow-lg shadow-primary/20"
-                        onClick={() =>
-                          toast("Upload media đang được phát triển")
-                        }
+                        variant="outline"
+                        className="h-10 rounded-xl px-6"
+                        onClick={() => void mediaQuery.refetch()}
+                        disabled={mediaQuery.isRefetching}
                       >
-                        <Upload className="mr-2 h-4 w-4" /> Tải lên media
+                        {mediaQuery.isRefetching ? (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                          <RefreshCw className="mr-2 h-4 w-4" />
+                        )}
+                        Làm mới
                       </Button>
                     </CardHeader>
 
                     <CardContent className="p-8 pt-0">
-                      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-                        {Array.isArray((pet as any).mediaGallery) &&
-                        (pet as any).mediaGallery.length > 0 ? (
-                          (pet as any).mediaGallery.map((media: any) => (
-                            <div
-                              key={media.mediaId ?? media.url}
-                              className="group relative aspect-square overflow-hidden rounded-2xl border border-border bg-muted"
-                            >
-                              <Image
-                                src={media.url}
-                                alt={ "media"}
-                                className="h-full w-full object-cover transition-transform group-hover:scale-110"
-                              />
-                              <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 rounded-lg bg-white/20 text-white backdrop-blur-sm"
-                                >
-                                  <Eye className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 rounded-lg bg-white/20 text-white backdrop-blur-sm"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </div>
-                          ))
-                        ) : (
-                          <div className="col-span-full text-sm text-muted-foreground">
-                            Chưa có media.
-                          </div>
-                        )}
-                      </div>
+                      {mediaQuery.isPending ? (
+                        <MediaGridSkeleton />
+                      ) : mediaQuery.isError ? (
+                        <InlineState
+                          title="Không tải được media"
+                          description="Thử làm mới để lấy lại thư viện ảnh."
+                        />
+                      ) : mediaItems.length ? (
+                        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+                          {mediaItems.map((media) => (
+                            <MediaCard
+                              key={media.mediaId}
+                              media={media}
+                              busy={
+                                deleteMediaMutation.isPending ||
+                                updatePrimaryMediaMutation.isPending
+                              }
+                              onDelete={() =>
+                                void handleDeleteMedia(media.mediaId)
+                              }
+                              onPreview={() => window.open(media.url, "_blank")}
+                              onSetPrimary={() =>
+                                void handleSetPrimaryMedia(media.mediaId)
+                              }
+                            />
+                          ))}
+                        </div>
+                      ) : (
+                        <InlineState
+                          title="Chưa có media"
+                          description="Hiện chưa có hình ảnh hoặc video nào được gắn với hồ sơ này."
+                        />
+                      )}
                     </CardContent>
                   </Card>
                 </motion.div>
-              )}
+              ) : null}
 
-              {activeTab === "logs" && (
+              {activeTab === "logs" ? (
                 <motion.div
+                  key="logs"
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
@@ -536,42 +729,68 @@ export default function PetDetailPage() {
                   <Card className="border-none shadow-xl shadow-primary/5">
                     <CardHeader className="p-8">
                       <CardTitle className="text-lg font-bold">
-                        Nhật ký hoạt động
+                        Hoạt động gần đây
                       </CardTitle>
                     </CardHeader>
-                    <CardContent className="p-8 pt-0 text-sm text-muted-foreground">
-                      {(pet as any).activityLogs?.length
-                        ? "Hiển thị nhật ký tại đây"
-                        : "Chưa có nhật ký."}
+                    <CardContent className="p-8 pt-0">
+                      <InlineState
+                        title="Chưa có endpoint nhật ký hoạt động"
+                        description="Tab này đã sẵn sàng về giao diện và sẽ hiển thị khi backend cung cấp nguồn dữ liệu tương ứng."
+                      />
                     </CardContent>
                   </Card>
                 </motion.div>
-              )}
+              ) : null}
             </AnimatePresence>
           </div>
         </div>
 
-        {/* Right Column */}
         <div className="space-y-8">
-          {/* Organization Card */}
+          <div className="space-y-3">
+            <Label className="px-2 text-muted-foreground">Thao tác nhanh</Label>
+            <div className="grid grid-cols-2 gap-3">
+              <ActionButton
+                icon={ImageIcon}
+                label="Mở thư viện"
+                onClick={() => setActiveTab("media")}
+              />
+              <ActionButton
+                icon={RefreshCw}
+                label="Cập nhật"
+                onClick={handleOpenUpdateDialog}
+              />
+              <ActionButton
+                icon={RefreshCw}
+                label="Làm mới"
+                onClick={handleRefreshDetail}
+              />
+              <ActionButton
+                icon={Trash2}
+                label="Xóa hồ sơ"
+                color="text-red-600 bg-red-50"
+                onClick={() => void handleDeletePet()}
+                disabled={deletePetMutation.isPending}
+              />
+            </div>
+          </div>
+
           <Card className="overflow-hidden border-none shadow-xl shadow-primary/5">
-            <div className="h-2 bg-primary" />
-            <CardHeader className="p-8 pb-4">
+            <CardHeader>
               <CardTitle className="text-lg font-bold">
                 Trung tâm quản lý
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6 p-8 pt-0">
+            <CardContent className="space-y-6 ">
               <div className="flex items-center gap-4">
                 <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-border bg-muted text-primary">
                   <Building2 className="h-7 w-7" />
                 </div>
                 <div>
                   <p className="text-base font-bold text-foreground">
-                    {orgName}
+                    {organizationName}
                   </p>
-                  <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
-                    {orgId}
+                  <p className="text-xs font-medium text-muted-foreground">
+                    {pet.owner?.caretakerName || "Đang quản lý hồ sơ thú cưng"}
                   </p>
                 </div>
               </div>
@@ -579,30 +798,28 @@ export default function PetDetailPage() {
               <Button
                 variant="outline"
                 className="h-11 w-full rounded-xl border-primary/20 font-bold text-primary"
-                onClick={() => {
-                  if (orgId && orgId !== "—") router.push(`/quan-ly-trung-tam`);
-                }}
+                onClick={() => router.push("/quan-ly-trung-tam")}
               >
-                Xem hồ sơ trung tâm <ChevronRight className="ml-1 h-4 w-4" />
+                Xem hồ sơ trung tâm
+                <ChevronRight className="ml-1 h-4 w-4" />
               </Button>
             </CardContent>
           </Card>
 
-          {/* Location Card */}
           <Card className="border-none shadow-xl shadow-primary/5">
-            <CardHeader className="p-8 pb-4">
+            <CardHeader>
               <CardTitle className="text-lg font-bold">
                 Vị trí hiện tại
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6 p-8 pt-0">
+            <CardContent className="space-y-6 ">
               <div className="space-y-4">
                 <div className="flex items-start gap-3">
                   <MapPin className="mt-0.5 h-5 w-5 text-primary" />
                   <div>
-                    <p className="text-sm font-bold">{pet.province ?? "—"}</p>
+                    <p className="text-sm font-bold">{pet.province || "—"}</p>
                     <p className="text-xs font-medium text-muted-foreground">
-                      {pet.ward ?? "—"}
+                      {pet.ward || "—"}
                     </p>
                   </div>
                 </div>
@@ -610,7 +827,7 @@ export default function PetDetailPage() {
                 <div className="relative aspect-video overflow-hidden rounded-2xl border border-border bg-muted">
                   <Image
                     src="https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&q=80&w=400"
-                    alt="fake"
+                    alt="Bản đồ minh họa"
                     width={400}
                     height={225}
                     className="h-full w-full object-cover opacity-50 grayscale"
@@ -619,101 +836,54 @@ export default function PetDetailPage() {
                     <MapPin className="h-8 w-8 animate-bounce fill-primary/20 text-primary" />
                   </div>
                 </div>
+
+                <p className="text-sm text-muted-foreground">
+                  {pet.rescueLocation ||
+                    "Chưa có mô tả chi tiết về địa điểm tiếp nhận."}
+                </p>
               </div>
             </CardContent>
           </Card>
 
-          {/* Ownership Timeline */}
           <Card className="border-none shadow-xl shadow-primary/5">
-            <CardHeader className="p-8 pb-4">
+            <CardHeader>
               <CardTitle className="text-lg font-bold">
                 Lịch sử sở hữu
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-8 pt-0">
-              <div className="relative space-y-6 before:absolute before:bottom-2 before:left-2 before:top-2 before:w-px before:bg-border">
-                {Array.isArray((pet as any).ownershipHistory) &&
-                (pet as any).ownershipHistory.length > 0 ? (
-                  (pet as any).ownershipHistory.map(
-                    (owner: any, idx: number) => (
-                      <div
-                        key={`${idx}-${owner.ownerId ?? "x"}`}
-                        className="relative pl-8"
-                      >
-                        <div
-                          className={cn(
-                            "absolute left-0 top-1.5 z-10 h-4 w-4 rounded-full border-2 border-white shadow-sm ring-4 ring-white",
-                            idx === 0 ? "bg-primary" : "bg-muted-foreground",
-                          )}
-                        />
-                        <div>
-                          <p className="flex items-center gap-2 text-sm font-bold text-foreground">
-                            {owner.ownerName ?? "—"}
-                            {idx === 0 && (
-                              <Badge
-                                variant="default"
-                                className="h-3.5 px-1.5 text-[8px]"
-                              >
-                                Hiện tại
-                              </Badge>
-                            )}
-                          </p>
-                          <p className="mt-0.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                            {owner.ownerType ?? "—"} • Từ{" "}
-                            {formatDateVi(owner.fromTime)}{" "}
-                            {owner.toTime
-                              ? `đến ${formatDateVi(owner.toTime)}`
-                              : ""}
-                          </p>
-                        </div>
-                      </div>
-                    ),
-                  )
-                ) : (
-                  <div className="text-sm text-muted-foreground">
-                    Chưa có lịch sử sở hữu.
-                  </div>
-                )}
-              </div>
-
-              <Button
-                variant="ghost"
-                className="mt-6 w-full text-xs font-bold text-primary hover:bg-primary/5"
-                onClick={() =>
-                  toast("Chuyển quyền sở hữu đang được phát triển")
-                }
-              >
-                <ArrowRightLeft className="mr-2 h-3.5 w-3.5" /> Chuyển quyền sở
-                hữu
-              </Button>
+            <CardContent className="">
+              {ownershipsQuery.isPending ? (
+                <TimelineSkeleton />
+              ) : ownershipsQuery.isError ? (
+                <InlineState
+                  title="Không tải được lịch sử sở hữu"
+                  description="Thử làm mới lại thông tin sở hữu."
+                />
+              ) : ownerships.length ? (
+                <OwnershipTimeline ownerships={ownerships} />
+              ) : (
+                <InlineState
+                  title="Chưa có lịch sử sở hữu"
+                  description="Thông tin chuyển giao sở hữu sẽ xuất hiện tại đây khi backend trả dữ liệu."
+                />
+              )}
             </CardContent>
           </Card>
-
-          {/* Quick Actions */}
-          <div className="space-y-3">
-            <Label className="px-2 text-muted-foreground">Thao tác nhanh</Label>
-            <div className="grid grid-cols-2 gap-3">
-              <ActionButton icon={Edit2} label="Chỉnh sửa" />
-              <ActionButton icon={ArrowRightLeft} label="Chuyển trung tâm" />
-              <ActionButton
-                icon={ShieldAlert}
-                label="Báo vi phạm"
-                color="text-amber-600 bg-amber-50"
-              />
-              <ActionButton
-                icon={Trash2}
-                label="Xóa hồ sơ"
-                color="text-red-600 bg-red-50"
-              />
-            </div>
-          </div>
         </div>
       </div>
+
+      <PetUpdateDialog
+        open={updateDialogOpen}
+        onOpenChange={setUpdateDialogOpen}
+        pet={pet}
+        mediaItems={mediaItems}
+        submitting={updatePetMutation.isPending}
+        onSubmit={(values) => void handleUpdatePet(values)}
+      />
     </div>
   );
 }
 
-// -------- Subcomponents --------
 function InfoItem({
   label,
   value,
@@ -746,6 +916,17 @@ function InfoItem({
   );
 }
 
+function SummaryStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl p-4 w-full">
+      <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+        {label}
+      </p>
+      <p className="mt-2 text-sm font-bold text-foreground">{value}</p>
+    </div>
+  );
+}
+
 function TabButton({
   children,
   active,
@@ -755,10 +936,12 @@ function TabButton({
   children: React.ReactNode;
   active: boolean;
   onClick: () => void;
-  icon: any;
+  icon: LucideIcon;
 }) {
   return (
-    <button
+    <Button
+      type="button"
+      variant="ghost"
       onClick={onClick}
       className={cn(
         "flex items-center gap-2 rounded-xl px-5 py-2.5 text-xs font-bold transition-all duration-300",
@@ -769,7 +952,7 @@ function TabButton({
     >
       <Icon className="h-4 w-4" />
       {children}
-    </button>
+    </Button>
   );
 }
 
@@ -777,25 +960,257 @@ function ActionButton({
   icon: Icon,
   label,
   color = "bg-white text-foreground",
+  onClick,
+  disabled = false,
 }: {
-  icon: any;
+  icon: LucideIcon;
   label: string;
   color?: string;
+  onClick: () => void;
+  disabled?: boolean;
 }) {
   return (
     <Button
       variant="outline"
       className={cn(
-        "h-auto flex flex-col items-center justify-center gap-2 rounded-2xl border-border py-4 transition-all hover:border-primary/30",
+        "h-auto flex-col gap-2 rounded-2xl border-border py-4 transition-all hover:border-primary/30",
         color,
       )}
-      onClick={() => toast("Chức năng đang được phát triển")}
+      onClick={onClick}
+      disabled={disabled}
     >
       <Icon className="h-5 w-5" />
       <span className="text-[10px] font-bold uppercase tracking-widest">
         {label}
       </span>
     </Button>
+  );
+}
+
+function EmptyStateCard({
+  title,
+  description,
+  action,
+}: {
+  title: string;
+  description: string;
+  action?: React.ReactNode;
+}) {
+  return (
+    <Card className="border-dashed">
+      <CardContent className="flex flex-col items-center gap-4 px-6 py-16 text-center">
+        <div className="rounded-full bg-muted p-4">
+          <History className="h-6 w-6 text-muted-foreground" />
+        </div>
+        <div className="space-y-2">
+          <p className="text-lg font-semibold text-foreground">{title}</p>
+          <p className="max-w-md text-sm text-muted-foreground">
+            {description}
+          </p>
+        </div>
+        {action}
+      </CardContent>
+    </Card>
+  );
+}
+
+function InlineState({
+  title,
+  description,
+}: {
+  title: string;
+  description: string;
+}) {
+  return (
+    <div className="rounded-2xl border border-dashed border-border bg-muted/20 px-6 py-10 text-center">
+      <p className="text-sm font-semibold text-foreground">{title}</p>
+      <p className="mt-2 text-sm text-muted-foreground">{description}</p>
+    </div>
+  );
+}
+
+function MedicalRecordsTable({ records }: { records: PetMedicalRecord[] }) {
+  return (
+    <table className="w-full border-collapse text-left">
+      <thead>
+        <tr className="border-y border-border bg-muted/30">
+          <th className="px-8 py-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+            Ngày
+          </th>
+          <th className="px-8 py-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+            Vaccine
+          </th>
+          <th className="px-8 py-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+            Chẩn đoán
+          </th>
+          <th className="px-8 py-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+            Mô tả
+          </th>
+          <th className="px-8 py-4 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+            Người tạo
+          </th>
+        </tr>
+      </thead>
+      <tbody className="divide-y divide-border">
+        {records.map((record) => (
+          <tr key={record.recordId}>
+            <td className="px-8 py-5 text-sm font-medium">
+              {formatDateVi(record.recordDate)}
+            </td>
+            <td className="px-8 py-5">
+              <Badge
+                variant="outline"
+                className="border-primary/10 bg-primary/5 text-primary"
+              >
+                {record.vaccine || "Đang cập nhật"}
+              </Badge>
+            </td>
+            <td className="px-8 py-5 text-sm font-bold text-foreground">
+              {record.diagnosis || "Đang cập nhật"}
+            </td>
+            <td className="max-w-[220px] truncate px-8 py-5 text-xs text-muted-foreground">
+              {record.description || "Không có mô tả"}
+            </td>
+            <td className="px-8 py-5 text-sm font-medium">
+              {record.createdBy || "Hệ thống"}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
+function MediaCard({
+  media,
+  busy,
+  onDelete,
+  onPreview,
+  onSetPrimary,
+}: {
+  media: PetMedia;
+  busy: boolean;
+  onDelete: () => void;
+  onPreview: () => void;
+  onSetPrimary: () => void;
+}) {
+  return (
+    <div className="group relative aspect-square overflow-hidden rounded-2xl border border-border bg-muted">
+      <Image
+        src={media.url}
+        alt="Pet media"
+        fill
+        unoptimized
+        className="object-cover transition-transform group-hover:scale-110"
+      />
+      <div className="absolute left-3 top-3">
+        {media.primaryMedia ? (
+          <Badge className="rounded-full bg-white/90 text-primary hover:bg-white/90">
+            Ảnh chính
+          </Badge>
+        ) : null}
+      </div>
+      <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/45 opacity-0 transition-opacity group-hover:opacity-100">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-9 w-9 rounded-lg bg-white/20 text-white backdrop-blur-sm"
+          onClick={onPreview}
+        >
+          <Eye className="h-4 w-4" />
+        </Button>
+        {!media.primaryMedia ? (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-9 w-9 rounded-lg bg-white/20 text-white backdrop-blur-sm"
+            onClick={onSetPrimary}
+            disabled={busy}
+          >
+            <Star className="h-4 w-4" />
+          </Button>
+        ) : null}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-9 w-9 rounded-lg bg-white/20 text-white backdrop-blur-sm"
+          onClick={onDelete}
+          disabled={busy}
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function OwnershipTimeline({ ownerships }: { ownerships: PetOwnership[] }) {
+  return (
+    <div className="relative space-y-6 before:absolute before:bottom-2 before:left-2 before:top-2 before:w-px before:bg-border">
+      {ownerships.map((owner, index) => (
+        <div
+          key={`${owner.ownerName}-${owner.fromTime}-${index}`}
+          className="relative pl-8"
+        >
+          <div
+            className={cn(
+              "absolute left-0 top-1.5 z-10 h-4 w-4 rounded-full border-2 border-white shadow-sm ring-4 ring-white",
+              index === 0 ? "bg-primary" : "bg-muted-foreground",
+            )}
+          />
+          <div>
+            <p className="flex items-center gap-2 text-sm font-bold text-foreground">
+              {owner.ownerName || "Đang cập nhật"}
+              {index === 0 ? (
+                <Badge variant="default" className="h-5 px-2 text-[10px]">
+                  Hiện tại
+                </Badge>
+              ) : null}
+            </p>
+            <p className="mt-0.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+              {owner.ownerType} • Từ {formatDateVi(owner.fromTime)}
+              {owner.toTime ? ` đến ${formatDateVi(owner.toTime)}` : ""}
+            </p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function SectionTableSkeleton() {
+  return (
+    <div className="space-y-3 p-8">
+      <Skeleton className="h-14 w-full rounded-2xl" />
+      <Skeleton className="h-14 w-full rounded-2xl" />
+      <Skeleton className="h-14 w-full rounded-2xl" />
+    </div>
+  );
+}
+
+function MediaGridSkeleton() {
+  return (
+    <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+      {Array.from({ length: 4 }).map((_, index) => (
+        <Skeleton key={index} className="aspect-square rounded-2xl" />
+      ))}
+    </div>
+  );
+}
+
+function TimelineSkeleton() {
+  return (
+    <div className="space-y-4">
+      {Array.from({ length: 3 }).map((_, index) => (
+        <div key={index} className="flex items-start gap-4">
+          <Skeleton className="mt-1 h-4 w-4 rounded-full" />
+          <div className="flex-1 space-y-2">
+            <Skeleton className="h-4 w-40 rounded" />
+            <Skeleton className="h-3 w-52 rounded" />
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -808,7 +1223,7 @@ function PetDetailSkeleton() {
       </div>
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
         <div className="space-y-8 lg:col-span-2">
-          <Skeleton className="aspect-[21/9] w-full rounded-3xl" />
+          <Skeleton className="h-[320px] w-full rounded-3xl" />
           <Skeleton className="h-[300px] w-full rounded-3xl" />
         </div>
         <div className="space-y-8">
