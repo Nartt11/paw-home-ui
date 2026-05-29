@@ -1,9 +1,15 @@
+import type { Metadata } from "next";
 import { ChartAreaInteractive } from "@/components/chart-area-interactive";
 import { DataTable } from "@/components/data-table";
 import { SectionCards } from "@/components/section-cards";
 
 import data from "./data.json";
 import { SiteHeader } from "@/components/site-header";
+
+export const metadata: Metadata = {
+  title: "Dashboard",
+  description: "Báo cáo thống kê, biểu đồ hoạt động cứu trợ, nhận nuôi và quyên góp trên hệ thống Paw Home.",
+};
 
 export default function Page() {
   return (

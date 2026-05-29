@@ -59,7 +59,7 @@ export default function HeroSection({
       imageSrc={currentBanner?.mediaUrl || HERO_IMG}
       imageAlt={currentBanner?.title || hero.titleHighlight}
       className="bg-slate-950"
-      minHeightClassName="min-h-screen"
+      minHeightClassName="min-h-[75dvh]"
       imageClassName="object-[50%_30%]"
       overlayClassName="bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.1),transparent_55%),linear-gradient(135deg,rgba(2,23,31,0.88)_0%,rgba(3,53,79,0.78)_50%,rgba(2,23,31,0.7)_100%)]"
       containerClassName="max-w-7xl pb-20"

@@ -23,6 +23,26 @@ export function useAdoptions(params: AdoptionListParams) {
   });
 }
 
+export function useAdoptionsByUser(userId?: string, params?: AdoptionListParams) {
+  return useQuery({
+    queryKey: [...adoptionKeys.all, "by-user", userId, params] as const,
+    queryFn: async () => {
+      if (!userId) {
+        return {
+          content: [],
+          page: 0,
+          size: 0,
+          totalElements: 0,
+          totalPages: 0,
+          last: true,
+        };
+      }
+      return await adoptionService.getAdoptionsByUser(userId, params);
+    },
+    enabled: !!userId,
+  });
+}
+
 export function useAdoptionDetail(id?: string) {
   return useQuery({
     queryKey: adoptionKeys.detail(id ?? ""),

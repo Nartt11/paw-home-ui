@@ -2,14 +2,31 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Menu, X } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
+import { Menu, User, Settings, LogOut } from "lucide-react";
 
 import { APP_ROUTES } from "@/constants/routes";
 import { useLogout } from "@/hooks/use-auth";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { cn } from "@/lib/utils";
 
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import NotifBell from "./NotifBell";
 
 type NavItem = {
@@ -28,11 +45,7 @@ const NAV_LINKS: NavItem[] = [
   },
   {
     href: APP_ROUTES.MAP,
-    label: "Bản đồ cứu hộ",
-  },
-  {
-    href: APP_ROUTES.NEWS,
-    label: "Tin tức",
+    label: "Bản đồ",
   },
   {
     href: APP_ROUTES.DONATION,
@@ -51,184 +64,81 @@ export default function Header() {
   const { data: currentUser } = useCurrentUser();
   const logoutMutation = useLogout();
 
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
   const isLoggedIn = Boolean(currentUser);
-  const unread = 2;
-  const isDark = false;
+  const unread = 2; // Keep notification state if mock data is used
 
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 24);
+      setScrolled(window.scrollY > 20);
     };
 
     handleScroll();
-
-    window.addEventListener("scroll", handleScroll, {
-      passive: true,
-    });
+    window.addEventListener("scroll", handleScroll, { passive: true });
 
     return () => {
       window.removeEventListener("scroll", handleScroll);
     };
   }, []);
 
-  useEffect(() => {
-    document.body.style.overflow = menuOpen ? "hidden" : "unset";
-
-    return () => {
-      document.body.style.overflow = "unset";
-    };
-  }, [menuOpen]);
-
   const handleLogout = async () => {
-    await logoutMutation.mutateAsync();
-
-    setMenuOpen(false);
-
-    router.replace(APP_ROUTES.HOME);
+    try {
+      await logoutMutation.mutateAsync();
+      setMobileMenuOpen(false);
+      router.replace(APP_ROUTES.HOME);
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
   };
 
-  const handleNavigate = () => {
-    setMenuOpen(false);
+  const isLinkActive = (href: string) => {
+    if (href === "/") {
+      return pathname === "/";
+    }
+    return pathname.startsWith(href);
   };
 
   return (
-    <>
-      <header className="fixed z-50 w-full items-center ">
-        <div
-          className={cn(
-            "flex h-16 items-center justify-between border-b transition-all duration-300 md:px-6",
-            scrolled
-              ? "border-border bg-background/80  shadow-xl backdrop-blur-xl"
-              : "border-white/10 bg-primary/90 text-foreground backdrop-blur-md",
-          )}
+    <header
+      className={cn(
+        "w-full border-b transition-all duration-300",
+        scrolled
+          ? "border-border bg-background/80 shadow-xs backdrop-blur-md"
+          : "border-border/40 bg-background/95 backdrop-blur-xs",
+      )}
+    >
+      <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex h-16 items-center justify-between gap-4">
+        {/* Logo Area */}
+        <Link
+          href={APP_ROUTES.HOME}
+          className="flex shrink-0 items-center gap-3 select-none"
         >
-          {/* Logo */}
-          <div className="container max-w-7xl mx-auto px-6 flex items-center justify-between gap-6">
-            <Link
-              href={APP_ROUTES.HOME}
-              className="flex shrink-0 items-center gap-3"
-              onClick={handleNavigate}
-            >
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-linear-to-br from-orange-500 to-red-500 text-sm font-black text-background shadow-lg">
-                Paw
-              </div>
-
-              <div className="hidden flex-col sm:flex">
-                <span className="text-sm font-black text-background">
-                  PawHome
-                </span>
-
-                <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-background">
-                  Cứu hộ · Nhận nuôi
-                </span>
-              </div>
-            </Link>
-
-            {/* Desktop Navigation */}
-            <nav className="hidden flex-1 items-center justify-center gap-1 lg:flex">
-              {NAV_LINKS.map((link) => {
-                const active = pathname === link.href;
-
-                return (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    className={cn(
-                      " px-3 py-2 text-[13px] font-semibold transition-all duration-200",
-                      active
-                        ? "bg-ph-orange/15 text-background border-b"
-                        : "text-background hover:border-b hover:text-muted-background/10",
-                    )}
-                  >
-                    {link.label}
-                  </Link>
-                );
-              })}
-            </nav>
-
-            {/* Desktop Actions */}
-            <div className="hidden shrink-0 items-center gap-2 lg:flex">
-              {isLoggedIn ? (
-                <>
-                  <NotifBell unread={unread} />
-
-                  <Link
-                    href={APP_ROUTES.DASHBOARD}
-                    className="rounded-full border border-border bg-card px-4 py-2 text-xs font-bold text-foreground transition hover:bg-muted"
-                  >
-                    Dashboard
-                  </Link>
-
-                  <button
-                    type="button"
-                    onClick={() => void handleLogout()}
-                    disabled={logoutMutation.isPending}
-                    className="rounded-full bg-primary px-4 py-2 text-xs font-bold text-primary-foreground transition hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-60"
-                  >
-                    {logoutMutation.isPending
-                      ? "Đang đăng xuất..."
-                      : "Đăng xuất"}
-                  </button>
-                </>
-              ) : (
-                <Link
-                  href={APP_ROUTES.LOGIN}
-                  className="rounded-full bg-primary px-5 py-2 text-xs font-bold text-primary-foreground transition hover:bg-primary/90"
-                >
-                  Tham gia ngay
-                </Link>
-              )}
-            </div>
-
-            {/* Mobile Actions */}
-            <div className="flex items-center gap-2 lg:hidden">
-              {isLoggedIn && <NotifBell unread={unread} />}
-
-              <button
-                type="button"
-                onClick={() => setMenuOpen((prev) => !prev)}
-                className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted text-foreground transition hover:bg-muted/80"
-                aria-label={menuOpen ? "Đóng menu" : "Mở menu"}
-                aria-expanded={menuOpen}
-              >
-                {menuOpen ? (
-                  <X className="h-5 w-5" />
-                ) : (
-                  <Menu className="h-5 w-5" />
-                )}
-              </button>
-            </div>
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-linear-to-br from-orange-500 to-red-500 text-sm font-black text-white shadow-md">
+            Paw
           </div>
-        </div>
-      </header>
+          <div className="hidden flex-col sm:flex">
+            <span className="text-sm font-black text-foreground">PawHome</span>
+            <span className="text-[9px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">
+              Cứu hộ · Nhận nuôi
+            </span>
+          </div>
+        </Link>
 
-      {/* Mobile Drawer */}
-      <div
-        className={cn(
-          "fixed inset-0 z-40 flex flex-col overflow-y-auto bg-background/95 px-6 pb-6 pt-28 backdrop-blur-xl transition-all duration-300 lg:hidden",
-          menuOpen
-            ? "translate-y-0 opacity-100"
-            : "pointer-events-none -translate-y-4 opacity-0",
-        )}
-      >
-        {/* Mobile Navigation */}
-        <nav className="flex flex-col gap-2">
+        {/* Desktop Navigation Links */}
+        <nav className="hidden lg:flex items-center gap-6 justify-center flex-1">
           {NAV_LINKS.map((link) => {
-            const active = pathname === link.href;
-
+            const active = isLinkActive(link.href);
             return (
               <Link
                 key={link.href}
                 href={link.href}
-                onClick={handleNavigate}
                 className={cn(
-                  "rounded-2xl px-4 py-4 text-base font-bold transition-all duration-200",
+                  "relative py-2 text-sm font-semibold transition-colors duration-200 select-none",
                   active
-                    ? "bg-ph-orange/15 text-ph-orange"
-                    : "text-foreground hover:bg-muted",
+                    ? "text-primary after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-primary after:rounded-full"
+                    : "text-muted-foreground hover:text-foreground",
                 )}
               >
                 {link.label}
@@ -237,45 +147,213 @@ export default function Header() {
           })}
         </nav>
 
-        {/* Mobile Actions */}
-        <div className="mt-auto flex flex-col gap-3 pt-8">
-          {isLoggedIn ? (
+        {/* Desktop Actions Area */}
+        <div className="hidden lg:flex items-center gap-3">
+          {isLoggedIn && currentUser ? (
             <>
-              <Link
-                href={APP_ROUTES.DASHBOARD}
-                onClick={handleNavigate}
-                className="flex w-full items-center justify-center rounded-2xl border border-border bg-card py-4 text-sm font-bold text-foreground transition hover:bg-muted"
-              >
-                Dashboard
-              </Link>
+              <NotifBell unread={unread} />
 
-              <button
-                type="button"
-                onClick={() => void handleLogout()}
-                disabled={logoutMutation.isPending}
-                className="flex w-full items-center justify-center rounded-2xl bg-primary py-4 text-sm font-bold text-primary-foreground transition hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-60"
-              >
-                {logoutMutation.isPending ? "Đang đăng xuất..." : "Đăng xuất"}
-              </button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="flex items-center gap-2 p-1.5 px-3 rounded-full hover:bg-accent hover:text-accent-foreground cursor-pointer focus-visible:ring-0"
+                  >
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage
+                        src={currentUser.avatarUrl}
+                        alt={currentUser.fullName}
+                      />
+                      <AvatarFallback className="bg-primary/10 text-primary font-bold">
+                        {currentUser.fullName?.charAt(0) || "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="text-sm font-medium max-w-[120px] truncate">
+                      {currentUser.fullName}
+                    </span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56 mt-1">
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">
+                        {currentUser.fullName}
+                      </p>
+                      <p className="text-xs leading-none text-muted-foreground">
+                        {currentUser.email}
+                      </p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link
+                      href={APP_ROUTES.PROFILE}
+                      className="flex w-full items-center gap-2 cursor-pointer"
+                    >
+                      <User className="h-4 w-4" />
+                      <span>Xem trang cá nhân</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    {/* TODO: Update proper settings route if available in future */}
+                    <Link
+                      href={`${APP_ROUTES.PROFILE}?tab=settings`}
+                      className="flex w-full items-center gap-2 cursor-pointer"
+                    >
+                      <Settings className="h-4 w-4" />
+                      <span>Cài đặt</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={() => void handleLogout()}
+                    disabled={logoutMutation.isPending}
+                    className="flex w-full items-center gap-2 text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    <span>
+                      {logoutMutation.isPending
+                        ? "Đang đăng xuất..."
+                        : "Đăng xuất"}
+                    </span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </>
           ) : (
-            <Link
-              href={APP_ROUTES.LOGIN}
-              onClick={handleNavigate}
-              className="flex w-full items-center justify-center rounded-2xl bg-primary py-4 text-sm font-bold text-primary-foreground transition hover:bg-primary/90"
+            <Button
+              asChild
+              className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90 font-medium px-5 cursor-pointer"
             >
-              Tham gia ngay
-            </Link>
+              <Link href={APP_ROUTES.LOGIN}>Tham gia</Link>
+            </Button>
           )}
+        </div>
 
-          <button
-            type="button"
-            className="w-full rounded-2xl border border-border bg-card py-4 text-sm font-bold text-muted-foreground transition hover:bg-muted hover:text-foreground"
-          >
-            {isDark ? "Sáng" : "Tối"}
-          </button>
+        {/* Mobile / Tablet Controls (Hamburger Menu) */}
+        <div className="flex lg:hidden items-center gap-3">
+          {isLoggedIn && <NotifBell unread={unread} />}
+
+          <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+            <SheetTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-10 w-10 rounded-xl hover:bg-accent text-foreground cursor-pointer"
+                aria-label="Toggle menu"
+              >
+                <Menu className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-[300px] flex flex-col p-6">
+              <SheetHeader className="text-left pb-4 border-b">
+                <SheetTitle className="flex items-center gap-3">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-linear-to-br from-orange-500 to-red-500 text-xs font-black text-white">
+                    Paw
+                  </div>
+                  <span className="font-bold text-foreground">PawHome</span>
+                </SheetTitle>
+              </SheetHeader>
+
+              {/* Mobile Navigation Links */}
+              <nav className="flex flex-col gap-1 py-4 flex-1">
+                {NAV_LINKS.map((link) => {
+                  const active = isLinkActive(link.href);
+                  return (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={cn(
+                        "flex items-center px-4 py-3 text-sm font-semibold rounded-xl transition-all duration-200",
+                        active
+                          ? "bg-primary/10 text-primary"
+                          : "text-muted-foreground hover:bg-accent hover:text-foreground",
+                      )}
+                    >
+                      {link.label}
+                    </Link>
+                  );
+                })}
+              </nav>
+
+              {/* Mobile Actions Area */}
+              <div className="border-t pt-4 flex flex-col gap-3">
+                {isLoggedIn && currentUser ? (
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-3 px-2 py-2">
+                      <Avatar className="h-10 w-10">
+                        <AvatarImage
+                          src={currentUser.avatarUrl}
+                          alt={currentUser.fullName}
+                        />
+                        <AvatarFallback className="bg-primary/10 text-primary font-bold">
+                          {currentUser.fullName?.charAt(0) || "U"}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex flex-col overflow-hidden">
+                        <span className="text-sm font-semibold text-foreground truncate">
+                          {currentUser.fullName}
+                        </span>
+                        <span className="text-xs text-muted-foreground truncate">
+                          {currentUser.email}
+                        </span>
+                      </div>
+                    </div>
+
+                    <Button
+                      variant="outline"
+                      asChild
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="w-full justify-start rounded-xl cursor-pointer"
+                    >
+                      <Link href="/ho-so-cua-toi" className="flex gap-2">
+                        <User className="h-4 w-4" />
+                        <span>Xem trang cá nhân</span>
+                      </Link>
+                    </Button>
+
+                    <Button
+                      variant="outline"
+                      asChild
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="w-full justify-start rounded-xl cursor-pointer"
+                    >
+                      {/* TODO: Update proper settings route if available in future */}
+                      <Link href="/ho-so-cua-toi" className="flex gap-2">
+                        <Settings className="h-4 w-4" />
+                        <span>Cài đặt</span>
+                      </Link>
+                    </Button>
+
+                    <Button
+                      variant="destructive"
+                      onClick={() => void handleLogout()}
+                      disabled={logoutMutation.isPending}
+                      className="w-full justify-start gap-2 rounded-xl cursor-pointer mt-2"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      <span>
+                        {logoutMutation.isPending
+                          ? "Đang đăng xuất..."
+                          : "Đăng xuất"}
+                      </span>
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    asChild
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="w-full rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 font-semibold cursor-pointer"
+                  >
+                    <Link href={APP_ROUTES.LOGIN}>Tham gia ngay</Link>
+                  </Button>
+                )}
+              </div>
+            </SheetContent>
+          </Sheet>
         </div>
       </div>
-    </>
+    </header>
   );
 }
