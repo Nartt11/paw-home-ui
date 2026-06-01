@@ -68,6 +68,10 @@ function statusToBadge(status?: string) {
       label: "Da huy",
       className: "bg-slate-100 text-slate-700 hover:bg-slate-100",
     },
+    COMPLETED: {
+      label: "Hoan thanh",
+      className: "bg-blue-50 text-blue-700 hover:bg-blue-50",
+    },
   };
 
   const item = map[s] ?? { label: s };
@@ -85,6 +89,8 @@ export interface AdoptionViewDetailProps {
   onOpenChange: (open: boolean) => void;
   onApprove?: (applicationId: string) => void;
   onReject?: (applicationId: string) => void;
+  onCancel?: (applicationId: string) => void;
+  onComplete?: (applicationId: string) => void;
 }
 
 export function AdoptionViewDetail({
@@ -93,6 +99,8 @@ export function AdoptionViewDetail({
   onOpenChange,
   onApprove,
   onReject,
+  onCancel,
+  onComplete,
 }: AdoptionViewDetailProps) {
   const title = adoption
     ? `Don nhan nuoi • ${adoption.adoptionCode || adoption.applicationId}`
@@ -101,7 +109,7 @@ export function AdoptionViewDetail({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-full p-0 sm:max-w-5xl">
+      <DialogContent className="w-full p-0 sm:max-w-5xl bg-white">
         <DialogHeader className="px-6 pt-6">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="space-y-2">
@@ -132,6 +140,26 @@ export function AdoptionViewDetail({
                   disabled={!onApprove}
                 >
                   Duyet don
+                </Button>
+              </div>
+            ) : adoption?.status === "APPROVED" ? (
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="border-rose-200 text-rose-700 hover:bg-rose-50 hover:text-rose-800"
+                  onClick={() => onCancel?.(adoption.applicationId)}
+                  disabled={!onCancel}
+                >
+                  Hủy đơn
+                </Button>
+                <Button
+                  type="button"
+                  className="bg-emerald-600 text-white hover:bg-emerald-700"
+                  onClick={() => onComplete?.(adoption.applicationId)}
+                  disabled={!onComplete}
+                >
+                  Hoàn thành
                 </Button>
               </div>
             ) : null}

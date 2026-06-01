@@ -13,7 +13,12 @@ import {
   useAdoptions,
   useApproveAdoption,
   useRejectAdoption,
+  useCancelAdoption,
+  useCompleteAdoption,
 } from "@/hooks/use-adoption";
+import { getAuthErrorMessage } from "@/hooks/use-auth";
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import type {
   Adoption,
   AdoptionApprovePayload,
@@ -41,6 +46,7 @@ export default function AdoptionManagementPage() {
   const [openDetail, setOpenDetail] = React.useState(false);
   const [selectedId, setSelectedId] = React.useState<string | null>(null);
   const [decisionState, setDecisionState] = React.useState<DecisionState>(null);
+  const [pendingTab, setPendingTab] = React.useState<"ALL" | "PENDING" | "APPROVED">("ALL");
 
   const { data: currentUser } = useCurrentUser();
   const isOrganizationUser = currentUser?.roles.includes("MEMBERSHIP") && !!currentUser?.organizationRole;
@@ -65,8 +71,8 @@ export default function AdoptionManagementPage() {
   const pendingParams = React.useMemo(() => {
     const params: AdoptionListParams = {
       page: 0,
-      size: PENDING_PREVIEW_SIZE,
-      status: ["PENDING"],
+      size: 50,
+      status: ["PENDING", "APPROVED"],
     };
     if (isOrganizationUser && currentOrgId) {
       params.organizationId = currentOrgId;
@@ -81,6 +87,8 @@ export default function AdoptionManagementPage() {
   );
   const approveMutation = useApproveAdoption();
   const rejectMutation = useRejectAdoption();
+  const cancelMutation = useCancelAdoption();
+  const completeMutation = useCompleteAdoption();
 
   const adoptions = React.useMemo(
     () => adoptionsQuery.data?.content ?? [],
@@ -91,6 +99,24 @@ export default function AdoptionManagementPage() {
     [pendingAdoptionsQuery.data],
   );
   const adoptionDetail = adoptionDetailQuery.data ?? null;
+
+  const filteredPendingAdoptions = React.useMemo(() => {
+    if (pendingTab === "ALL") return pendingAdoptions;
+    return pendingAdoptions.filter((item) => item.status === pendingTab);
+  }, [pendingAdoptions, pendingTab]);
+
+  const pendingCounts = React.useMemo(() => {
+    const counts = {
+      ALL: pendingAdoptions.length,
+      PENDING: 0,
+      APPROVED: 0,
+    };
+    pendingAdoptions.forEach((item) => {
+      if (item.status === "PENDING") counts.PENDING++;
+      if (item.status === "APPROVED") counts.APPROVED++;
+    });
+    return counts;
+  }, [pendingAdoptions]);
 
   const selectedDecisionAdoption = React.useMemo<
     Adoption | AdoptionSummary | null
@@ -118,7 +144,38 @@ export default function AdoptionManagementPage() {
   const totalPages = adoptionsQuery.data?.totalPages ?? 1;
   const totalItems = adoptionsQuery.data?.totalElements ?? 0;
   const isDecisionSubmitting =
-    approveMutation.isPending || rejectMutation.isPending;
+    approveMutation.isPending ||
+    rejectMutation.isPending ||
+    cancelMutation.isPending ||
+    completeMutation.isPending;
+
+  const handleCancelAdoption = React.useCallback(
+    async (applicationId: string) => {
+      try {
+        await cancelMutation.mutateAsync(applicationId);
+        toast.success("Hủy đơn nhận nuôi thành công!");
+        setOpenDetail(false);
+        setSelectedId(null);
+      } catch (error) {
+        toast.error(getAuthErrorMessage(error, "Hủy đơn nhận nuôi thất bại."));
+      }
+    },
+    [cancelMutation],
+  );
+
+  const handleCompleteAdoption = React.useCallback(
+    async (applicationId: string) => {
+      try {
+        await completeMutation.mutateAsync(applicationId);
+        toast.success("Hoàn thành nhận nuôi thành công!");
+        setOpenDetail(false);
+        setSelectedId(null);
+      } catch (error) {
+        toast.error(getAuthErrorMessage(error, "Hoàn thành nhận nuôi thất bại."));
+      }
+    },
+    [completeMutation],
+  );
 
   const handleViewDetail = React.useCallback((applicationId: string) => {
     setSelectedId(applicationId);
@@ -182,7 +239,7 @@ export default function AdoptionManagementPage() {
         />
 
         <section className="space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="text-xl font-semibold text-foreground">
                 Đơn chờ xét duyệt
@@ -190,6 +247,45 @@ export default function AdoptionManagementPage() {
               <p className="text-sm text-muted-foreground">
                 Ưu tiên xem nhanh các hồ sơ đang chờ xử lý.
               </p>
+            </div>
+
+            <div className="flex items-center gap-1.5 bg-muted/50 p-1.5 rounded-2xl border border-border/40 w-fit shrink-0">
+              <button
+                type="button"
+                onClick={() => setPendingTab("ALL")}
+                className={cn(
+                  "px-3.5 py-1.5 text-xs font-semibold rounded-xl transition cursor-pointer select-none border border-transparent",
+                  pendingTab === "ALL"
+                    ? "bg-white text-slate-900 shadow-xs border-border/10"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                Tất cả ({pendingCounts.ALL})
+              </button>
+              <button
+                type="button"
+                onClick={() => setPendingTab("PENDING")}
+                className={cn(
+                  "px-3.5 py-1.5 text-xs font-semibold rounded-xl transition cursor-pointer select-none border border-transparent",
+                  pendingTab === "PENDING"
+                    ? "bg-white text-slate-900 shadow-xs border-border/10"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                Đợi xét duyệt ({pendingCounts.PENDING})
+              </button>
+              <button
+                type="button"
+                onClick={() => setPendingTab("APPROVED")}
+                className={cn(
+                  "px-3.5 py-1.5 text-xs font-semibold rounded-xl transition cursor-pointer select-none border border-transparent",
+                  pendingTab === "APPROVED"
+                    ? "bg-white text-slate-900 shadow-xs border-border/10"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                Đợi nhận nuôi ({pendingCounts.APPROVED})
+              </button>
             </div>
           </div>
 
@@ -206,9 +302,13 @@ export default function AdoptionManagementPage() {
             <div className="rounded-3xl border border-dashed px-6 py-10 text-center text-sm text-muted-foreground">
               Không có đơn nào đang chờ xét duyệt.
             </div>
+          ) : filteredPendingAdoptions.length === 0 ? (
+            <div className="rounded-3xl border border-dashed px-6 py-10 text-center text-sm text-muted-foreground">
+              Không có đơn nào ở trạng thái này.
+            </div>
           ) : (
             <AdoptionRequestList
-              adoptionsList={pendingAdoptions}
+              adoptionsList={filteredPendingAdoptions}
               onViewDetail={handleViewDetail}
               onApprove={canManage ? handleOpenApprove : undefined}
               onReject={canManage ? handleOpenReject : undefined}
@@ -259,6 +359,8 @@ export default function AdoptionManagementPage() {
           adoption={adoptionDetailQuery.isFetching ? null : adoptionDetail}
           onApprove={canManage ? handleOpenApprove : undefined}
           onReject={canManage ? handleOpenReject : undefined}
+          onCancel={canManage ? handleCancelAdoption : undefined}
+          onComplete={canManage ? handleCompleteAdoption : undefined}
         />
 
         {decisionState ? (
