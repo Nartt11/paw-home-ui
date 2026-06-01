@@ -4,7 +4,8 @@ import { DataTable } from "@/components/data-table";
 import { SectionCards } from "@/components/section-cards";
 
 import data from "./data.json";
-import { SiteHeader } from "@/components/site-header";
+import RequireAuth from "@/components/auth/RequireAuth";
+import { SYSTEM_ROLES, ORGANIZATION_ROLES } from "@/constants/roles";
 
 export const metadata: Metadata = {
   title: "Dashboard",
@@ -13,16 +14,25 @@ export const metadata: Metadata = {
 
 export default function Page() {
   return (
-    <div className="flex flex-1 flex-col">
-      <div className="@container/main flex flex-1 flex-col gap-2">
-        <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-          <SectionCards />
-          <div className="px-4 lg:px-6">
-            <ChartAreaInteractive />
+    <RequireAuth
+      allowedSystemRoles={[SYSTEM_ROLES.ADMIN]}
+      allowedOrganizationRoles={[
+        ORGANIZATION_ROLES.OWNER,
+        ORGANIZATION_ROLES.STAFF,
+        ORGANIZATION_ROLES.MEMBER,
+      ]}
+    >
+      <div className="flex flex-1 flex-col">
+        <div className="@container/main flex flex-1 flex-col gap-2">
+          <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
+            <SectionCards />
+            <div className="px-4 lg:px-6">
+              <ChartAreaInteractive />
+            </div>
+            <DataTable data={data} />
           </div>
-          <DataTable data={data} />
         </div>
       </div>
-    </div>
+    </RequireAuth>
   );
 }

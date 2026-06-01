@@ -58,12 +58,14 @@ export interface RescueCaseMarkers {
   status?: RescueCaseStatus[];
   priority?: RescueCasePriority[];
   species?: string;
+  organizationId?: string;
 }
 export interface RescueCaseBoundingBoxParams extends ListParams {
   minLat: number;
   maxLat: number;
   minLng: number;
   maxLng: number;
+  organizationId?: string;
 }
 
 export interface RescueCasePayload {

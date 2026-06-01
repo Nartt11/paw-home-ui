@@ -23,6 +23,10 @@ import {
 import type { OrganizationSummary } from "@/types/organization.type";
 import type { RescueCaseBoundingBoxParams, RescueCaseMarkers, RescueCasePayload, RescueCaseSummary } from "@/types/rescue-case.type";
 
+import { useCurrentUser } from "@/hooks/use-current-user";
+import RequireAuth from "@/components/auth/RequireAuth";
+import { SYSTEM_ROLES, ORGANIZATION_ROLES } from "@/constants/roles";
+
 const Map = dynamic(() => import("@/components/map-rescue/MapRescue"), {
   ssr: false,
   loading: () => (
@@ -65,9 +69,40 @@ export default function RescueCaseManagementPage() {
   const [organizationViewOpen, setOrganizationViewOpen] = React.useState(false);
   const [selectedRescueId, setSelectedRescueId] = React.useState<string | null>(null);
   const [selectedOrganizationId, setSelectedOrganizationId] = React.useState<string | null>(null);
+  const [zoomToLocation, setZoomToLocation] = React.useState<{
+    latitude: number;
+    longitude: number;
+    zoom?: number;
+    timestamp: number;
+  } | null>(null);
 
-  const rescueMarkersQuery = useRescueMapMarkers(VIETNAM_MARKER_BOUNDS);
-  const rescueBoundingBoxQuery = useRescueCasesInBoundingBox(VIETNAM_BOUNDS);
+  const { data: currentUser } = useCurrentUser();
+  const isOrganizationUser = currentUser?.roles.includes("MEMBERSHIP") && !!currentUser?.organizationRole;
+  const currentOrgId = isOrganizationUser ? currentUser?.organizationId : undefined;
+
+  const canCreate = React.useMemo(() => {
+    if (!isOrganizationUser) return true;
+    return currentUser?.organizationRole === ORGANIZATION_ROLES.OWNER || currentUser?.organizationRole === ORGANIZATION_ROLES.STAFF;
+  }, [isOrganizationUser, currentUser?.organizationRole]);
+
+  const markerParams = React.useMemo(() => {
+    const params: RescueCaseMarkers = { ...VIETNAM_MARKER_BOUNDS };
+    if (isOrganizationUser && currentOrgId) {
+      params.organizationId = currentOrgId;
+    }
+    return params;
+  }, [isOrganizationUser, currentOrgId]);
+
+  const boundingBoxParams = React.useMemo(() => {
+    const params: RescueCaseBoundingBoxParams = { ...VIETNAM_BOUNDS };
+    if (isOrganizationUser && currentOrgId) {
+      params.organizationId = currentOrgId;
+    }
+    return params;
+  }, [isOrganizationUser, currentOrgId]);
+
+  const rescueMarkersQuery = useRescueMapMarkers(markerParams);
+  const rescueBoundingBoxQuery = useRescueCasesInBoundingBox(boundingBoxParams);
   const organizationMarkersQuery = useOrganizationMapMarkers({
     minLat: VIETNAM_BOUNDS.minLat,
     maxLat: VIETNAM_BOUNDS.maxLat,
@@ -89,27 +124,33 @@ export default function RescueCaseManagementPage() {
     () => rescueBoundingBoxQuery.data?.content ?? [],
     [rescueBoundingBoxQuery.data],
   );
-  const organizations = React.useMemo(
-    () => organizationBoundingBoxQuery.data?.content ?? [],
-    [organizationBoundingBoxQuery.data],
-  );
+  const organizations = React.useMemo(() => {
+    const content = organizationBoundingBoxQuery.data?.content ?? [];
+    if (isOrganizationUser && currentOrgId) {
+      return content.filter(o => o.organizationId === currentOrgId);
+    }
+    return content;
+  }, [organizationBoundingBoxQuery.data, isOrganizationUser, currentOrgId]);
+
   const rescueMarkers: RescueMapMarker[] = React.useMemo(
     () => (rescueMarkersQuery.data ?? []).map((marker) => ({ ...marker })),
     [rescueMarkersQuery.data],
   );
-  const organizationMarkers: OrganizationMapMarker[] = React.useMemo(
-    () =>
-      (organizationMarkersQuery.data ?? []).map((item) => ({
-        organizationId: item.organizationId,
-        name: item.name,
-        latitude: item.latitude,
-        longitude: item.longitude,
-        type: item.type,
-        provinceName: item.provinceName,
-        wardName: item.wardName,
-      })),
-    [organizationMarkersQuery.data],
-  );
+  const organizationMarkers: OrganizationMapMarker[] = React.useMemo(() => {
+    const markers = (organizationMarkersQuery.data ?? []).map((item) => ({
+      organizationId: item.organizationId,
+      name: item.name,
+      latitude: item.latitude,
+      longitude: item.longitude,
+      type: item.type,
+      provinceName: item.provinceName,
+      wardName: item.wardName,
+    }));
+    if (isOrganizationUser && currentOrgId) {
+      return markers.filter(o => o.organizationId === currentOrgId);
+    }
+    return markers;
+  }, [organizationMarkersQuery.data, isOrganizationUser, currentOrgId]);
   const totalRescueCases = rescueBoundingBoxQuery.data?.totalElements ?? 0;
   const totalOrganizations =
     organizationBoundingBoxQuery.data?.totalElements ??
@@ -159,6 +200,36 @@ export default function RescueCaseManagementPage() {
     [],
   );
 
+  const handleCardRescueClick = React.useCallback(
+    (caseId: string) => {
+      const marker = rescueMarkers.find((m) => m.caseId === caseId);
+      if (marker) {
+        setZoomToLocation({
+          latitude: marker.latitude,
+          longitude: marker.longitude,
+          zoom: 16,
+          timestamp: Date.now(),
+        });
+      }
+    },
+    [rescueMarkers],
+  );
+
+  const handleCardOrganizationClick = React.useCallback(
+    (organizationId: string) => {
+      const marker = organizationMarkers.find((m) => m.organizationId === organizationId);
+      if (marker) {
+        setZoomToLocation({
+          latitude: marker.latitude,
+          longitude: marker.longitude,
+          zoom: 16,
+          timestamp: Date.now(),
+        });
+      }
+    },
+    [organizationMarkers],
+  );
+
   const handleCreateRescueCase = React.useCallback(
     async (values: RescueCaseCreateValues) => {
       await createRescueCaseMutation.mutateAsync(toCreateRescuePayload(values));
@@ -196,7 +267,7 @@ export default function RescueCaseManagementPage() {
         <button
           key={caseItem.caseId}
           type="button"
-          onClick={() => handleOpenDetail(caseItem.caseId)}
+          onClick={() => handleCardRescueClick(caseItem.caseId)}
           className="w-full rounded-xl border p-4 text-left transition hover:border-primary hover:bg-muted/40"
         >
           <div className="flex items-start justify-between gap-3">
@@ -224,7 +295,7 @@ export default function RescueCaseManagementPage() {
         </button>
       ));
     },
-    [handleOpenDetail, isLoadingMap],
+    [handleCardRescueClick, isLoadingMap],
   );
 
   const renderOrganizationList = React.useCallback(
@@ -250,7 +321,7 @@ export default function RescueCaseManagementPage() {
         <button
           key={organization.organizationId}
           type="button"
-          onClick={() => handleOpenOrganizationDetail(organization.organizationId)}
+          onClick={() => handleCardOrganizationClick(organization.organizationId)}
           className="w-full rounded-xl border p-4 text-left transition hover:border-primary hover:bg-muted/40"
         >
           <div className="flex items-start justify-between gap-3">
@@ -286,17 +357,25 @@ export default function RescueCaseManagementPage() {
         </button>
       ));
     },
-    [handleOpenOrganizationDetail, isLoadingMap],
+    [handleCardOrganizationClick, isLoadingMap],
   );
 
   return (
-    <div className="space-y-6">
-      <TitlePerPage
-        title="Quản lý ca cứu trợ"
-        description="Theo dõi trực quan các ca cứu trợ và tổ chức hỗ trợ trên bản đồ."
-        buttonText="Báo cáo ca cứu trợ mới"
-        handleOpenModal={() => setCreateOpen(true)}
-      />
+    <RequireAuth
+      allowedSystemRoles={[SYSTEM_ROLES.ADMIN]}
+      allowedOrganizationRoles={[
+        ORGANIZATION_ROLES.OWNER,
+        ORGANIZATION_ROLES.STAFF,
+        ORGANIZATION_ROLES.MEMBER,
+      ]}
+    >
+      <div className="space-y-6">
+        <TitlePerPage
+          title="Quản lý ca cứu trợ"
+          description="Theo dõi trực quan các ca cứu trợ và tổ chức hỗ trợ trên bản đồ."
+          buttonText={canCreate ? "Báo cáo ca cứu trợ mới" : undefined}
+          handleOpenModal={() => setCreateOpen(true)}
+        />
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         <Card>
@@ -367,6 +446,7 @@ export default function RescueCaseManagementPage() {
             loading={isLoadingMap}
             onRescueMarkerClick={handleOpenDetail}
             onOrganizationMarkerClick={handleOpenOrganizationDetail}
+            zoomToLocation={zoomToLocation}
           />
         </div>
 
@@ -468,5 +548,6 @@ export default function RescueCaseManagementPage() {
         />
       ) : null}
     </div>
+    </RequireAuth>
   );
 }

@@ -15,6 +15,7 @@ export const APP_ROUTES = {
   DASHBOARD: "/dashboard",
   ADOPTION_MANAGEMENT: "/quan-ly-nhan-nuoi",
   PET_MANAGEMENT: "/quan-ly-thu-cung",
+  ORGANIZATION_MEMBER_MANAGEMENT: "/organization/members",
   RESCUE_CASE_MANAGEMENT: "/quan-ly-cuu-tro",
   CENTER_MANAGEMENT: "/quan-ly-trung-tam",
   BANNER_MANAGEMENT: "/quan-ly-banner",

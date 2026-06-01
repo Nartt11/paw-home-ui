@@ -19,7 +19,11 @@ import type {
   AdoptionApprovePayload,
   AdoptionRejectPayload,
   AdoptionSummary,
+  AdoptionListParams,
 } from "@/types/adoption.type";
+import { useCurrentUser } from "@/hooks/use-current-user";
+import RequireAuth from "@/components/auth/RequireAuth";
+import { SYSTEM_ROLES, ORGANIZATION_ROLES } from "@/constants/roles";
 
 type DecisionState =
   | {
@@ -38,15 +42,40 @@ export default function AdoptionManagementPage() {
   const [selectedId, setSelectedId] = React.useState<string | null>(null);
   const [decisionState, setDecisionState] = React.useState<DecisionState>(null);
 
-  const adoptionsQuery = useAdoptions({
-    page,
-    size: pageSize,
-  });
-  const pendingAdoptionsQuery = useAdoptions({
-    page: 0,
-    size: PENDING_PREVIEW_SIZE,
-    status: ["PENDING"],
-  });
+  const { data: currentUser } = useCurrentUser();
+  const isOrganizationUser = currentUser?.roles.includes("MEMBERSHIP") && !!currentUser?.organizationRole;
+  const currentOrgId = isOrganizationUser ? currentUser?.organizationId : undefined;
+
+  const canManage = React.useMemo(() => {
+    if (!isOrganizationUser) return true; // ADMIN can manage
+    return currentUser?.organizationRole === ORGANIZATION_ROLES.OWNER || currentUser?.organizationRole === ORGANIZATION_ROLES.STAFF;
+  }, [isOrganizationUser, currentUser?.organizationRole]);
+
+  const adoptionsParams = React.useMemo(() => {
+    const params: AdoptionListParams = {
+      page,
+      size: pageSize,
+    };
+    if (isOrganizationUser && currentOrgId) {
+      params.organizationId = currentOrgId;
+    }
+    return params;
+  }, [page, pageSize, isOrganizationUser, currentOrgId]);
+
+  const pendingParams = React.useMemo(() => {
+    const params: AdoptionListParams = {
+      page: 0,
+      size: PENDING_PREVIEW_SIZE,
+      status: ["PENDING"],
+    };
+    if (isOrganizationUser && currentOrgId) {
+      params.organizationId = currentOrgId;
+    }
+    return params;
+  }, [isOrganizationUser, currentOrgId]);
+
+  const adoptionsQuery = useAdoptions(adoptionsParams);
+  const pendingAdoptionsQuery = useAdoptions(pendingParams);
   const adoptionDetailQuery = useAdoptionDetail(
     openDetail ? selectedId ?? undefined : undefined,
   );
@@ -138,103 +167,112 @@ export default function AdoptionManagementPage() {
   );
 
   return (
-    <div className="space-y-6">
-      <TitlePerPage
-        title="Quan ly nhan nuoi"
-        description="Theo doi don nhan nuoi, xu ly phe duyet va xem chi tiet ho so."
-      />
+    <RequireAuth
+      allowedSystemRoles={[SYSTEM_ROLES.ADMIN]}
+      allowedOrganizationRoles={[
+        ORGANIZATION_ROLES.OWNER,
+        ORGANIZATION_ROLES.STAFF,
+        ORGANIZATION_ROLES.MEMBER,
+      ]}
+    >
+      <div className="space-y-6">
+        <TitlePerPage
+          title="Quản lý nhận nuôi"
+          description="Theo dõi đơn nhận nuôi, xử lý phê duyệt và xem chi tiết hồ sơ."
+        />
 
-      <section className="space-y-4">
-        <div className="flex items-center justify-between">
+        <section className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-semibold text-foreground">
+                Đơn chờ xét duyệt
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Ưu tiên xem nhanh các hồ sơ đang chờ xử lý.
+              </p>
+            </div>
+          </div>
+
+          {pendingAdoptionsQuery.isPending ? (
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {Array.from({ length: 3 }).map((_, index) => (
+                <div
+                  key={index}
+                  className="h-72 animate-pulse rounded-3xl border bg-muted/40"
+                />
+              ))}
+            </div>
+          ) : pendingAdoptions.length === 0 ? (
+            <div className="rounded-3xl border border-dashed px-6 py-10 text-center text-sm text-muted-foreground">
+              Không có đơn nào đang chờ xét duyệt.
+            </div>
+          ) : (
+            <AdoptionRequestList
+              adoptionsList={pendingAdoptions}
+              onViewDetail={handleViewDetail}
+              onApprove={canManage ? handleOpenApprove : undefined}
+              onReject={canManage ? handleOpenReject : undefined}
+            />
+          )}
+        </section>
+
+        <section className="space-y-4">
           <div>
             <h2 className="text-xl font-semibold text-foreground">
-              Don cho xet duyet
+              Tất cả đơn nhận nuôi
             </h2>
             <p className="text-sm text-muted-foreground">
-              Uu tien xem nhanh cac ho so dang cho xu ly.
+              Danh sách tổng hợp hồ sơ nhận nuôi, hiển thị thông tin pet và người nộp đơn.
             </p>
           </div>
-        </div>
 
-        {pendingAdoptionsQuery.isPending ? (
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {Array.from({ length: 3 }).map((_, index) => (
-              <div
-                key={index}
-                className="h-72 animate-pulse rounded-3xl border bg-muted/40"
-              />
-            ))}
-          </div>
-        ) : pendingAdoptions.length === 0 ? (
-          <div className="rounded-3xl border border-dashed px-6 py-10 text-center text-sm text-muted-foreground">
-            Khong co don nao dang cho xet duyet.
-          </div>
-        ) : (
-          <AdoptionRequestList
-            adoptionsList={pendingAdoptions}
+          <AdoptionListTable
+            data={adoptions}
+            loading={adoptionsQuery.isPending}
             onViewDetail={handleViewDetail}
-            onApprove={handleOpenApprove}
-            onReject={handleOpenReject}
+            onApprove={canManage ? handleOpenApprove : undefined}
+            onReject={canManage ? handleOpenReject : undefined}
           />
-        )}
-      </section>
 
-      <section className="space-y-4">
-        <div>
-          <h2 className="text-xl font-semibold text-foreground">
-            Tat ca don nhan nuoi
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            Danh sach tong hop ho so nhan nuoi, hien thi thong tin pet va nguoi nop don.
-          </p>
-        </div>
+          <PageControls
+            page={page}
+            pageSize={pageSize}
+            pageSizeOptions={[10, 20, 30]}
+            totalPages={totalPages}
+            totalItems={totalItems}
+            onPageChange={setPage}
+            onPageSizeChange={(nextSize) => {
+              setPageSize(nextSize);
+              setPage(0);
+            }}
+          />
+        </section>
 
-        <AdoptionListTable
-          data={adoptions}
-          loading={adoptionsQuery.isPending}
-          onViewDetail={handleViewDetail}
-          onApprove={handleOpenApprove}
-          onReject={handleOpenReject}
-        />
-
-        <PageControls
-          page={page}
-          pageSize={pageSize}
-          pageSizeOptions={[10, 20, 30]}
-          totalPages={totalPages}
-          totalItems={totalItems}
-          onPageChange={setPage}
-          onPageSizeChange={(nextSize) => {
-            setPageSize(nextSize);
-            setPage(0);
+        <AdoptionViewDetail
+          open={openDetail}
+          onOpenChange={(nextOpen) => {
+            setOpenDetail(nextOpen);
+            if (!nextOpen) {
+              setSelectedId(null);
+            }
           }}
+          adoption={adoptionDetailQuery.isFetching ? null : adoptionDetail}
+          onApprove={canManage ? handleOpenApprove : undefined}
+          onReject={canManage ? handleOpenReject : undefined}
         />
-      </section>
 
-      <AdoptionViewDetail
-        open={openDetail}
-        onOpenChange={(nextOpen) => {
-          setOpenDetail(nextOpen);
-          if (!nextOpen) {
-            setSelectedId(null);
-          }
-        }}
-        adoption={adoptionDetailQuery.isFetching ? null : adoptionDetail}
-        onApprove={handleOpenApprove}
-        onReject={handleOpenReject}
-      />
-
-      {decisionState ? (
-        <AdoptionDecisionDialog
-          open={Boolean(decisionState)}
-          onOpenChange={handleDecisionOpenChange}
-          mode={decisionState.mode}
-          submitting={isDecisionSubmitting}
-          applicantName={selectedDecisionAdoption?.applicantUsername}
-          petName={selectedDecisionAdoption?.petName}
-          onSubmit={handleSubmitDecision}
-        />
-      ) : null}
-    </div>
+        {decisionState ? (
+          <AdoptionDecisionDialog
+            open={Boolean(decisionState)}
+            onOpenChange={handleDecisionOpenChange}
+            mode={decisionState.mode}
+            submitting={isDecisionSubmitting}
+            applicantName={selectedDecisionAdoption?.applicantUsername}
+            petName={selectedDecisionAdoption?.petName}
+            onSubmit={handleSubmitDecision}
+          />
+        ) : null}
+      </div>
+    </RequireAuth>
   );
 }

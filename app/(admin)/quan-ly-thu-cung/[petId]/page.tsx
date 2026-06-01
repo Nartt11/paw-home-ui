@@ -22,6 +22,10 @@ import {
   Trash2,
 } from "lucide-react";
 
+import { useCurrentUser } from "@/hooks/use-current-user";
+import RequireAuth from "@/components/auth/RequireAuth";
+import { SYSTEM_ROLES, ORGANIZATION_ROLES } from "@/constants/roles";
+
 import {
   useDeletePet,
   useDeletePetMedia,
@@ -126,6 +130,9 @@ export default function PetDetailPage() {
   const petId = params?.petId;
   const router = useRouter();
 
+  const { data: currentUser } = useCurrentUser();
+  const isOrganizationUser = currentUser?.roles.includes("MEMBERSHIP") && !!currentUser?.organizationRole;
+
   const petQuery = usePetDetail(petId);
   const medicalRecordsQuery = usePetMedicalRecords(petId, {
     petId,
@@ -146,6 +153,18 @@ export default function PetDetailPage() {
   const updatePrimaryMediaMutation = useUpdatePetMediaPrimary();
 
   const pet = petQuery.data ?? null;
+
+  const canModify = React.useMemo(() => {
+    if (!isOrganizationUser) return true;
+    return currentUser?.organizationRole === ORGANIZATION_ROLES.OWNER || currentUser?.organizationRole === ORGANIZATION_ROLES.STAFF;
+  }, [isOrganizationUser, currentUser?.organizationRole]);
+
+  const isMyOrganizationPet = React.useMemo(() => {
+    if (!isOrganizationUser) return true;
+    const petOrgId = pet?.organization?.organizationId || pet?.shelterId;
+    return petOrgId === currentUser?.organizationId;
+  }, [isOrganizationUser, pet?.organization?.organizationId, pet?.shelterId, currentUser?.organizationId]);
+
   const medicalRecords = medicalRecordsQuery.data?.content ?? [];
   const mediaItems = mediaQuery.data?.content ?? [];
   const ownerships = ownershipsQuery.data?.content ?? [];
@@ -296,7 +315,20 @@ export default function PetDetailPage() {
   }
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-700">
+    <RequireAuth
+      allowedSystemRoles={[SYSTEM_ROLES.ADMIN]}
+      allowedOrganizationRoles={[
+        ORGANIZATION_ROLES.OWNER,
+        ORGANIZATION_ROLES.STAFF,
+        ORGANIZATION_ROLES.MEMBER,
+      ]}
+    >
+      {!isMyOrganizationPet ? (
+        <div className="flex min-h-[40vh] items-center justify-center text-sm text-muted-foreground">
+          Bạn không có quyền truy cập hồ sơ thú cưng của tổ chức khác.
+        </div>
+      ) : (
+        <div className="space-y-8 animate-in fade-in duration-700">
       <div className="flex flex-col justify-between gap-6 md:flex-row md:items-center">
         <div className="flex items-center gap-4">
           <Button
@@ -331,13 +363,15 @@ export default function PetDetailPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <Button
-            variant="outline"
-            className="h-11 rounded-xl border-border px-6 font-bold text-muted-foreground"
-            onClick={handleOpenUpdateDialog}
-          >
-            Cập nhật
-          </Button>
+          {canModify && (
+            <Button
+              variant="outline"
+              className="h-11 rounded-xl border-border px-6 font-bold text-muted-foreground"
+              onClick={handleOpenUpdateDialog}
+            >
+              Cập nhật
+            </Button>
+          )}
 
           <Button
             variant="outline"
@@ -754,23 +788,27 @@ export default function PetDetailPage() {
                 label="Mở thư viện"
                 onClick={() => setActiveTab("media")}
               />
-              <ActionButton
-                icon={RefreshCw}
-                label="Cập nhật"
-                onClick={handleOpenUpdateDialog}
-              />
+              {canModify && (
+                <ActionButton
+                  icon={RefreshCw}
+                  label="Cập nhật"
+                  onClick={handleOpenUpdateDialog}
+                />
+              )}
               <ActionButton
                 icon={RefreshCw}
                 label="Làm mới"
                 onClick={handleRefreshDetail}
               />
-              <ActionButton
-                icon={Trash2}
-                label="Xóa hồ sơ"
-                color="text-red-600 bg-red-50"
-                onClick={() => void handleDeletePet()}
-                disabled={deletePetMutation.isPending}
-              />
+              {canModify && (
+                <ActionButton
+                  icon={Trash2}
+                  label="Xóa hồ sơ"
+                  color="text-red-600 bg-red-50"
+                  onClick={() => void handleDeletePet()}
+                  disabled={deletePetMutation.isPending}
+                />
+              )}
             </div>
           </div>
 
@@ -881,6 +919,8 @@ export default function PetDetailPage() {
         onSubmit={(values) => void handleUpdatePet(values)}
       />
     </div>
+      )}
+    </RequireAuth>
   );
 }
 

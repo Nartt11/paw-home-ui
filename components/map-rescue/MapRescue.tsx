@@ -45,6 +45,7 @@ interface MapProps {
   showUserLocation?: boolean;
   onRescueMarkerClick?: (caseId: string) => void;
   onOrganizationMarkerClick?: (organizationId: string) => void;
+  zoomToLocation?: { latitude: number; longitude: number; zoom?: number } | null;
 }
 
 const DEFAULT_CENTER: [number, number] = [10.8702, 106.8029];
@@ -110,6 +111,26 @@ function FitMapBounds({
   return null;
 }
 
+function MapViewController({
+  zoomToLocation,
+}: {
+  zoomToLocation?: { latitude: number; longitude: number; zoom?: number } | null;
+}) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (zoomToLocation) {
+      const { latitude, longitude, zoom = 16 } = zoomToLocation;
+      map.flyTo([latitude, longitude], zoom, {
+        animate: true,
+        duration: 1.0,
+      });
+    }
+  }, [map, zoomToLocation]);
+
+  return null;
+}
+
 export default function MapRescue({
   rescueMarkers = [],
   organizationMarkers = [],
@@ -120,6 +141,7 @@ export default function MapRescue({
   showUserLocation = true,
   onRescueMarkerClick,
   onOrganizationMarkerClick,
+  zoomToLocation,
 }: MapProps) {
   const [mapCenter, setMapCenter] = useState<[number, number]>(initialCenter);
   const [userLocation, setUserLocation] = useState<[number, number] | null>(
@@ -179,6 +201,8 @@ export default function MapRescue({
           organizationMarkers={validOrganizationMarkers}
         />
 
+        <MapViewController zoomToLocation={zoomToLocation} />
+
         {userLocation && (
           <Marker position={userLocation} icon={createMarkerIcon("organization")}>
             <Popup>
@@ -201,19 +225,7 @@ export default function MapRescue({
               eventHandlers={{
                 click: () => onOrganizationMarkerClick?.(marker.organizationId),
               }}
-            >
-              <Popup>
-                <div className="space-y-1">
-                  <p className="font-semibold">{marker.name}</p>
-                  <p className="text-sm">{marker.type ?? "ORGANIZATION"}</p>
-                  <p className="text-xs text-gray-500">
-                    {[marker.wardName, marker.provinceName]
-                      .filter(Boolean)
-                      .join(", ") || "Chưa có địa chỉ"}
-                  </p>
-                </div>
-              </Popup>
-            </Marker>
+            />
           ))}
 
         {!loading &&
@@ -227,19 +239,7 @@ export default function MapRescue({
               eventHandlers={{
                 click: () => onRescueMarkerClick?.(marker.caseId),
               }}
-            >
-              <Popup>
-                <div className="space-y-2">
-                  <div className="font-semibold">{marker.caseCode ?? marker.caseId}</div>
-                  <div className="text-sm">Loài: {marker.species ?? "—"}</div>
-                  <div className="text-xs text-gray-500">
-                    {marker.reportedAt
-                      ? new Date(marker.reportedAt).toLocaleDateString("vi-VN")
-                      : "Chưa có thời gian báo cáo"}
-                  </div>
-                </div>
-              </Popup>
-            </Marker>
+            />
           ))}
       </MapContainer>
 

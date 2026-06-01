@@ -27,6 +27,8 @@ import {
 
 import { APP_ROUTES } from "@/constants/routes";
 import { useCurrentUser } from "@/hooks/use-current-user";
+import { SYSTEM_ROLES, ORGANIZATION_ROLES } from "@/constants/roles";
+import { canAccessByRoles } from "@/lib/permission";
 
 const data = {
   navSystem: [
@@ -34,26 +36,51 @@ const data = {
       title: "Dashboard",
       url: `${APP_ROUTES.DASHBOARD}`,
       icon: <LayoutDashboardIcon />,
+      allowedSystemRoles: [SYSTEM_ROLES.ADMIN],
+      allowedOrganizationRoles: [
+        ORGANIZATION_ROLES.OWNER,
+        ORGANIZATION_ROLES.STAFF,
+        ORGANIZATION_ROLES.MEMBER,
+      ],
     },
     {
       title: "Quản lý thú cưng",
       url: `${APP_ROUTES.PET_MANAGEMENT}`,
       icon: <ListIcon />,
+      allowedSystemRoles: [SYSTEM_ROLES.ADMIN],
+      allowedOrganizationRoles: [
+        ORGANIZATION_ROLES.OWNER,
+        ORGANIZATION_ROLES.STAFF,
+        ORGANIZATION_ROLES.MEMBER,
+      ],
+    },
+    {
+      title: "Quản lý thành viên",
+      url: `${APP_ROUTES.ORGANIZATION_MEMBER_MANAGEMENT}`,
+      icon: <FolderIcon />,
+      allowedSystemRoles: [],
+      allowedOrganizationRoles: [
+        ORGANIZATION_ROLES.OWNER,
+        ORGANIZATION_ROLES.STAFF,
+      ],
     },
     {
       title: "Quản lý trung tâm",
       url: `${APP_ROUTES.CENTER_MANAGEMENT}`,
       icon: <ChartBarIcon />,
+      allowedSystemRoles: [SYSTEM_ROLES.ADMIN],
     },
     {
       title: "Quản lý người dùng",
       url: `${APP_ROUTES.USER_MANAGEMENT}`,
       icon: <FolderIcon />,
+      allowedSystemRoles: [SYSTEM_ROLES.ADMIN],
     },
     {
       title: "Quản lý bài đăng",
       url: `${APP_ROUTES.POST_MANAGEMENT}`,
       icon: <LayoutDashboardIcon />,
+      allowedSystemRoles: [SYSTEM_ROLES.ADMIN],
     },
   ],
   navContent: [
@@ -61,11 +88,13 @@ const data = {
       title: "Quản lý bài tin tức",
       url: `${APP_ROUTES.NEWS_MANAGEMENT}`,
       icon: <LayoutDashboardIcon />,
+      allowedSystemRoles: [SYSTEM_ROLES.ADMIN],
     },
     {
       title: "Quản lý banner",
       url: `${APP_ROUTES.BANNER_MANAGEMENT}`,
       icon: <LayoutDashboardIcon />,
+      allowedSystemRoles: [SYSTEM_ROLES.ADMIN],
     },
   ],
   navOperation: [
@@ -73,11 +102,23 @@ const data = {
       title: "Quản lý cứu trợ",
       url: `${APP_ROUTES.RESCUE_CASE_MANAGEMENT}`,
       icon: <LayoutDashboardIcon />,
+      allowedSystemRoles: [SYSTEM_ROLES.ADMIN],
+      allowedOrganizationRoles: [
+        ORGANIZATION_ROLES.OWNER,
+        ORGANIZATION_ROLES.STAFF,
+        ORGANIZATION_ROLES.MEMBER,
+      ],
     },
     {
       title: "Quản lý nhận nuôi",
       url: `${APP_ROUTES.ADOPTION_MANAGEMENT}`,
       icon: <ListIcon />,
+      allowedSystemRoles: [SYSTEM_ROLES.ADMIN],
+      allowedOrganizationRoles: [
+        ORGANIZATION_ROLES.OWNER,
+        ORGANIZATION_ROLES.STAFF,
+        ORGANIZATION_ROLES.MEMBER,
+      ],
     },
   ],
   navSecondary: [
@@ -108,6 +149,24 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     avatar: "",
   };
 
+  const filterNavItems = React.useCallback(
+    (items: typeof data.navSystem) => {
+      return items.filter((item) =>
+        canAccessByRoles({
+          userSystemRoles: currentUser?.roles ?? [],
+          userOrganizationRole: currentUser?.organizationRole,
+          allowedSystemRoles: item.allowedSystemRoles,
+          allowedOrganizationRoles: item.allowedOrganizationRoles,
+        })
+      );
+    },
+    [currentUser]
+  );
+
+  const filteredNavSystem = React.useMemo(() => filterNavItems(data.navSystem), [filterNavItems, data.navSystem]);
+  const filteredNavOperation = React.useMemo(() => filterNavItems(data.navOperation), [filterNavItems, data.navOperation]);
+  const filteredNavContent = React.useMemo(() => filterNavItems(data.navContent), [filterNavItems, data.navContent]);
+
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
@@ -126,9 +185,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain label="Quản lý hệ thống" items={data.navSystem} />
-        <NavMain label="Hoạt động cứu trợ" items={data.navOperation} />
-        <NavMain label="Quản lý nội dung" items={data.navContent} />
+        {filteredNavSystem.length > 0 && (
+          <NavMain label="Quản lý hệ thống" items={filteredNavSystem} />
+        )}
+        {filteredNavOperation.length > 0 && (
+          <NavMain label="Hoạt động cứu trợ" items={filteredNavOperation} />
+        )}
+        {filteredNavContent.length > 0 && (
+          <NavMain label="Quản lý nội dung" items={filteredNavContent} />
+        )}
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>

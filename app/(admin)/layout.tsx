@@ -26,7 +26,10 @@ export default function AdminLayout({
         } as React.CSSProperties
       }
     >
-      <RequireAuth allowedRoles={["ADMIN", "STAFF", "OWNER", "VET"]}>
+      <RequireAuth
+        allowedSystemRoles={["ADMIN"]}
+        allowedOrganizationRoles={["OWNER", "STAFF", "MEMBER"]}
+      >
         <AppSidebar variant="inset" />
         <SidebarInset>
           <SiteHeader />

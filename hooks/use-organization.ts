@@ -192,6 +192,42 @@ export function useRemoveOrganizationMember() {
   });
 }
 
+export function useAddOrganizationMember() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, payload }: { id: string; payload: { email: string; role: string } }) =>
+      organizationService.addMember(id, payload),
+
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: organizationKeys.members(),
+      });
+      queryClient.invalidateQueries({
+        queryKey: organizationKeys.detail(variables.id),
+      });
+    },
+  });
+}
+
+export function useUpdateOrganizationMemberRole() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, userId, payload }: { id: string; userId: string; payload: { role: string } }) =>
+      organizationService.updateMemberRole(id, userId, payload),
+
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: organizationKeys.members(),
+      });
+      queryClient.invalidateQueries({
+        queryKey: organizationKeys.detail(variables.id),
+      });
+    },
+  });
+}
+
 export function useDeactivateOrganization() {
   const queryClient = useQueryClient();
 

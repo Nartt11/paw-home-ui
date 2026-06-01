@@ -79,6 +79,12 @@ export default function MapRescuePage() {
   const [selectedOrganizationId, setSelectedOrganizationId] = useState<
     string | null
   >(null);
+  const [zoomToLocation, setZoomToLocation] = useState<{
+    latitude: number;
+    longitude: number;
+    zoom?: number;
+    timestamp: number;
+  } | null>(null);
 
   const rescueMarkersQuery = useRescueMapMarkers(VIETNAM_MARKER_BOUNDS);
   const rescueBoundingBoxQuery = useRescueCasesInBoundingBox(VIETNAM_BOUNDS);
@@ -167,6 +173,36 @@ export default function MapRescuePage() {
     }
   }, []);
 
+  const handleCardRescueClick = useCallback(
+    (caseId: string) => {
+      const marker = rescueMarkers.find((m) => m.caseId === caseId);
+      if (marker) {
+        setZoomToLocation({
+          latitude: marker.latitude,
+          longitude: marker.longitude,
+          zoom: 16,
+          timestamp: Date.now(),
+        });
+      }
+    },
+    [rescueMarkers],
+  );
+
+  const handleCardOrganizationClick = useCallback(
+    (organizationId: string) => {
+      const marker = organizationMarkers.find((m) => m.organizationId === organizationId);
+      if (marker) {
+        setZoomToLocation({
+          latitude: marker.latitude,
+          longitude: marker.longitude,
+          zoom: 16,
+          timestamp: Date.now(),
+        });
+      }
+    },
+    [organizationMarkers],
+  );
+
   const handleCreateRescueCase = useCallback(
     async (values: RescueCaseCreateValues) => {
       await createRescueCaseMutation.mutateAsync(toCreateRescuePayload(values));
@@ -198,7 +234,7 @@ export default function MapRescuePage() {
         <button
           key={caseItem.caseId}
           type="button"
-          onClick={() => handleOpenRescueDetail(caseItem.caseId)}
+          onClick={() => handleCardRescueClick(caseItem.caseId)}
           className="w-full rounded-xl border border-gray-200 p-4 text-left transition hover:border-orange-400 hover:bg-orange-50"
         >
           <div className="flex items-start justify-between gap-3">
@@ -226,7 +262,7 @@ export default function MapRescuePage() {
         </button>
       ));
     },
-    [handleOpenRescueDetail, isLoadingMap],
+    [handleCardRescueClick, isLoadingMap],
   );
 
   const renderOrganizationList = useCallback(
@@ -253,7 +289,7 @@ export default function MapRescuePage() {
           key={organization.organizationId}
           type="button"
           onClick={() =>
-            handleOpenOrganizationDetail(organization.organizationId)
+            handleCardOrganizationClick(organization.organizationId)
           }
           className="w-full rounded-xl border border-gray-200 p-4 text-left transition hover:border-teal-500 hover:bg-teal-50"
         >
@@ -290,7 +326,7 @@ export default function MapRescuePage() {
         </button>
       ));
     },
-    [handleOpenOrganizationDetail, isLoadingMap],
+    [handleCardOrganizationClick, isLoadingMap],
   );
 
   return (
@@ -302,6 +338,7 @@ export default function MapRescuePage() {
           loading={isLoadingMap}
           onRescueMarkerClick={handleOpenRescueDetail}
           onOrganizationMarkerClick={handleOpenOrganizationDetail}
+          zoomToLocation={zoomToLocation}
         />
         <Button
           type="button"
