@@ -357,6 +357,7 @@ export default function AdoptionManagementPage() {
             }
           }}
           adoption={adoptionDetailQuery.isFetching ? null : adoptionDetail}
+          canManage={canManage}
           onApprove={canManage ? handleOpenApprove : undefined}
           onReject={canManage ? handleOpenReject : undefined}
           onCancel={canManage ? handleCancelAdoption : undefined}

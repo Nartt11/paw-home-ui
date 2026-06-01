@@ -4,6 +4,7 @@ import * as React from "react";
 import dynamic from "next/dynamic";
 
 import { RescueCaseUpdate } from "@/components/rescue-case/RescueCaseUpdate";
+import { CompleteRescueDialog } from "@/components/rescue-case/CompleteRescueDialog";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { useUpdateRescueCaseStatus } from "@/hooks/use-rescue-case";
 import type { RescueCase } from "@/types/rescue-case.type";
@@ -135,10 +136,10 @@ const RESCUE_CASE_STATUS_OPTIONS: Array<{
   value: NonNullable<RescueCase["status"]>;
   label: string;
 }> = [
-  { value: "REPORTED", label: "Da bao cao" },
-  { value: "IN_PROGRESS", label: "Dang xu ly" },
-  { value: "RESCUED", label: "Da cuu" },
-  { value: "CLOSED", label: "Da dong" },
+  { value: "REPORTED", label: "Đã báo cáo" },
+  { value: "IN_PROGRESS", label: "Đang xử lý" },
+  { value: "RESCUED", label: "Đã cứu" },
+  { value: "CLOSED", label: "Đã đóng" },
 ];
 
 export interface RescueCaseViewDetailProps {
@@ -155,6 +156,15 @@ export function RescueCaseViewDetail({
   const currentUserQuery = useCurrentUser();
   const updateStatusMutation = useUpdateRescueCaseStatus();
   const [updateOpen, setUpdateOpen] = React.useState(false);
+  const [completeRescueOpen, setCompleteRescueOpen] = React.useState(false);
+  const [selectValue, setSelectValue] = React.useState<string>("REPORTED");
+
+  const [prevStatus, setPrevStatus] = React.useState<string | null>(null);
+
+  if (rescueCase && (rescueCase.status ?? "REPORTED") !== prevStatus) {
+    setPrevStatus(rescueCase.status ?? "REPORTED");
+    setSelectValue(rescueCase.status ?? "REPORTED");
+  }
   const title = rescueCase
     ? `Ca cứu hộ • ${rescueCase.caseId || ""}`
     : "Ca cứu hộ";
@@ -195,7 +205,7 @@ export function RescueCaseViewDetail({
                 onClick={() => setUpdateOpen(true)}
                 disabled={updateStatusMutation.isPending}
               >
-                Cap nhat rescue-case
+                Cập nhật ca cứu hộ
               </Button>
             ) : null}
           </div>
@@ -230,11 +240,10 @@ export function RescueCaseViewDetail({
                   <div className="grid gap-4">
                     <div className="space-y-2">
                       <div className="text-xs font-medium text-muted-foreground">
-                        Cap nhat trang thai
+                        Cập nhật trạng thái
                       </div>
                       <Select
-                        key={`${rescueCase.caseId}-${rescueCase.status ?? "REPORTED"}`}
-                        defaultValue={rescueCase.status ?? "REPORTED"}
+                        value={selectValue}
                         onValueChange={async (value) => {
                           const nextStatus =
                             value as NonNullable<RescueCase["status"]>;
@@ -243,15 +252,25 @@ export function RescueCaseViewDetail({
                             return;
                           }
 
-                          await updateStatusMutation.mutateAsync({
-                            id: rescueCase.caseId,
-                            status: nextStatus,
-                          });
+                          if (nextStatus === "RESCUED") {
+                            setCompleteRescueOpen(true);
+                            return;
+                          }
+
+                          try {
+                            setSelectValue(nextStatus);
+                            await updateStatusMutation.mutateAsync({
+                              id: rescueCase.caseId,
+                              status: nextStatus,
+                            });
+                          } catch {
+                            setSelectValue(rescueCase.status ?? "REPORTED");
+                          }
                         }}
                         disabled={updateStatusMutation.isPending}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="Chon trang thai" />
+                          <SelectValue placeholder="Chọn trạng thái" />
                         </SelectTrigger>
                         <SelectContent>
                           {RESCUE_CASE_STATUS_OPTIONS.map((statusOption) => (
@@ -371,6 +390,15 @@ export function RescueCaseViewDetail({
           open={updateOpen}
           onOpenChange={setUpdateOpen}
           rescueCase={rescueCase}
+        />
+      ) : null}
+
+      {rescueCase && completeRescueOpen ? (
+        <CompleteRescueDialog
+          key={`complete-${rescueCase.caseId}`}
+          rescueId={rescueCase.caseId}
+          open={completeRescueOpen}
+          onOpenChange={setCompleteRescueOpen}
         />
       ) : null}
     </>

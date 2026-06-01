@@ -5,6 +5,7 @@ import {
   RescueCaseMarkers,
   RescueCaseNearByParams,
   RescueCasePayload,
+  CompleteRescuePayload,
 } from "@/types/rescue-case.type";
 
 import { ListParams } from "@/types/api.type";
@@ -152,6 +153,42 @@ export function useUpdateRescueCaseStatus() {
   return useMutation({
     mutationFn: ({ id, status }: { id: string; status: string }) =>
       rescueService.updateRescueCaseStatus(id, status),
+
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: rescueCaseKeys.lists(),
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: rescueCaseKeys.detail(variables.id),
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: rescueCaseKeys.nearbyLists(),
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: rescueCaseKeys.markers(),
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: rescueCaseKeys.boundingBoxes(),
+      });
+    },
+  });
+}
+
+export function useCompleteRescue() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      id,
+      payload,
+    }: {
+      id: string;
+      payload: Omit<CompleteRescuePayload, "rescueId">;
+    }) => rescueService.completeRescue(id, payload),
 
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({

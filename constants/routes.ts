@@ -6,7 +6,7 @@ export const APP_ROUTES = {
   NEWS: "/tin-tuc",
   DONATION: "/ung-ho",
   ABOUT_US: "/ve-chung-toi",
-
+  USER_SETTING: "/ho-so-cua-toi",
   LOGIN: "/dang-nhap",
   SIGNUP: "/dang-ki",
   PROFILE: "/trang-ca-nhan",

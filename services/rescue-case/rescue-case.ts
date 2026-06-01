@@ -8,6 +8,7 @@ import {
   RescueCaseMarkers,
   RescueCaseBoundingBoxParams,
   RescueCasePayload,
+  CompleteRescuePayload,
 } from "@/types/rescue-case.type";
 import { ListParams, PaginatedResponse } from "@/types/api.type";
 
@@ -83,6 +84,35 @@ const rescueService = {
   // PATCH /api/v1/rescue-cases/{id}/status - Change rescue case status
   async updateRescueCaseStatus(id: string, status: string): Promise<RescueCase> {
     return await http.patch<RescueCase, string>(apiEndpoints.rescueCases.status(id), status);
+  },
+
+  // POST /api/v1/rescue-cases/{id}/complete - Complete rescue case
+  async completeRescue(
+    id: string,
+    payload: Omit<CompleteRescuePayload, "rescueId">,
+  ): Promise<RescueCase> {
+    const formData = new FormData();
+    formData.append("status", "RESCUED");
+    formData.append("rescuedAt", payload.rescuedAt);
+    if (payload.rescueNote) {
+      formData.append("rescueNote", payload.rescueNote);
+    }
+    if (payload.locationNote) {
+      formData.append("locationNote", payload.locationNote);
+    }
+    payload.verificationImages.forEach((file) => {
+      formData.append("verificationImages", file);
+    });
+
+    return await http.post<RescueCase, FormData>(
+      apiEndpoints.rescueCases.complete(id),
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      },
+    );
   },
 };
 

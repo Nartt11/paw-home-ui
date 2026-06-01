@@ -187,7 +187,7 @@ export default function Header() {
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
                     <Link
-                      href={APP_ROUTES.PROFILE}
+                      href={APP_ROUTES.USER_SETTING}
                       className="flex w-full items-center gap-2 cursor-pointer"
                     >
                       <User className="h-4 w-4" />
@@ -197,7 +197,7 @@ export default function Header() {
                   <DropdownMenuItem asChild>
                     {/* TODO: Update proper settings route if available in future */}
                     <Link
-                      href={`${APP_ROUTES.PROFILE}?tab=settings`}
+                      href={`${APP_ROUTES.USER_SETTING}`}
                       className="flex w-full items-center gap-2 cursor-pointer"
                     >
                       <Settings className="h-4 w-4" />
@@ -307,7 +307,7 @@ export default function Header() {
                       onClick={() => setMobileMenuOpen(false)}
                       className="w-full justify-start rounded-xl cursor-pointer"
                     >
-                      <Link href="/ho-so-cua-toi" className="flex gap-2">
+                      <Link href={APP_ROUTES.USER_SETTING} className="flex gap-2">
                         <User className="h-4 w-4" />
                         <span>Xem trang cá nhân</span>
                       </Link>
@@ -320,7 +320,7 @@ export default function Header() {
                       className="w-full justify-start rounded-xl cursor-pointer"
                     >
                       {/* TODO: Update proper settings route if available in future */}
-                      <Link href="/ho-so-cua-toi" className="flex gap-2">
+                      <Link href={APP_ROUTES.USER_SETTING} className="flex gap-2">
                         <Settings className="h-4 w-4" />
                         <span>Cài đặt</span>
                       </Link>

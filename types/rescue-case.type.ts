@@ -5,6 +5,8 @@ export type RescueCaseStatus =
   | "IN_PROGRESS"
   | "RESCUED"
   | "CLOSED";
+
+export type RescueStatus = RescueCaseStatus;
 export type RescueCasePriority = "LOW" | "NORMAL" | "HIGH" | "CRITICAL";
 export interface RescueCaseSummary {
   caseId: string;
@@ -86,4 +88,13 @@ export interface RescueCasePayload {
   imageUrls: string[];
   mediaIds: string[];
   contactPhone: string;
+}
+
+export interface CompleteRescuePayload {
+  rescueId: string;
+  status: "RESCUED";
+  verificationImages: File[];
+  rescueNote?: string;
+  rescuedAt: string;
+  locationNote?: string;
 }
