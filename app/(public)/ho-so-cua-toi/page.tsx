@@ -36,7 +36,7 @@ import {
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { useUpdateMyProfile } from "@/hooks/use-user";
 import { useAdoptionsByUser, useCancelAdoption } from "@/hooks/use-adoption";
-import { useCreateOrganization, useOrganizations } from "@/hooks/use-organization";
+import { useCreateOrganization, useOrganizations, useMyOrganization } from "@/hooks/use-organization";
 import {
   OrganizationCreateNew,
   type OrganizationCreateNewValues,
@@ -811,9 +811,44 @@ function CenterProfilesTab() {
   const router = useRouter();
   const { data: currentUser } = useCurrentUser();
   const createMutation = useCreateOrganization();
+  const myOrgQuery = useMyOrganization();
   const [openCreate, setOpenCreate] = useState(false);
-  const [centers, setCenters] = useState<MockCenterItem[]>(MOCK_CENTERS);
+  const [localCreatedCenters, setLocalCreatedCenters] = useState<MockCenterItem[]>([]);
   const [selectedStatus, setSelectedStatus] = useState<string>("ALL");
+
+  const centers = React.useMemo(() => {
+    if (!currentUser) return [...localCreatedCenters, ...MOCK_CENTERS];
+    
+    if (myOrgQuery.isError) {
+      return [...localCreatedCenters, ...MOCK_CENTERS];
+    }
+    
+    if (myOrgQuery.data && myOrgQuery.data.organization) {
+      const org = myOrgQuery.data.organization;
+      return [
+        {
+          organizationId: org.organizationId,
+          name: org.name,
+          type: org.type,
+          status: org.status as "ACTIVE" | "PENDING" | "INACTIVE",
+          streetAddress: org.streetAddress,
+          wardName: org.wardName || "",
+          provinceName: org.provinceName || "",
+          phone: org.phone,
+          email: org.email,
+          officialLink: org.officialLink || "",
+          description: org.description || "",
+          imageUrl: org.imageUrl || "https://images.unsplash.com/photo-1548199973-03cce0bbc87b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=400",
+        }
+      ];
+    }
+    
+    if (myOrgQuery.isSuccess && !myOrgQuery.data?.organization) {
+      return localCreatedCenters;
+    }
+    
+    return [...localCreatedCenters, ...MOCK_CENTERS];
+  }, [currentUser, myOrgQuery.data, myOrgQuery.isError, myOrgQuery.isSuccess, localCreatedCenters]);
 
   const handleCreateCenter = (values: OrganizationCreateNewValues) => {
     if (!values.name.trim()) {
@@ -828,24 +863,9 @@ function CenterProfilesTab() {
     const payload = toCreateOrganizationPayload(values);
 
     createMutation.mutate(payload, {
-      onSuccess: (newOrg) => {
+      onSuccess: () => {
         toast.success("Gửi yêu cầu đăng ký trung tâm thành công!");
         setOpenCreate(false);
-        const newMockCenter = {
-          organizationId: newOrg.organizationId || `org-mock-${Date.now()}`,
-          name: newOrg.name,
-          type: newOrg.type as "SHELTER" | "VET_CENTER",
-          status: "PENDING" as const,
-          streetAddress: newOrg.streetAddress,
-          wardName: newOrg.wardName || "",
-          provinceName: newOrg.provinceName || "",
-          phone: newOrg.phone,
-          email: newOrg.email,
-          officialLink: newOrg.officialLink || "",
-          description: newOrg.description || "",
-          imageUrl: newOrg.imageUrl || "https://images.unsplash.com/photo-1548199973-03cce0bbc87b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=400",
-        };
-        setCenters((prev) => [newMockCenter, ...prev]);
       },
       onError: () => {
         toast.success("Gửi yêu cầu đăng ký trung tâm thành công! (Chế độ mô phỏng)");
@@ -864,7 +884,7 @@ function CenterProfilesTab() {
           description: values.description.trim(),
           imageUrl: "https://images.unsplash.com/photo-1548199973-03cce0bbc87b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=400",
         };
-        setCenters((prev) => [newMockCenter, ...prev]);
+        setLocalCreatedCenters((prev) => [newMockCenter, ...prev]);
       }
     });
   };
@@ -888,6 +908,17 @@ function CenterProfilesTab() {
     if (selectedStatus === "ALL") return centers;
     return centers.filter((item) => item.status === selectedStatus);
   }, [centers, selectedStatus]);
+
+  if (myOrgQuery.isPending && currentUser) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="mt-4 text-sm text-muted-foreground">
+          Đang tải thông tin trung tâm...
+        </p>
+      </div>
+    );
+  }
 
   const filterPills = [
     { value: "ALL", label: "Tất cả" },

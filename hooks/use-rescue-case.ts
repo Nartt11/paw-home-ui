@@ -187,7 +187,7 @@ export function useCompleteRescue() {
       payload,
     }: {
       id: string;
-      payload: Omit<CompleteRescuePayload, "rescueId">;
+      payload: CompleteRescuePayload;
     }) => rescueService.completeRescue(id, payload),
 
     onSuccess: (data, variables) => {

@@ -198,16 +198,30 @@ export function RescueCaseViewDetail({
               ) : null}
             </div>
 
-            {rescueCase && canOpenUpdateForm ? (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setUpdateOpen(true)}
-                disabled={updateStatusMutation.isPending}
-              >
-                Cập nhật ca cứu hộ
-              </Button>
-            ) : null}
+            <div className="flex items-center gap-2">
+              {rescueCase && rescueCase.status !== "RESCUED" && rescueCase.status !== "CLOSED" ? (
+                <Button
+                  type="button"
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer font-semibold rounded-xl"
+                  onClick={() => setCompleteRescueOpen(true)}
+                  disabled={updateStatusMutation.isPending}
+                >
+                  Hoàn thành cứu hộ
+                </Button>
+              ) : null}
+
+              {rescueCase && canOpenUpdateForm ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setUpdateOpen(true)}
+                  disabled={updateStatusMutation.isPending}
+                  className="cursor-pointer font-semibold rounded-xl"
+                >
+                  Cập nhật ca cứu hộ
+                </Button>
+              ) : null}
+            </div>
           </div>
 
           <DialogDescription className="mt-1">

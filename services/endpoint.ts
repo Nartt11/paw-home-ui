@@ -25,6 +25,7 @@ export const apiEndpoints = {
   organizations: {
     root: "/organizations",
     byId: (id: string) => byId("/organizations", id),
+    me: "/organizations/me",
     status: (id: string) => `/organizations/${id}/status`,
     members: (id: string) => `/organizations/${id}/members`,
     memberByUser: (id: string, userId: string) =>

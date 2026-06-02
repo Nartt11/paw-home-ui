@@ -10,6 +10,7 @@ import type {
   OrganizationSummary,
   OrganizationStatus,
   OrganizationMarkerParams,
+  MyOrganizationResponse,
 } from "@/types/organization.type";
 
 const organizationService = {
@@ -127,6 +128,11 @@ const organizationService = {
     return http.get<Organization[]>(apiEndpoints.organizations.map.markers, {
       params,
     });
+  },
+
+  // GET /api/v1/organizations/me - Get my organization with my role
+  async getMyOrganization(): Promise<MyOrganizationResponse> {
+    return await http.get<MyOrganizationResponse>(apiEndpoints.organizations.me);
   },
 };
 

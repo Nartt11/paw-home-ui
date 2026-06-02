@@ -91,10 +91,10 @@ export interface RescueCasePayload {
 }
 
 export interface CompleteRescuePayload {
-  rescueId: string;
-  status: "RESCUED";
-  verificationImages: File[];
+  caseId: string;
+  verificationImageIds: string[];
   rescueNote?: string;
   rescuedAt: string;
   locationNote?: string;
+  confirmRescued: boolean;
 }

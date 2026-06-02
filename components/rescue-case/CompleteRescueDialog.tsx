@@ -28,6 +28,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 
+import { useUploadTempMedia } from "@/hooks/use-media";
 import { useCompleteRescue } from "@/hooks/use-rescue-case";
 import { completeRescueSchema, type CompleteRescueFormValues } from "@/lib/schemas/rescue";
 
@@ -45,6 +46,7 @@ export function CompleteRescueDialog({
   onSuccess,
 }: CompleteRescueDialogProps) {
   const completeMutation = useCompleteRescue();
+  const uploadMediaMutation = useUploadTempMedia();
   const [previewUrls, setPreviewUrls] = React.useState<string[]>([]);
   const fileInputRef = React.useRef<HTMLInputElement | null>(null);
 
@@ -122,14 +124,24 @@ export function CompleteRescueDialog({
 
   const handleFormSubmit = async (values: CompleteRescueFormValues) => {
     try {
+      // 1. Upload verification images first
+      const uploadedMedia = await Promise.all(
+        values.verificationImages.map((file) =>
+          uploadMediaMutation.mutateAsync({ file })
+        )
+      );
+      const verificationImageIds = uploadedMedia.map((m) => m.mediaId);
+
+      // 2. Submit rescue completion with the retrieved image IDs
       await completeMutation.mutateAsync({
         id: rescueId,
         payload: {
-          status: "RESCUED",
-          verificationImages: values.verificationImages,
+          caseId: rescueId,
+          verificationImageIds,
           rescueNote: values.rescueNote,
           rescuedAt: new Date(values.rescuedAt).toISOString(),
           locationNote: values.locationNote,
+          confirmRescued: values.confirmRescued,
         },
       });
 
@@ -143,7 +155,7 @@ export function CompleteRescueDialog({
     }
   };
 
-  const isPending = completeMutation.isPending;
+  const isPending = completeMutation.isPending || uploadMediaMutation.isPending;
 
   return (
     <Dialog open={open} onOpenChange={(val) => !isPending && handleOpenChange(val)}>

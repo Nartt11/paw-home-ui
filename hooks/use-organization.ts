@@ -6,6 +6,7 @@ import type {
   OrganizationMarkerParams,
   OrganizationStatus,
   OrganizationUpdatePayload,
+  MyOrganizationResponse,
 } from "@/types/organization.type";
 import organizationService from "@/services/organization";
 
@@ -18,6 +19,8 @@ export const organizationKeys = {
 
   details: () => [...organizationKeys.all, "detail"] as const,
   detail: (id: string) => [...organizationKeys.details(), id] as const,
+
+  me: () => [...organizationKeys.all, "me"] as const,
 
   members: () => [...organizationKeys.all, "members"] as const,
   memberList: (id: string, params: OrganizationListParams) =>
@@ -109,6 +112,10 @@ export function useCreateOrganization() {
 
       queryClient.invalidateQueries({
         queryKey: organizationKeys.markers(),
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: organizationKeys.me(),
       });
     },
   });
@@ -253,3 +260,11 @@ export function useDeactivateOrganization() {
     },
   });
 }
+
+export function useMyOrganization() {
+  return useQuery({
+    queryKey: organizationKeys.me(),
+    queryFn: () => organizationService.getMyOrganization(),
+  });
+}
+
