@@ -25,6 +25,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
 
 const MapPicker = dynamic(() => import("@/components/map/MapPicker"), {
@@ -166,7 +167,7 @@ export function RescueCaseViewDetail({
     setSelectValue(rescueCase.status ?? "REPORTED");
   }
   const title = rescueCase
-    ? `Ca cứu hộ • ${rescueCase.caseId || ""}`
+    ? `Ca cứu hộ${rescueCase.caseCode ? ` • ${rescueCase.caseCode}` : ""}`
     : "Ca cứu hộ";
   const canShowMap = rescueCase
     ? hasValidCoordinates(rescueCase.latitude, rescueCase.longitude)
@@ -197,31 +198,6 @@ export function RescueCaseViewDetail({
                 </>
               ) : null}
             </div>
-
-            <div className="flex items-center gap-2">
-              {rescueCase && rescueCase.status !== "RESCUED" && rescueCase.status !== "CLOSED" ? (
-                <Button
-                  type="button"
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer font-semibold rounded-xl"
-                  onClick={() => setCompleteRescueOpen(true)}
-                  disabled={updateStatusMutation.isPending}
-                >
-                  Hoàn thành cứu hộ
-                </Button>
-              ) : null}
-
-              {rescueCase && canOpenUpdateForm ? (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setUpdateOpen(true)}
-                  disabled={updateStatusMutation.isPending}
-                  className="cursor-pointer font-semibold rounded-xl"
-                >
-                  Cập nhật ca cứu hộ
-                </Button>
-              ) : null}
-            </div>
           </div>
 
           <DialogDescription className="mt-1">
@@ -239,8 +215,6 @@ export function RescueCaseViewDetail({
               <Separator />
 
               <div className="grid gap-5 md:grid-cols-2">
-                <FieldRow label="Case ID" value={rescueCase.caseId} mono />
-                <FieldRow label="Pet ID" value={rescueCase.petId || "—"} mono />
                 <FieldRow label="Pet name" value={rescueCase.petName || "—"} />
                 <FieldRow label="Species" value={rescueCase.species || "—"} />
                 <FieldRow label="Color" value={rescueCase.color || "—"} />
@@ -307,25 +281,11 @@ export function RescueCaseViewDetail({
               <div className="grid gap-5 md:grid-cols-2">
                 <FieldRow
                   label="Organization"
-                  value={
-                    <div className="space-y-1">
-                      <div>{rescueCase.organizationName || "—"}</div>
-                      <div className="font-mono text-xs text-muted-foreground">
-                        {rescueCase.organizationId || "—"}
-                      </div>
-                    </div>
-                  }
+                  value={rescueCase.organizationName || "—"}
                 />
                 <FieldRow
                   label="Reporter"
-                  value={
-                    <div className="space-y-1">
-                      <div>{rescueCase.reporterUsername || "—"}</div>
-                      <div className="font-mono text-xs text-muted-foreground">
-                        {rescueCase.reportedBy || "—"}
-                      </div>
-                    </div>
-                  }
+                  value={rescueCase.reporterUsername || "—"}
                 />
               </div>
 
@@ -395,6 +355,55 @@ export function RescueCaseViewDetail({
             </>
           )}
         </div>
+
+        {rescueCase ? (
+          <DialogFooter className="px-6 pb-6 bg-gray-50/50 py-4 border-t rounded-b-lg">
+            <Button
+              variant="secondary"
+              type="button"
+              onClick={() => onOpenChange(false)}
+              className="rounded-xl font-semibold"
+            >
+              Đóng
+            </Button>
+            
+            <div className="flex items-center gap-2">
+              {rescueCase.status !== "RESCUED" && rescueCase.status !== "CLOSED" ? (
+                <Button
+                  type="button"
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer font-semibold rounded-xl"
+                  onClick={() => setCompleteRescueOpen(true)}
+                  disabled={updateStatusMutation.isPending}
+                >
+                  Hoàn thành cứu hộ
+                </Button>
+              ) : null}
+
+              {canOpenUpdateForm ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setUpdateOpen(true)}
+                  disabled={updateStatusMutation.isPending}
+                  className="cursor-pointer font-semibold rounded-xl"
+                >
+                  Cập nhật ca cứu hộ
+                </Button>
+              ) : null}
+            </div>
+          </DialogFooter>
+        ) : (
+          <DialogFooter className="px-6 pb-6 bg-gray-50/50 py-4 border-t rounded-b-lg">
+            <Button
+              variant="secondary"
+              type="button"
+              onClick={() => onOpenChange(false)}
+              className="rounded-xl font-semibold"
+            >
+              Đóng
+            </Button>
+          </DialogFooter>
+        )}
         </DialogContent>
       </Dialog>
 

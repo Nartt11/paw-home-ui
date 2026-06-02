@@ -65,9 +65,6 @@ function toCreateRescuePayload(
 ): RescueCasePayload {
   return {
     ...values,
-    imageUrls: [],
-    mediaIds: [],
-    contactPhone: "",
   };
 }
 

@@ -98,3 +98,21 @@ export interface CompleteRescuePayload {
   locationNote?: string;
   confirmRescued: boolean;
 }
+
+export interface RescueCompletion {
+  completionId: string;
+  caseId: string;
+  rescuedAt: string;
+  rescueNote: string;
+  locationNote: string;
+  verifiedBy: string;
+  verifiedByName: string;
+  verifiedAt: string;
+  verificationImagesUrl: string[];
+}
+
+export interface RescueCompletionQueryParams extends ListParams {
+  isResolved?: boolean;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
+}

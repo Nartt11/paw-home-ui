@@ -66,6 +66,9 @@ export const apiEndpoints = {
     nearby: "/rescue-cases/nearby",
     status: (id: string) => `/rescue-cases/${id}/status`,
     complete: (id: string) => `/rescue-cases/${id}/complete`,
+    completions: "/rescue-cases/completions",
+    completionById: (id: string) => byId("/rescue-cases/completions", id),
+    approveCompletion: (id: string) => `/rescue-cases/completions/${id}/approved`,
     map: {
       markers: "/rescue-cases/map/markers",
       boundingBox: "/rescue-cases/map/bounding-box",

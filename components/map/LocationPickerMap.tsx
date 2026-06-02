@@ -101,7 +101,7 @@ export default function LocationPickerMap({
         <Marker
           ref={markerRef}
           position={[latitude as number, longitude as number]}
-          icon={createMarkerIcon("organization")}
+          icon={createMarkerIcon("rescue", { level: "high" })}
           draggable={!disabled}
           eventHandlers={{
             dragend: () => {
