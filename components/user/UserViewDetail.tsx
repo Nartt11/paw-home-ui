@@ -62,6 +62,20 @@ function statusToBadge(status?: User["status"] | string) {
   }
 }
 
+function formatDateTimeVi(value?: string) {
+  if (!value) return "—";
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return "—";
+  return d.toLocaleString("vi-VN", {
+    hour12: false,
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 export function UserViewDetail({
   user,
   open,
@@ -72,14 +86,15 @@ export function UserViewDetail({
       ? user.roles.join(", ")
       : "—";
 
+  const title = user.fullName || user.username || "Người dùng";
+  const subtitle = user.email || "";
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-full p-0 sm:max-w-4xl">
         <DialogHeader className="px-6 pt-6">
           <div className="flex flex-wrap items-center gap-3">
-            <DialogTitle className="text-base sm:text-lg">
-              {user.fullName || user.username || user.userId}
-            </DialogTitle>
+            <DialogTitle className="text-base sm:text-lg">{title}</DialogTitle>
             <div className="flex items-center gap-2">
               {statusToBadge(user.status)}
               {user.organizationRole ? (
@@ -88,53 +103,68 @@ export function UserViewDetail({
             </div>
           </div>
 
-          <DialogDescription className="mt-1">
-            {user.email || ""}
-          </DialogDescription>
+          <DialogDescription className="mt-1">{subtitle}</DialogDescription>
         </DialogHeader>
 
         <div className="max-h-[calc(100vh-10rem)] space-y-6 overflow-y-auto px-6 pb-6">
           <Separator />
 
-          {/* Basic */}
+          {/* Thông tin */}
           <div className="grid gap-5 md:grid-cols-2">
-            <FieldRow label="User ID" value={user.userId} mono />
+            <FieldRow label="Họ tên" value={user.fullName || "—"} />
             <FieldRow label="Username" value={user.username || "—"} />
             <FieldRow label="Email" value={user.email || "—"} />
             <FieldRow
-              label="Email verified"
+              label="Xác minh email"
               value={user.emailVerified ? "Đã xác minh" : "Chưa xác minh"}
             />
-            <FieldRow label="Roles" value={rolesText} />
-            <FieldRow label="Phone" value={user.phone || "—"} />
-            <FieldRow label="Gender" value={user.gender || "—"} />
+            <FieldRow label="Số điện thoại" value={user.phone || "—"} />
+            <FieldRow label="Giới tính" value={user.gender || "—"} />
+            <FieldRow label="Vai trò hệ thống" value={rolesText} />
           </div>
 
           <Separator />
 
-          {/* Organization */}
+          {/* Tổ chức */}
           <div className="grid gap-5 md:grid-cols-2">
+            <FieldRow label="Tổ chức" value={user.organizationName || "—"} />
             <FieldRow
-              label="Organization"
-              value={user.organizationName || "—"}
+              label="Vai trò trong tổ chức"
+              value={user.organizationRole || "—"}
             />
+          </div>
+
+          <Separator />
+
+          {/* Địa chỉ */}
+          <div className="grid gap-5 md:grid-cols-2">
+            <FieldRow label="Địa chỉ" value={user.streetAddress || "—"} />
+            <FieldRow label="Phường / Xã" value={user.wardName || "—"} />
+            <FieldRow
+              label="Tỉnh / Thành phố"
+              value={user.provinceName || "—"}
+            />
+          </div>
+
+          <Separator />
+
+          {/* Metadata (ID chỉ làm index, hiển thị phụ) */}
+          <div className="grid gap-5 md:grid-cols-2">
+            <FieldRow label="User ID" value={user.userId} mono />
+            <FieldRow label="User code" value={user.userCode || "—"} mono />
             <FieldRow
               label="Organization ID"
               value={user.organizationId || "—"}
               mono
             />
-          </div>
-
-          <Separator />
-
-          {/* Address */}
-          <div className="grid gap-5 md:grid-cols-2">
             <FieldRow
-              label="Street address"
-              value={user.streetAddress || "—"}
+              label="Tạo lúc"
+              value={formatDateTimeVi(user.createdAt)}
             />
-            <FieldRow label="Ward" value={user.wardName || "—"} />
-            <FieldRow label="Province" value={user.provinceName || "—"} />
+            <FieldRow
+              label="Cập nhật lúc"
+              value={formatDateTimeVi(user.updatedAt)}
+            />
           </div>
         </div>
       </DialogContent>

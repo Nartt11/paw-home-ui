@@ -75,6 +75,17 @@ const adoptionService = {
     );
     return adoption;
   },
+
+  // GET /api/v1/adoptions/user/{userId} - List adoptions by user
+  async getAdoptionsByUser(
+    userId: string,
+    params?: AdoptionListParams,
+  ): Promise<PaginatedResponse<AdoptionSummary>> {
+    return await http.get<PaginatedResponse<AdoptionSummary>>(
+      apiEndpoints.adoptions.byUser(userId),
+      { params },
+    );
+  },
 };
 
 export default adoptionService;

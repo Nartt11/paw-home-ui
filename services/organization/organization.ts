@@ -10,6 +10,7 @@ import type {
   OrganizationSummary,
   OrganizationStatus,
   OrganizationMarkerParams,
+  MyOrganizationResponse,
 } from "@/types/organization.type";
 
 const organizationService = {
@@ -81,6 +82,29 @@ const organizationService = {
     return res;
   },
 
+  // POST /api/v1/organizations/{id}/members - Add a member to an organization
+  async addMember(
+    id: string,
+    payload: { email: string; role: string },
+  ): Promise<any> {
+    return await http.post<any, { email: string; role: string }>(
+      apiEndpoints.organizations.members(id),
+      payload,
+    );
+  },
+
+  // PUT /api/v1/organizations/{id}/members/{userId} - Update a member's role
+  async updateMemberRole(
+    id: string,
+    userId: string,
+    payload: { role: string },
+  ): Promise<any> {
+    return await http.put<any, { role: string }>(
+      apiEndpoints.organizations.memberByUser(id, userId),
+      payload,
+    );
+  },
+
   // DELETE /api/v1/organizations/{id} - Deactivate an organization (soft delete)
   async deactivateOrganization(id: string): Promise<null> {
     const res = await http.delete<null>(apiEndpoints.organizations.byId(id));
@@ -104,6 +128,11 @@ const organizationService = {
     return http.get<Organization[]>(apiEndpoints.organizations.map.markers, {
       params,
     });
+  },
+
+  // GET /api/v1/organizations/me - Get my organization with my role
+  async getMyOrganization(): Promise<MyOrganizationResponse> {
+    return await http.get<MyOrganizationResponse>(apiEndpoints.organizations.me);
   },
 };
 

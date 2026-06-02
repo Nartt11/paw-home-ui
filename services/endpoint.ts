@@ -25,6 +25,7 @@ export const apiEndpoints = {
   organizations: {
     root: "/organizations",
     byId: (id: string) => byId("/organizations", id),
+    me: "/organizations/me",
     status: (id: string) => `/organizations/${id}/status`,
     members: (id: string) => `/organizations/${id}/members`,
     memberByUser: (id: string, userId: string) =>
@@ -64,6 +65,10 @@ export const apiEndpoints = {
     byId: (id: string) => byId("/rescue-cases", id),
     nearby: "/rescue-cases/nearby",
     status: (id: string) => `/rescue-cases/${id}/status`,
+    complete: (id: string) => `/rescue-cases/${id}/complete`,
+    completions: "/rescue-cases/completions",
+    completionById: (id: string) => byId("/rescue-cases/completions", id),
+    approveCompletion: (id: string) => `/rescue-cases/completions/${id}/approved`,
     map: {
       markers: "/rescue-cases/map/markers",
       boundingBox: "/rescue-cases/map/bounding-box",

@@ -8,6 +8,9 @@ import {
   RescueCaseMarkers,
   RescueCaseBoundingBoxParams,
   RescueCasePayload,
+  CompleteRescuePayload,
+  RescueCompletion,
+  RescueCompletionQueryParams,
 } from "@/types/rescue-case.type";
 import { ListParams, PaginatedResponse } from "@/types/api.type";
 
@@ -83,6 +86,43 @@ const rescueService = {
   // PATCH /api/v1/rescue-cases/{id}/status - Change rescue case status
   async updateRescueCaseStatus(id: string, status: string): Promise<RescueCase> {
     return await http.patch<RescueCase, string>(apiEndpoints.rescueCases.status(id), status);
+  },
+
+  // POST /api/v1/rescue-cases/{id}/complete - Complete rescue case
+  async completeRescue(
+    id: string,
+    payload: CompleteRescuePayload,
+  ): Promise<RescueCase> {
+    return await http.post<RescueCase, CompleteRescuePayload>(
+      apiEndpoints.rescueCases.complete(id),
+      payload,
+    );
+  },
+
+  // GET /api/v1/rescue-cases/completions - List all rescue completions (paginated)
+  async getRescueCompletions(
+    params: RescueCompletionQueryParams,
+  ): Promise<PaginatedResponse<RescueCompletion>> {
+    return await http.get<PaginatedResponse<RescueCompletion>>(
+      apiEndpoints.rescueCases.completions,
+      {
+        params,
+      },
+    );
+  },
+
+  // GET /api/v1/rescue-cases/completions/{id} - Get rescue completion details
+  async getRescueCompletionById(id: string): Promise<RescueCompletion> {
+    return await http.get<RescueCompletion>(
+      apiEndpoints.rescueCases.completionById(id),
+    );
+  },
+
+  // POST /api/v1/rescue-cases/completions/{id}/approved - Approve rescue case completion
+  async approveRescueCompletion(id: string): Promise<any> {
+    return await http.post<any, void>(
+      apiEndpoints.rescueCases.approveCompletion(id),
+    );
   },
 };
 

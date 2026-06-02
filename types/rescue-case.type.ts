@@ -5,6 +5,8 @@ export type RescueCaseStatus =
   | "IN_PROGRESS"
   | "RESCUED"
   | "CLOSED";
+
+export type RescueStatus = RescueCaseStatus;
 export type RescueCasePriority = "LOW" | "NORMAL" | "HIGH" | "CRITICAL";
 export interface RescueCaseSummary {
   caseId: string;
@@ -58,12 +60,14 @@ export interface RescueCaseMarkers {
   status?: RescueCaseStatus[];
   priority?: RescueCasePriority[];
   species?: string;
+  organizationId?: string;
 }
 export interface RescueCaseBoundingBoxParams extends ListParams {
   minLat: number;
   maxLat: number;
   minLng: number;
   maxLng: number;
+  organizationId?: string;
 }
 
 export interface RescueCasePayload {
@@ -84,4 +88,31 @@ export interface RescueCasePayload {
   imageUrls: string[];
   mediaIds: string[];
   contactPhone: string;
+}
+
+export interface CompleteRescuePayload {
+  caseId: string;
+  verificationImageIds: string[];
+  rescueNote?: string;
+  rescuedAt: string;
+  locationNote?: string;
+  confirmRescued: boolean;
+}
+
+export interface RescueCompletion {
+  completionId: string;
+  caseId: string;
+  rescuedAt: string;
+  rescueNote: string;
+  locationNote: string;
+  verifiedBy: string;
+  verifiedByName: string;
+  verifiedAt: string;
+  verificationImagesUrl: string[];
+}
+
+export interface RescueCompletionQueryParams extends ListParams {
+  isResolved?: boolean;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
 }

@@ -95,3 +95,9 @@ export interface OrganizationBoundingBoxParams extends ListParams {
   maxLng: number;
   status?: OrganizationStatus[];
 }
+
+export interface MyOrganizationResponse {
+  organization: Organization;
+  role: string;
+}
+

@@ -39,7 +39,7 @@ const Map = dynamic(() => import("@/components/map-rescue/MapRescue"), {
   ssr: false,
   loading: () => (
     <div className="flex h-screen w-full items-center justify-center bg-gray-100">
-      <p className="text-gray-600">Dang tai ban do...</p>
+      <p className="text-gray-600">Đang tải bản đồ...</p>
     </div>
   ),
 });
@@ -65,9 +65,6 @@ function toCreateRescuePayload(
 ): RescueCasePayload {
   return {
     ...values,
-    imageUrls: [],
-    mediaIds: [],
-    contactPhone: "",
   };
 }
 
@@ -79,6 +76,12 @@ export default function MapRescuePage() {
   const [selectedOrganizationId, setSelectedOrganizationId] = useState<
     string | null
   >(null);
+  const [zoomToLocation, setZoomToLocation] = useState<{
+    latitude: number;
+    longitude: number;
+    zoom?: number;
+    timestamp: number;
+  } | null>(null);
 
   const rescueMarkersQuery = useRescueMapMarkers(VIETNAM_MARKER_BOUNDS);
   const rescueBoundingBoxQuery = useRescueCasesInBoundingBox(VIETNAM_BOUNDS);
@@ -167,6 +170,36 @@ export default function MapRescuePage() {
     }
   }, []);
 
+  const handleCardRescueClick = useCallback(
+    (caseId: string) => {
+      const marker = rescueMarkers.find((m) => m.caseId === caseId);
+      if (marker) {
+        setZoomToLocation({
+          latitude: marker.latitude,
+          longitude: marker.longitude,
+          zoom: 16,
+          timestamp: Date.now(),
+        });
+      }
+    },
+    [rescueMarkers],
+  );
+
+  const handleCardOrganizationClick = useCallback(
+    (organizationId: string) => {
+      const marker = organizationMarkers.find((m) => m.organizationId === organizationId);
+      if (marker) {
+        setZoomToLocation({
+          latitude: marker.latitude,
+          longitude: marker.longitude,
+          zoom: 16,
+          timestamp: Date.now(),
+        });
+      }
+    },
+    [organizationMarkers],
+  );
+
   const handleCreateRescueCase = useCallback(
     async (values: RescueCaseCreateValues) => {
       await createRescueCaseMutation.mutateAsync(toCreateRescuePayload(values));
@@ -198,7 +231,7 @@ export default function MapRescuePage() {
         <button
           key={caseItem.caseId}
           type="button"
-          onClick={() => handleOpenRescueDetail(caseItem.caseId)}
+          onClick={() => handleCardRescueClick(caseItem.caseId)}
           className="w-full rounded-xl border border-gray-200 p-4 text-left transition hover:border-orange-400 hover:bg-orange-50"
         >
           <div className="flex items-start justify-between gap-3">
@@ -226,7 +259,7 @@ export default function MapRescuePage() {
         </button>
       ));
     },
-    [handleOpenRescueDetail, isLoadingMap],
+    [handleCardRescueClick, isLoadingMap],
   );
 
   const renderOrganizationList = useCallback(
@@ -243,7 +276,7 @@ export default function MapRescuePage() {
       if (items.length === 0) {
         return (
           <div className="rounded-xl border border-dashed p-6 text-center text-sm text-gray-500">
-            Chua co trung tam nao trong vung hien thi.
+            Chưa có trung tâm nào trong vùng hiển thị.
           </div>
         );
       }
@@ -253,7 +286,7 @@ export default function MapRescuePage() {
           key={organization.organizationId}
           type="button"
           onClick={() =>
-            handleOpenOrganizationDetail(organization.organizationId)
+            handleCardOrganizationClick(organization.organizationId)
           }
           className="w-full rounded-xl border border-gray-200 p-4 text-left transition hover:border-teal-500 hover:bg-teal-50"
         >
@@ -281,20 +314,20 @@ export default function MapRescuePage() {
           </div>
           <div className="mt-3 flex items-center justify-between gap-3 text-xs text-gray-500">
             <span className="truncate">
-              {organization.phone || "Chua co so dien thoai"}
+              {organization.phone || "Chưa có số điện thoại"}
             </span>
             <span className="truncate text-right">
-              {organization.email || "Chua co email"}
+              {organization.email || "Chưa có email"}
             </span>
           </div>
         </button>
       ));
     },
-    [handleOpenOrganizationDetail, isLoadingMap],
+    [handleCardOrganizationClick, isLoadingMap],
   );
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-[calc(100vh-4rem)]">
       <main className="relative flex-1 overflow-hidden">
         <Map
           rescueMarkers={rescueMarkers}
@@ -302,34 +335,35 @@ export default function MapRescuePage() {
           loading={isLoadingMap}
           onRescueMarkerClick={handleOpenRescueDetail}
           onOrganizationMarkerClick={handleOpenOrganizationDetail}
+          zoomToLocation={zoomToLocation}
         />
         <Button
           type="button"
           size="lg"
-          className="absolute bottom-6 right-6 z-20 rounded-full shadow-lg"
+          className="absolute bottom-6 right-6 z-20 rounded-full shadow-lg cursor-pointer bg-primary text-primary-foreground hover:bg-primary/90 font-semibold gap-1.5"
           onClick={() => setCreateOpen(true)}
         >
           <Plus className="size-4" />
-          Tao ca cuu ho
+          Tạo ca cứu hộ
         </Button>
       </main>
 
       <aside className="w-80 border-l bg-white shadow-xl">
-        <div className="flex h-full min-h-0 flex-col pt-16">
+        <div className="flex h-full min-h-0 flex-col">
           <div className="border-b px-5 py-4">
             <h2 className="text-base font-semibold text-gray-900">
-              Tong quan khu vuc
+              Tổng quan khu vực
             </h2>
             <p className="text-sm text-gray-500">
-              Xem nhanh ca cuu ho va trung tam ho tro tren ban do.
+              Xem nhanh ca cứu hộ và trung tâm hỗ trợ trên bản đồ.
             </p>
           </div>
 
           <Tabs defaultValue="all" className="min-h-0 flex-1 gap-0">
             <TabsList className="mx-4 mt-4 grid w-auto grid-cols-3">
-              <TabsTrigger value="all">Tat ca</TabsTrigger>
-              <TabsTrigger value="rescue">Can ho tro</TabsTrigger>
-              <TabsTrigger value="organizations">Trung tam</TabsTrigger>
+              <TabsTrigger value="all">Tất cả</TabsTrigger>
+              <TabsTrigger value="rescue">Cần hỗ trợ</TabsTrigger>
+              <TabsTrigger value="organizations">Trung tâm</TabsTrigger>
             </TabsList>
 
             <TabsContent
@@ -340,16 +374,16 @@ export default function MapRescuePage() {
                 <section className="space-y-3">
                   <div className="flex items-center justify-between">
                     <h3 className="text-sm font-semibold text-gray-900">
-                      Ca cuu ho
+                      Ca cứu hộ
                     </h3>
                     <span className="text-xs text-gray-500">
-                      {totalRescueCases} muc
+                      {totalRescueCases} mục
                     </span>
                   </div>
                   <div className="space-y-3">
                     {renderRescueList(
                       rescueCases,
-                      "Chua co ca cuu ho trong vung hien thi.",
+                      "Chưa có ca cứu hộ trong vùng hiển thị.",
                     )}
                   </div>
                 </section>
@@ -357,10 +391,10 @@ export default function MapRescuePage() {
                 <section className="space-y-3">
                   <div className="flex items-center justify-between">
                     <h3 className="text-sm font-semibold text-gray-900">
-                      Trung tam ho tro
+                      Trung tâm hỗ trợ
                     </h3>
                     <span className="text-xs text-gray-500">
-                      {totalOrganizations} muc
+                      {totalOrganizations} mục
                     </span>
                   </div>
                   <div className="space-y-3">
@@ -377,7 +411,7 @@ export default function MapRescuePage() {
               <div className="space-y-3">
                 {renderRescueList(
                   rescueCasesNeedingSupport,
-                  "Chua co ca nao dang can ho tro trong vung hien thi.",
+                  "Chưa có ca nào đang cần hỗ trợ trong vùng hiển thị.",
                 )}
               </div>
             </TabsContent>

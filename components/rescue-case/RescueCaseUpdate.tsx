@@ -107,31 +107,6 @@ export function RescueCaseUpdate({
 
           <div className="grid gap-5 md:grid-cols-2">
             <div className="space-y-2">
-              <Label>Organization ID</Label>
-              <Input
-                value={values.organizationId ?? ""}
-                onChange={(event) =>
-                  setValues((prev) => ({
-                    ...prev,
-                    organizationId: event.target.value,
-                  }))
-                }
-                disabled={isBusy}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Pet ID</Label>
-              <Input
-                value={values.petId ?? ""}
-                onChange={(event) =>
-                  setValues((prev) => ({ ...prev, petId: event.target.value }))
-                }
-                disabled={isBusy}
-              />
-            </div>
-
-            <div className="space-y-2">
               <Label>Loai</Label>
               <Input
                 value={values.species ?? ""}
@@ -214,50 +189,38 @@ export function RescueCaseUpdate({
                   latitude={values.latitude}
                   longitude={values.longitude}
                   disabled={isBusy}
-                  onChange={({ latitude, longitude }) =>
+                  onChange={async ({ latitude, longitude }) => {
                     setValues((prev) => ({
                       ...prev,
                       latitude,
                       longitude,
-                    }))
-                  }
+                    }));
+                    
+                    try {
+                      const res = await fetch(
+                        `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&accept-language=vi`
+                      );
+                      const data = await res.json();
+                      if (data && data.address) {
+                        const addr = data.address;
+                        const ward = addr.suburb || addr.quarter || addr.town || addr.village || addr.ward || "";
+                        const province = addr.city || addr.state || addr.province || "";
+                        
+                        setValues((prev) => ({
+                          ...prev,
+                          latitude,
+                          longitude,
+                          wardName: ward,
+                          provinceName: province,
+                          locationText: data.display_name || prev.locationText,
+                        }));
+                      }
+                    } catch (err) {
+                      console.error("Reverse geocoding failed", err);
+                    }
+                  }}
                 />
               </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Latitude</Label>
-              <Input value={String(values.latitude ?? "")} readOnly disabled />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Longitude</Label>
-              <Input value={String(values.longitude ?? "")} readOnly disabled />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Province</Label>
-              <Input
-                value={values.provinceName ?? ""}
-                onChange={(event) =>
-                  setValues((prev) => ({
-                    ...prev,
-                    provinceName: event.target.value,
-                  }))
-                }
-                disabled={isBusy}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Ward</Label>
-              <Input
-                value={values.wardName ?? ""}
-                onChange={(event) =>
-                  setValues((prev) => ({ ...prev, wardName: event.target.value }))
-                }
-                disabled={isBusy}
-              />
             </div>
 
             <div className="space-y-2 md:col-span-2">
@@ -277,7 +240,7 @@ export function RescueCaseUpdate({
           </div>
         </div>
 
-        <DialogFooter className="px-6 pb-6">
+        <DialogFooter className="px-6 pb-6 bg-gray-50/50 py-4 border-t rounded-b-lg">
           <Button
             variant="secondary"
             type="button"

@@ -6,6 +6,7 @@ import type {
   OrganizationMarkerParams,
   OrganizationStatus,
   OrganizationUpdatePayload,
+  MyOrganizationResponse,
 } from "@/types/organization.type";
 import organizationService from "@/services/organization";
 
@@ -18,6 +19,8 @@ export const organizationKeys = {
 
   details: () => [...organizationKeys.all, "detail"] as const,
   detail: (id: string) => [...organizationKeys.details(), id] as const,
+
+  me: () => [...organizationKeys.all, "me"] as const,
 
   members: () => [...organizationKeys.all, "members"] as const,
   memberList: (id: string, params: OrganizationListParams) =>
@@ -110,6 +113,10 @@ export function useCreateOrganization() {
       queryClient.invalidateQueries({
         queryKey: organizationKeys.markers(),
       });
+
+      queryClient.invalidateQueries({
+        queryKey: organizationKeys.me(),
+      });
     },
   });
 }
@@ -192,6 +199,42 @@ export function useRemoveOrganizationMember() {
   });
 }
 
+export function useAddOrganizationMember() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, payload }: { id: string; payload: { email: string; role: string } }) =>
+      organizationService.addMember(id, payload),
+
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: organizationKeys.members(),
+      });
+      queryClient.invalidateQueries({
+        queryKey: organizationKeys.detail(variables.id),
+      });
+    },
+  });
+}
+
+export function useUpdateOrganizationMemberRole() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, userId, payload }: { id: string; userId: string; payload: { role: string } }) =>
+      organizationService.updateMemberRole(id, userId, payload),
+
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: organizationKeys.members(),
+      });
+      queryClient.invalidateQueries({
+        queryKey: organizationKeys.detail(variables.id),
+      });
+    },
+  });
+}
+
 export function useDeactivateOrganization() {
   const queryClient = useQueryClient();
 
@@ -217,3 +260,11 @@ export function useDeactivateOrganization() {
     },
   });
 }
+
+export function useMyOrganization() {
+  return useQuery({
+    queryKey: organizationKeys.me(),
+    queryFn: () => organizationService.getMyOrganization(),
+  });
+}
+

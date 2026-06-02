@@ -25,26 +25,9 @@ import {
   useUpdateBanner,
 } from "@/hooks/use-banner";
 import { useListUrlState } from "@/hooks/use-list-url-state";
-import { useUploadTempMedia } from "@/hooks/use-media";
 
 function getErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : "Co loi xay ra";
-}
-
-async function resolveBannerMedia(
-  values: CreateBannerFormValues | UpdateBannerFormValues,
-  uploadTempMedia: ReturnType<typeof useUploadTempMedia>["mutateAsync"],
-) {
-  if (values.imageFile) {
-    return uploadTempMedia({
-      file: values.imageFile,
-      folder: "temp/banners",
-    });
-  }
-
-  return {
-    mediaId: values.mediaId,
-  };
 }
 
 export default function BannerManagementPage() {
@@ -64,7 +47,6 @@ export default function BannerManagementPage() {
   const updateBannerMutation = useUpdateBanner();
   const deleteBannerMutation = useDeleteBanner();
   const toggleBannerMutation = useToggleBannerActive();
-  const uploadTempMediaMutation = useUploadTempMedia();
 
   const data = listQuery.data;
   const selectedBanner = detailQuery.data ?? null;
@@ -72,17 +54,7 @@ export default function BannerManagementPage() {
   const handleCreateBanner = React.useCallback(
     async (values: CreateBannerFormValues) => {
       try {
-        const media = await resolveBannerMedia(
-          values,
-          uploadTempMediaMutation.mutateAsync,
-        );
-
-        await createBannerMutation.mutateAsync(
-          toBannerPayload({
-            ...values,
-            mediaId: media.mediaId,
-          }),
-        );
+        await createBannerMutation.mutateAsync(toBannerPayload(values));
 
         setCreateOpen(false);
         toast.success("Tao banner thanh cong");
@@ -90,7 +62,7 @@ export default function BannerManagementPage() {
         toast.error(getErrorMessage(error));
       }
     },
-    [createBannerMutation, uploadTempMediaMutation],
+    [createBannerMutation],
   );
 
   const handleUpdateBanner = React.useCallback(
@@ -98,17 +70,9 @@ export default function BannerManagementPage() {
       if (!selectedId) return;
 
       try {
-        const media = await resolveBannerMedia(
-          values,
-          uploadTempMediaMutation.mutateAsync,
-        );
-
         await updateBannerMutation.mutateAsync({
           id: selectedId,
-          payload: toBannerPayload({
-            ...values,
-            mediaId: media.mediaId,
-          }),
+          payload: toBannerPayload(values),
         });
 
         setEditOpen(false);
@@ -118,7 +82,7 @@ export default function BannerManagementPage() {
         toast.error(getErrorMessage(error));
       }
     },
-    [selectedId, updateBannerMutation, uploadTempMediaMutation],
+    [selectedId, updateBannerMutation],
   );
 
   const handleDeleteBanner = React.useCallback(async () => {
@@ -187,9 +151,7 @@ export default function BannerManagementPage() {
       <BannerCreateNew
         open={createOpen}
         onOpenChange={setCreateOpen}
-        submitting={
-          createBannerMutation.isPending || uploadTempMediaMutation.isPending
-        }
+        submitting={createBannerMutation.isPending}
         onSubmit={handleCreateBanner}
       />
 
@@ -215,9 +177,7 @@ export default function BannerManagementPage() {
           }
         }}
         loading={detailQuery.isPending}
-        submitting={
-          updateBannerMutation.isPending || uploadTempMediaMutation.isPending
-        }
+        submitting={updateBannerMutation.isPending}
         banner={selectedBanner}
         onSubmit={handleUpdateBanner}
       />

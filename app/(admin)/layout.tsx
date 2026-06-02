@@ -1,7 +1,16 @@
+import type { Metadata } from "next";
 import { AppSidebar } from "@/components/app-sidebar";
 import RequireAuth from "@/components/auth/RequireAuth";
 import { SiteHeader } from "@/components/site-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+
+export const metadata: Metadata = {
+  title: {
+    template: "%s | Paw Home Admin",
+    default: "Dashboard | Paw Home Admin",
+  },
+  description: "Trang quản trị hệ thống cứu trợ và nhận nuôi thú cưng Paw Home.",
+};
 
 export default function AdminLayout({
   children,
@@ -17,7 +26,10 @@ export default function AdminLayout({
         } as React.CSSProperties
       }
     >
-      <RequireAuth allowedRoles={["ADMIN", "STAFF", "OWNER", "VET"]}>
+      <RequireAuth
+        allowedSystemRoles={["ADMIN"]}
+        allowedOrganizationRoles={["OWNER", "STAFF", "MEMBER"]}
+      >
         <AppSidebar variant="inset" />
         <SidebarInset>
           <SiteHeader />

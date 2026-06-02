@@ -48,10 +48,11 @@ export const petKeys = {
     [...petKeys.media(petId), params] as const,
 };
 
-export function usePets(params: PetListParams) {
+export function usePets(params: PetListParams, options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: petKeys.list(params),
     queryFn: () => petService.getAllPets(params),
+    enabled: options?.enabled,
   });
 }
 
@@ -73,6 +74,7 @@ export function useAvailablePets(params: PetListParams) {
 export function usePetsByOrganization(
   organizationId?: string,
   params?: PetListParams,
+  options?: { enabled?: boolean }
 ) {
   return useQuery({
     queryKey: petKeys.byOrganizationList(
@@ -84,7 +86,7 @@ export function usePetsByOrganization(
         organizationId as string,
         params as PetListParams,
       ),
-    enabled: !!organizationId && !!params,
+    enabled: (options?.enabled !== false) && !!organizationId && !!params,
   });
 }
 

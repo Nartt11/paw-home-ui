@@ -23,18 +23,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { PageHero } from "@/components/marketing/PageHero";
+import Image from "next/image";
+import { motion, AnimatePresence } from "motion/react";
+import { cn } from "@/lib/utils";
 import GridSkeleton from "@/components/pet/GridSkeleton";
 import PetCard from "@/components/pet/PetCard";
 import { APP_ROUTES } from "@/constants/routes";
-import { useActiveBanners } from "@/hooks/use-active-banners";
+import { useActiveBanners } from "@/hooks/use-banner";
 import {
   getOptionalSearchParam,
   useListUrlState,
 } from "@/hooks/use-list-url-state";
 import {
   getBannerHref,
-  pickBannerForTargetPage,
   PUBLIC_BANNER_TARGETS,
 } from "@/lib/banner";
 import {
@@ -102,16 +103,55 @@ export default function AdoptionPage() {
       }),
     placeholderData: (previousData) => previousData,
   });
-  const activeBannersQuery = useActiveBanners();
-  const adoptionBanner = React.useMemo(
+  const activeBannersQuery = useActiveBanners(PUBLIC_BANNER_TARGETS.ADOPTION);
+  const adoptionBanners = React.useMemo(
     () =>
-      pickBannerForTargetPage(
-        activeBannersQuery.data ?? [],
-        PUBLIC_BANNER_TARGETS.ADOPTION,
-      ),
+      (activeBannersQuery.data ?? [])
+        .filter((item) => item.targetPage === PUBLIC_BANNER_TARGETS.ADOPTION)
+        .sort((left, right) => left.displayOrder - right.displayOrder),
     [activeBannersQuery.data],
   );
-  const heroPrimaryHref = getBannerHref(adoptionBanner, "#pet-list");
+
+  const defaultBanner = React.useMemo(
+    () => ({
+      bannerId: "default",
+      title: "Mở cửa trái tim cho một người bạn bốn chân đang chờ được yêu thương.",
+      subtitle:
+        "Khám phá danh sách thú cưng đang sẵn sàng nhận nuôi, lọc nhanh theo nhu cầu của bạn và bắt đầu hành trình đem một mái ấm mới đến cho các bé.",
+      mediaUrl:
+        "https://images.unsplash.com/photo-1517849845537-4d257902454a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=1600",
+      linkUrl: "#pet-list",
+      targetPage: PUBLIC_BANNER_TARGETS.ADOPTION,
+      displayOrder: 0,
+      isActive: true,
+    } as any),
+    [],
+  );
+
+  const banners = React.useMemo(
+    () => (adoptionBanners.length > 0 ? adoptionBanners : [defaultBanner]),
+    [adoptionBanners, defaultBanner],
+  );
+
+  const [currentIndex, setCurrentIndex] = React.useState(0);
+
+  React.useEffect(() => {
+    if (banners.length <= 1) return;
+
+    const timer = window.setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % banners.length);
+    }, 6000);
+
+    return () => window.clearInterval(timer);
+  }, [banners.length]);
+
+  React.useEffect(() => {
+    setCurrentIndex(0);
+  }, [banners.length]);
+
+  const normalizedIndex = banners.length > 0 ? currentIndex % banners.length : 0;
+  const currentBanner = banners[normalizedIndex];
+  const heroPrimaryHref = getBannerHref(currentBanner, "#pet-list");
 
   const pets = availablePetsQuery.data?.content ?? [];
   const totalPages = Math.max(availablePetsQuery.data?.totalPages ?? 1, 1);
@@ -144,87 +184,164 @@ export default function AdoptionPage() {
 
   return (
     <div className="bg-[linear-gradient(180deg,#fff7ed_0%,#ffffff_16%,#fffaf5_100%)]">
-      <PageHero
-        imageSrc={
-          adoptionBanner?.mediaUrl ||
-          "https://images.unsplash.com/photo-1517849845537-4d257902454a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=1600"
-        }
-        imageAlt={adoptionBanner?.title || "Pets waiting for adoption"}
-        minHeightClassName="min-h-[500px]"
-        overlayClassName="bg-[linear-gradient(100deg,rgba(6,23,35,0.88)_10%,rgba(6,23,35,0.55)_45%,rgba(6,23,35,0.18)_100%)]"
-        containerClassName="max-w-7xl"
-        badge={
-          <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-white/80 backdrop-blur">
-            <Sparkles size={14} />
-            Adoption Campaign
-          </div>
-        }
-        title={
-          <div>
-            <h1 className="max-w-3xl whitespace-pre-line text-balance text-4xl font-black tracking-tight text-white md:text-6xl">
-              {adoptionBanner?.title ||
-                "Mở cửa trái tim cho một người bạn bốn chân đang chờ được yêu thương."}
-            </h1>
-          </div>
-        }
-        description={
-          <p className="max-w-2xl text-base leading-7 text-white/78 md:text-lg">
-            {adoptionBanner?.subtitle ||
-              "Khám phá danh sách thú cưng đang sẵn sàng nhận nuôi, lọc nhanh theo nhu cầu của bạn và bắt đầu hành trình đem một mái ấm mới đến cho các bé."}
-          </p>
-        }
-        actions={
-          <>
-            <Button
-              asChild
-              size="lg"
-              className="rounded-2xl bg-white px-6 text-slate-900 hover:bg-white/90"
+      <section className="relative flex w-full items-center justify-center overflow-hidden min-h-[480px] bg-slate-950">
+        {/* Background Image Carousel with Ken Burns zoom & Cross-fade */}
+        <div className="absolute inset-0 z-0">
+          <AnimatePresence mode="popLayout">
+            <motion.div
+              key={currentBanner.bannerId}
+              initial={{ opacity: 0, scale: 1.06 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.96 }}
+              transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+              className="absolute inset-0"
             >
-              <Link href={heroPrimaryHref}>
-                {adoptionBanner ? "Xem chiến dịch" : "Xem danh sách"}
-              </Link>
-            </Button>
-            <Button
-              asChild
-              size="lg"
-              variant="outline"
-              className="rounded-2xl border-white/30 bg-white/10 px-6 text-white backdrop-blur hover:bg-white/15"
-            >
-              <Link href={APP_ROUTES.DONATION}>Ủng hộ trung tâm</Link>
-            </Button>
-          </>
-        }
-      >
-        <div className="mt-8 grid max-w-3xl grid-cols-1 gap-4 sm:grid-cols-3">
-          <div className="rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur">
-            <div className="flex items-center gap-2 text-white/80">
-              <PawPrint size={16} />
-              <span className="text-sm font-semibold">Sẵn sàng nhận nuôi</span>
+              <Image
+                src={currentBanner.mediaUrl || defaultBanner.mediaUrl}
+                alt={currentBanner.title || "Adoption Campaign"}
+                fill
+                priority
+                unoptimized
+                className="object-cover object-center"
+              />
+            </motion.div>
+          </AnimatePresence>
+          {/* Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-900/60 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent" />
+        </div>
+
+        {/* Content */}
+        <div className="relative z-10 container mx-auto w-full px-6 max-w-7xl py-12 md:py-16">
+          <div className="flex flex-col gap-6">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentBanner.bannerId}
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
+                className="flex flex-col gap-4"
+              >
+                {/* Badge */}
+                <div>
+                  <span className="inline-flex items-center gap-2 rounded-full border border-orange-500/30 bg-orange-500/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-orange-400 backdrop-blur-md">
+                    <Sparkles size={14} className="animate-pulse" />
+                    Adoption Campaign
+                  </span>
+                </div>
+
+                {/* Title */}
+                <h1 className="max-w-3xl whitespace-pre-line text-balance text-4xl font-black tracking-tight text-white md:text-6xl leading-tight">
+                  {currentBanner.title}
+                </h1>
+
+                {/* Description */}
+                <p className="max-w-2xl text-base leading-relaxed text-slate-200/90 md:text-lg">
+                  {currentBanner.subtitle}
+                </p>
+
+                {/* Actions */}
+                <div className="flex flex-wrap items-center gap-4 mt-2">
+                  <Button
+                    asChild
+                    size="lg"
+                    className="rounded-2xl bg-white px-6 text-slate-900 hover:bg-white/90 shadow-lg hover:shadow-orange-500/10"
+                  >
+                    <Link href={heroPrimaryHref}>
+                      {currentBanner.bannerId !== "default" ? "Xem chiến dịch" : "Xem danh sách"}
+                    </Link>
+                  </Button>
+                  <Button
+                    asChild
+                    size="lg"
+                    variant="outline"
+                    className="rounded-2xl border-white/30 bg-white/10 px-6 text-white backdrop-blur hover:bg-white/15 hover:border-white/50"
+                  >
+                    <Link href={APP_ROUTES.DONATION}>Ủng hộ trung tâm</Link>
+                  </Button>
+                </div>
+              </motion.div>
+            </AnimatePresence>
+
+            {/* Slider Dots */}
+            {banners.length > 1 && (
+              <div className="flex items-center gap-2.5 mt-2">
+                {banners.map((item, index) => (
+                  <button
+                    key={item.bannerId}
+                    type="button"
+                    aria-label={`Xem banner ${index + 1}`}
+                    onClick={() => setCurrentIndex(index)}
+                    className="group relative h-3 rounded-full transition-all focus:outline-none"
+                    style={{ width: index === normalizedIndex ? "32px" : "12px" }}
+                  >
+                    <span
+                      className={cn(
+                        "absolute inset-0 rounded-full transition-all duration-300",
+                        index === normalizedIndex
+                          ? "bg-gradient-to-r from-orange-500 to-amber-400"
+                          : "bg-white/30 group-hover:bg-white/60"
+                      )}
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Bottom cards */}
+            <div className="mt-8 grid max-w-4xl grid-cols-1 gap-5 sm:grid-cols-3">
+              <motion.div
+                whileHover={{ y: -6, scale: 1.02 }}
+                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                className="group relative rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-md shadow-xl transition-all duration-300 hover:border-orange-500/40 hover:bg-white/10"
+              >
+                <div className="flex items-center gap-3 text-orange-300 transition-colors group-hover:text-orange-400">
+                  <div className="rounded-lg bg-orange-500/10 p-2 group-hover:bg-orange-500/20">
+                    <PawPrint size={18} />
+                  </div>
+                  <span className="text-sm font-semibold tracking-wide text-white">Sẵn sàng nhận nuôi</span>
+                </div>
+                <p className="mt-3 text-3xl font-black text-white tracking-tight">
+                  {availablePetsQuery.data?.totalElements ?? "--"}
+                </p>
+              </motion.div>
+
+              <motion.div
+                whileHover={{ y: -6, scale: 1.02 }}
+                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                className="group relative rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-md shadow-xl transition-all duration-300 hover:border-orange-500/40 hover:bg-white/10"
+              >
+                <div className="flex items-center gap-3 text-orange-300 transition-colors group-hover:text-orange-400">
+                  <div className="rounded-lg bg-orange-500/10 p-2 group-hover:bg-orange-500/20">
+                    <HeartHandshake size={18} />
+                  </div>
+                  <span className="text-sm font-semibold tracking-wide text-white">Quy trình minh bạch</span>
+                </div>
+                <p className="mt-3 text-sm leading-relaxed text-slate-200/90">
+                  Lọc, theo dõi và sắp xếp theo từng nhu cầu nhận nuôi.
+                </p>
+              </motion.div>
+
+              <motion.div
+                whileHover={{ y: -6, scale: 1.02 }}
+                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                className="group relative rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-md shadow-xl transition-all duration-300 hover:border-orange-500/40 hover:bg-white/10"
+              >
+                <div className="flex items-center gap-3 text-orange-300 transition-colors group-hover:text-orange-400">
+                  <div className="rounded-lg bg-orange-500/10 p-2 group-hover:bg-orange-500/20">
+                    <Search size={18} />
+                  </div>
+                  <span className="text-sm font-semibold tracking-wide text-white">Tìm nhanh hơn</span>
+                </div>
+                <p className="mt-3 text-sm leading-relaxed text-slate-200/90">
+                  Tìm theo tên và lọc theo giới tính chỉ trong một thao tác.
+                </p>
+              </motion.div>
             </div>
-            <p className="mt-2 text-2xl font-black text-white">
-              {availablePetsQuery.data?.totalElements ?? "--"}
-            </p>
-          </div>
-          <div className="rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur">
-            <div className="flex items-center gap-2 text-white/80">
-              <HeartHandshake size={16} />
-              <span className="text-sm font-semibold">Quy trình minh bạch</span>
-            </div>
-            <p className="mt-2 text-sm leading-6 text-white/75">
-              Lọc, theo dõi và sắp xếp theo từng nhu cầu nhận nuôi.
-            </p>
-          </div>
-          <div className="rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur">
-            <div className="flex items-center gap-2 text-white/80">
-              <Search size={16} />
-              <span className="text-sm font-semibold">Tìm nhanh hơn</span>
-            </div>
-            <p className="mt-2 text-sm leading-6 text-white/75">
-              Tìm theo tên và lọc theo giới tính chỉ trong một thao tác.
-            </p>
           </div>
         </div>
-      </PageHero>
+      </section>
 
       <section id="pet-list" className="mx-auto max-w-7xl px-6 py-12 md:py-16">
         <div className="rounded-[28px] border border-orange-100 bg-white/90 p-6 shadow-[0_20px_80px_rgba(15,23,42,0.06)] backdrop-blur md:p-8">

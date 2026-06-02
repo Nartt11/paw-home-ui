@@ -85,7 +85,7 @@ function adoptionStatusBadge(status: AdoptionSummary["status"]) {
 const columns: ColumnDef<AdoptionSummary>[] = [
   {
     accessorKey: "adoptionCode",
-    header: "Ma don",
+    header: "Mã đơn",
     cell: ({ row }) => (
       <span className="font-mono text-xs text-slate-600">
         {row.original.adoptionCode || "-"}
@@ -94,7 +94,7 @@ const columns: ColumnDef<AdoptionSummary>[] = [
   },
   {
     accessorKey: "petName",
-    header: "Thu cung",
+    header: "Thú cưng",
     cell: ({ row }) => (
       <div className="flex min-w-60 items-center gap-3">
         {row.original.petPrimaryImageUrl ? (
@@ -122,7 +122,7 @@ const columns: ColumnDef<AdoptionSummary>[] = [
   },
   {
     accessorKey: "applicantUsername",
-    header: "Nguoi nop don",
+    header: "Người nộp đơn",
     cell: ({ row }) => (
       <div className="min-w-44">
         <div className="truncate font-medium text-slate-900">
@@ -132,26 +132,8 @@ const columns: ColumnDef<AdoptionSummary>[] = [
     ),
   },
   {
-    accessorKey: "experience",
-    header: "Kinh nghiem",
-    cell: ({ row }) => (
-      <p className="line-clamp-2 min-w-56 text-sm text-slate-600">
-        {row.original.experience || "Chua cap nhat"}
-      </p>
-    ),
-  },
-  {
-    accessorKey: "liveCondition",
-    header: "Dieu kien song",
-    cell: ({ row }) => (
-      <p className="line-clamp-2 min-w-56 text-sm text-slate-600">
-        {row.original.liveCondition || "Chua cap nhat"}
-      </p>
-    ),
-  },
-  {
     accessorKey: "createdAt",
-    header: "Ngay tao",
+    header: "Ngày tạo đơn",
     cell: ({ row }) => (
       <span className="text-sm text-slate-600">
         {formatDateVi(row.original.createdAt)}
@@ -160,7 +142,7 @@ const columns: ColumnDef<AdoptionSummary>[] = [
   },
   {
     accessorKey: "status",
-    header: "Trang thai",
+    header: "Trạng thái",
     cell: ({ row }) => adoptionStatusBadge(row.original.status),
   },
   {
@@ -259,7 +241,7 @@ export function AdoptionListTable({
 
   return (
     <div className="overflow-hidden rounded-lg border">
-      <div className="overflow-x-auto min-w-full">
+      <div className="overflow-x-auto max-w-full">
         <Table>
           <TableHeader className="sticky top-0 bg-muted">
             {table.getHeaderGroups().map((headerGroup) => (

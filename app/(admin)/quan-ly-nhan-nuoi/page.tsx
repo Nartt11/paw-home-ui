@@ -13,13 +13,22 @@ import {
   useAdoptions,
   useApproveAdoption,
   useRejectAdoption,
+  useCancelAdoption,
+  useCompleteAdoption,
 } from "@/hooks/use-adoption";
+import { getAuthErrorMessage } from "@/hooks/use-auth";
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import type {
   Adoption,
   AdoptionApprovePayload,
   AdoptionRejectPayload,
   AdoptionSummary,
+  AdoptionListParams,
 } from "@/types/adoption.type";
+import { useCurrentUser } from "@/hooks/use-current-user";
+import RequireAuth from "@/components/auth/RequireAuth";
+import { SYSTEM_ROLES, ORGANIZATION_ROLES } from "@/constants/roles";
 
 type DecisionState =
   | {
@@ -37,21 +46,49 @@ export default function AdoptionManagementPage() {
   const [openDetail, setOpenDetail] = React.useState(false);
   const [selectedId, setSelectedId] = React.useState<string | null>(null);
   const [decisionState, setDecisionState] = React.useState<DecisionState>(null);
+  const [pendingTab, setPendingTab] = React.useState<"ALL" | "PENDING" | "APPROVED">("ALL");
 
-  const adoptionsQuery = useAdoptions({
-    page,
-    size: pageSize,
-  });
-  const pendingAdoptionsQuery = useAdoptions({
-    page: 0,
-    size: PENDING_PREVIEW_SIZE,
-    status: ["PENDING"],
-  });
+  const { data: currentUser } = useCurrentUser();
+  const isOrganizationUser = currentUser?.roles.includes("MEMBERSHIP") && !!currentUser?.organizationRole;
+  const currentOrgId = isOrganizationUser ? currentUser?.organizationId : undefined;
+
+  const canManage = React.useMemo(() => {
+    if (!isOrganizationUser) return true; // ADMIN can manage
+    return currentUser?.organizationRole === ORGANIZATION_ROLES.OWNER || currentUser?.organizationRole === ORGANIZATION_ROLES.STAFF;
+  }, [isOrganizationUser, currentUser?.organizationRole]);
+
+  const adoptionsParams = React.useMemo(() => {
+    const params: AdoptionListParams = {
+      page,
+      size: pageSize,
+    };
+    if (isOrganizationUser && currentOrgId) {
+      params.organizationId = currentOrgId;
+    }
+    return params;
+  }, [page, pageSize, isOrganizationUser, currentOrgId]);
+
+  const pendingParams = React.useMemo(() => {
+    const params: AdoptionListParams = {
+      page: 0,
+      size: 50,
+      status: ["PENDING", "APPROVED"],
+    };
+    if (isOrganizationUser && currentOrgId) {
+      params.organizationId = currentOrgId;
+    }
+    return params;
+  }, [isOrganizationUser, currentOrgId]);
+
+  const adoptionsQuery = useAdoptions(adoptionsParams);
+  const pendingAdoptionsQuery = useAdoptions(pendingParams);
   const adoptionDetailQuery = useAdoptionDetail(
     openDetail ? selectedId ?? undefined : undefined,
   );
   const approveMutation = useApproveAdoption();
   const rejectMutation = useRejectAdoption();
+  const cancelMutation = useCancelAdoption();
+  const completeMutation = useCompleteAdoption();
 
   const adoptions = React.useMemo(
     () => adoptionsQuery.data?.content ?? [],
@@ -62,6 +99,24 @@ export default function AdoptionManagementPage() {
     [pendingAdoptionsQuery.data],
   );
   const adoptionDetail = adoptionDetailQuery.data ?? null;
+
+  const filteredPendingAdoptions = React.useMemo(() => {
+    if (pendingTab === "ALL") return pendingAdoptions;
+    return pendingAdoptions.filter((item) => item.status === pendingTab);
+  }, [pendingAdoptions, pendingTab]);
+
+  const pendingCounts = React.useMemo(() => {
+    const counts = {
+      ALL: pendingAdoptions.length,
+      PENDING: 0,
+      APPROVED: 0,
+    };
+    pendingAdoptions.forEach((item) => {
+      if (item.status === "PENDING") counts.PENDING++;
+      if (item.status === "APPROVED") counts.APPROVED++;
+    });
+    return counts;
+  }, [pendingAdoptions]);
 
   const selectedDecisionAdoption = React.useMemo<
     Adoption | AdoptionSummary | null
@@ -89,7 +144,38 @@ export default function AdoptionManagementPage() {
   const totalPages = adoptionsQuery.data?.totalPages ?? 1;
   const totalItems = adoptionsQuery.data?.totalElements ?? 0;
   const isDecisionSubmitting =
-    approveMutation.isPending || rejectMutation.isPending;
+    approveMutation.isPending ||
+    rejectMutation.isPending ||
+    cancelMutation.isPending ||
+    completeMutation.isPending;
+
+  const handleCancelAdoption = React.useCallback(
+    async (applicationId: string) => {
+      try {
+        await cancelMutation.mutateAsync(applicationId);
+        toast.success("Hủy đơn nhận nuôi thành công!");
+        setOpenDetail(false);
+        setSelectedId(null);
+      } catch (error) {
+        toast.error(getAuthErrorMessage(error, "Hủy đơn nhận nuôi thất bại."));
+      }
+    },
+    [cancelMutation],
+  );
+
+  const handleCompleteAdoption = React.useCallback(
+    async (applicationId: string) => {
+      try {
+        await completeMutation.mutateAsync(applicationId);
+        toast.success("Hoàn thành nhận nuôi thành công!");
+        setOpenDetail(false);
+        setSelectedId(null);
+      } catch (error) {
+        toast.error(getAuthErrorMessage(error, "Hoàn thành nhận nuôi thất bại."));
+      }
+    },
+    [completeMutation],
+  );
 
   const handleViewDetail = React.useCallback((applicationId: string) => {
     setSelectedId(applicationId);
@@ -138,103 +224,158 @@ export default function AdoptionManagementPage() {
   );
 
   return (
-    <div className="space-y-6">
-      <TitlePerPage
-        title="Quan ly nhan nuoi"
-        description="Theo doi don nhan nuoi, xu ly phe duyet va xem chi tiet ho so."
-      />
+    <RequireAuth
+      allowedSystemRoles={[SYSTEM_ROLES.ADMIN]}
+      allowedOrganizationRoles={[
+        ORGANIZATION_ROLES.OWNER,
+        ORGANIZATION_ROLES.STAFF,
+        ORGANIZATION_ROLES.MEMBER,
+      ]}
+    >
+      <div className="space-y-6">
+        <TitlePerPage
+          title="Quản lý nhận nuôi"
+          description="Theo dõi đơn nhận nuôi, xử lý phê duyệt và xem chi tiết hồ sơ."
+        />
 
-      <section className="space-y-4">
-        <div className="flex items-center justify-between">
+        <section className="space-y-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="text-xl font-semibold text-foreground">
+                Đơn chờ xét duyệt
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Ưu tiên xem nhanh các hồ sơ đang chờ xử lý.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-1.5 bg-muted/50 p-1.5 rounded-2xl border border-border/40 w-fit shrink-0">
+              <button
+                type="button"
+                onClick={() => setPendingTab("ALL")}
+                className={cn(
+                  "px-3.5 py-1.5 text-xs font-semibold rounded-xl transition cursor-pointer select-none border border-transparent",
+                  pendingTab === "ALL"
+                    ? "bg-white text-slate-900 shadow-xs border-border/10"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                Tất cả ({pendingCounts.ALL})
+              </button>
+              <button
+                type="button"
+                onClick={() => setPendingTab("PENDING")}
+                className={cn(
+                  "px-3.5 py-1.5 text-xs font-semibold rounded-xl transition cursor-pointer select-none border border-transparent",
+                  pendingTab === "PENDING"
+                    ? "bg-white text-slate-900 shadow-xs border-border/10"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                Đợi xét duyệt ({pendingCounts.PENDING})
+              </button>
+              <button
+                type="button"
+                onClick={() => setPendingTab("APPROVED")}
+                className={cn(
+                  "px-3.5 py-1.5 text-xs font-semibold rounded-xl transition cursor-pointer select-none border border-transparent",
+                  pendingTab === "APPROVED"
+                    ? "bg-white text-slate-900 shadow-xs border-border/10"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                Đợi nhận nuôi ({pendingCounts.APPROVED})
+              </button>
+            </div>
+          </div>
+
+          {pendingAdoptionsQuery.isPending ? (
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {Array.from({ length: 3 }).map((_, index) => (
+                <div
+                  key={index}
+                  className="h-72 animate-pulse rounded-3xl border bg-muted/40"
+                />
+              ))}
+            </div>
+          ) : pendingAdoptions.length === 0 ? (
+            <div className="rounded-3xl border border-dashed px-6 py-10 text-center text-sm text-muted-foreground">
+              Không có đơn nào đang chờ xét duyệt.
+            </div>
+          ) : filteredPendingAdoptions.length === 0 ? (
+            <div className="rounded-3xl border border-dashed px-6 py-10 text-center text-sm text-muted-foreground">
+              Không có đơn nào ở trạng thái này.
+            </div>
+          ) : (
+            <AdoptionRequestList
+              adoptionsList={filteredPendingAdoptions}
+              onViewDetail={handleViewDetail}
+              onApprove={canManage ? handleOpenApprove : undefined}
+              onReject={canManage ? handleOpenReject : undefined}
+            />
+          )}
+        </section>
+
+        <section className="space-y-4">
           <div>
             <h2 className="text-xl font-semibold text-foreground">
-              Don cho xet duyet
+              Tất cả đơn nhận nuôi
             </h2>
             <p className="text-sm text-muted-foreground">
-              Uu tien xem nhanh cac ho so dang cho xu ly.
+              Danh sách tổng hợp hồ sơ nhận nuôi, hiển thị thông tin pet và người nộp đơn.
             </p>
           </div>
-        </div>
 
-        {pendingAdoptionsQuery.isPending ? (
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {Array.from({ length: 3 }).map((_, index) => (
-              <div
-                key={index}
-                className="h-72 animate-pulse rounded-3xl border bg-muted/40"
-              />
-            ))}
-          </div>
-        ) : pendingAdoptions.length === 0 ? (
-          <div className="rounded-3xl border border-dashed px-6 py-10 text-center text-sm text-muted-foreground">
-            Khong co don nao dang cho xet duyet.
-          </div>
-        ) : (
-          <AdoptionRequestList
-            adoptionsList={pendingAdoptions}
+          <AdoptionListTable
+            data={adoptions}
+            loading={adoptionsQuery.isPending}
             onViewDetail={handleViewDetail}
-            onApprove={handleOpenApprove}
-            onReject={handleOpenReject}
+            onApprove={canManage ? handleOpenApprove : undefined}
+            onReject={canManage ? handleOpenReject : undefined}
           />
-        )}
-      </section>
 
-      <section className="space-y-4">
-        <div>
-          <h2 className="text-xl font-semibold text-foreground">
-            Tat ca don nhan nuoi
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            Danh sach tong hop ho so nhan nuoi, hien thi thong tin pet va nguoi nop don.
-          </p>
-        </div>
+          <PageControls
+            page={page}
+            pageSize={pageSize}
+            pageSizeOptions={[10, 20, 30]}
+            totalPages={totalPages}
+            totalItems={totalItems}
+            onPageChange={setPage}
+            onPageSizeChange={(nextSize) => {
+              setPageSize(nextSize);
+              setPage(0);
+            }}
+          />
+        </section>
 
-        <AdoptionListTable
-          data={adoptions}
-          loading={adoptionsQuery.isPending}
-          onViewDetail={handleViewDetail}
-          onApprove={handleOpenApprove}
-          onReject={handleOpenReject}
-        />
-
-        <PageControls
-          page={page}
-          pageSize={pageSize}
-          pageSizeOptions={[10, 20, 30]}
-          totalPages={totalPages}
-          totalItems={totalItems}
-          onPageChange={setPage}
-          onPageSizeChange={(nextSize) => {
-            setPageSize(nextSize);
-            setPage(0);
+        <AdoptionViewDetail
+          open={openDetail}
+          onOpenChange={(nextOpen) => {
+            setOpenDetail(nextOpen);
+            if (!nextOpen) {
+              setSelectedId(null);
+            }
           }}
+          adoption={adoptionDetailQuery.isFetching ? null : adoptionDetail}
+          canManage={canManage}
+          onApprove={canManage ? handleOpenApprove : undefined}
+          onReject={canManage ? handleOpenReject : undefined}
+          onCancel={canManage ? handleCancelAdoption : undefined}
+          onComplete={canManage ? handleCompleteAdoption : undefined}
         />
-      </section>
 
-      <AdoptionViewDetail
-        open={openDetail}
-        onOpenChange={(nextOpen) => {
-          setOpenDetail(nextOpen);
-          if (!nextOpen) {
-            setSelectedId(null);
-          }
-        }}
-        adoption={adoptionDetailQuery.isFetching ? null : adoptionDetail}
-        onApprove={handleOpenApprove}
-        onReject={handleOpenReject}
-      />
-
-      {decisionState ? (
-        <AdoptionDecisionDialog
-          open={Boolean(decisionState)}
-          onOpenChange={handleDecisionOpenChange}
-          mode={decisionState.mode}
-          submitting={isDecisionSubmitting}
-          applicantName={selectedDecisionAdoption?.applicantUsername}
-          petName={selectedDecisionAdoption?.petName}
-          onSubmit={handleSubmitDecision}
-        />
-      ) : null}
-    </div>
+        {decisionState ? (
+          <AdoptionDecisionDialog
+            open={Boolean(decisionState)}
+            onOpenChange={handleDecisionOpenChange}
+            mode={decisionState.mode}
+            submitting={isDecisionSubmitting}
+            applicantName={selectedDecisionAdoption?.applicantUsername}
+            petName={selectedDecisionAdoption?.petName}
+            onSubmit={handleSubmitDecision}
+          />
+        ) : null}
+      </div>
+    </RequireAuth>
   );
 }

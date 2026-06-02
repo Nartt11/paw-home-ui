@@ -1,12 +1,11 @@
 "use client";
 
 import * as React from "react";
+import dynamic from "next/dynamic";
 
 import type { Organization } from "@/types/organization.type";
 
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import {
   Dialog,
   DialogContent,
@@ -14,11 +13,19 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import dynamic from "next/dynamic";
+import { Separator } from "@/components/ui/separator";
 
-const MapPicker = dynamic(() => import("../map/MapPicker"), {
-  ssr: false,
-});
+const LocationPickerMap = dynamic(
+  () => import("@/components/map/LocationPickerMap"),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex h-40 w-full items-center justify-center rounded-xl border bg-muted/30 text-sm text-muted-foreground">
+        Đang tải bản đồ...
+      </div>
+    ),
+  },
+);
 
 function hasValidCoordinates(latitude: unknown, longitude: unknown) {
   return (
@@ -27,6 +34,43 @@ function hasValidCoordinates(latitude: unknown, longitude: unknown) {
     typeof longitude === "number" &&
     Number.isFinite(longitude)
   );
+}
+
+function typeLabel(type?: string) {
+  switch (type) {
+    case "SHELTER":
+      return "Mái ấm";
+    case "VET_CENTER":
+      return "Cơ sở thú y";
+    default:
+      return type || "-";
+  }
+}
+
+function statusToBadge(status?: string) {
+  const s = (status ?? "").toUpperCase();
+
+  if (s === "ACTIVE") {
+    return (
+      <Badge className="bg-emerald-50 text-emerald-700 hover:bg-emerald-50">
+        Đang hoạt động
+      </Badge>
+    );
+  }
+
+  if (s === "PENDING") {
+    return (
+      <Badge className="bg-amber-50 text-amber-700 hover:bg-amber-50">
+        Chờ duyệt
+      </Badge>
+    );
+  }
+
+  if (s === "INACTIVE") {
+    return <Badge variant="secondary">Ngừng hoạt động</Badge>;
+  }
+
+  return <Badge variant="secondary">{status || "-"}</Badge>;
 }
 
 function FieldRow({
@@ -62,90 +106,106 @@ export function OrganizationViewDetail({
     organization.longitude,
   );
 
+  const title = organization.name
+    ? `Trung tâm - ${organization.name}`
+    : `Trung tâm - ${organization.organizationId}`;
+
+  const addressLine = [
+    organization.streetAddress,
+    organization.wardName,
+    organization.provinceName,
+  ]
+    .filter(Boolean)
+    .join(", ");
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-full sm:max-w-4xl p-0">
+      <DialogContent className="w-full p-0 sm:max-w-4xl">
         <DialogHeader className="px-6 pt-6">
           <div className="flex flex-wrap items-center gap-3">
-            <DialogTitle className="text-base sm:text-lg">
-              {organization.name}
-            </DialogTitle>
-            <div className="flex items-center gap-2">
-              <Badge variant="secondary">{organization.type}</Badge>
-              <Badge>{organization.status}</Badge>
-            </div>
+            <DialogTitle className="text-base sm:text-lg">{title}</DialogTitle>
+            {statusToBadge(organization.status)}
+            <Badge variant="secondary">{typeLabel(organization.type)}</Badge>
           </div>
-          {organization.description ? (
-            <DialogDescription className="mt-1">
-              {organization.description}
-            </DialogDescription>
-          ) : null}
+
+          <DialogDescription className="mt-1">
+            {organization.description || ""}
+          </DialogDescription>
         </DialogHeader>
 
-        <div className="max-h-[calc(100vh-10rem)] overflow-y-auto px-6 pb-6">
-          <Card className="rounded-3xl border-0 shadow-none">
-            <CardHeader className="hidden" />
-            <CardContent className="space-y-6 p-0">
-              <Separator />
+        <div className="max-h-[calc(100vh-10rem)] space-y-6 overflow-y-auto px-6 pb-6">
+          <Separator />
 
-              <div className="grid gap-5 md:grid-cols-2">
-                <FieldRow
-                  label="Organization ID"
-                  value={organization.organizationId}
-                  mono
-                />
-                <FieldRow
-                  label="Created by"
-                  value={organization.createdBy}
-                  mono
-                />
-                <FieldRow label="Email" value={organization.email || "—"} />
-                <FieldRow label="Phone" value={organization.phone || "—"} />
-                <FieldRow
-                  label="Official link"
-                  value={organization.officialLink || "—"}
-                />
-              </div>
-
-              <div className="grid gap-5 md:grid-cols-2">
-                <FieldRow
-                  label="Street address"
-                  value={organization.streetAddress || "—"}
-                />
-                <FieldRow label="Ward" value={organization.wardName || "—"} />
-                <FieldRow
-                  label="Province"
-                  value={organization.provinceName || "—"}
-                />
-                <FieldRow
-                  label="Coordinates"
-                  value={
-                    canShowMap
-                      ? `${organization.latitude}, ${organization.longitude}`
-                      : "—"
-                  }
-                  mono
-                />
-              </div>
-
-              <Separator />
-
+          <div className="grid gap-4 md:grid-cols-[240px_1fr]">
+            <div className="overflow-hidden rounded-xl border border-border bg-muted">
               {canShowMap ? (
-                <div className="space-y-2">
-                  <div className="text-xs font-medium text-muted-foreground">
-                    Map
-                  </div>
-                  <div className="overflow-hidden rounded-2xl border border-border">
-                    <MapPicker
-                      title={organization.name}
-                      latitude={organization.latitude}
-                      longitude={organization.longitude}
-                    />
-                  </div>
+                <div className="h-40 w-full">
+                  <LocationPickerMap
+                    latitude={organization.latitude}
+                    longitude={organization.longitude}
+                    disabled
+                  />
                 </div>
-              ) : null}
-            </CardContent>
-          </Card>
+              ) : (
+                <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">
+                  Chưa có tọa độ
+                </div>
+              )}
+            </div>
+
+            <div className="grid gap-5 md:grid-cols-2">
+              <FieldRow
+                label="Organization ID"
+                value={organization.organizationId}
+                mono
+              />
+              <FieldRow
+                label="Người tạo"
+                value={organization.createdBy || "-"}
+                mono
+              />
+              <FieldRow label="Email" value={organization.email || "-"} />
+              <FieldRow label="Điện thoại" value={organization.phone || "-"} />
+              <FieldRow
+                label="Official link"
+                value={
+                  organization.officialLink ? (
+                    <a
+                      href={organization.officialLink}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="break-all text-primary underline-offset-4 hover:underline"
+                    >
+                      {organization.officialLink}
+                    </a>
+                  ) : (
+                    "-"
+                  )
+                }
+              />
+              <FieldRow label="Địa chỉ" value={addressLine || "-"} />
+              <FieldRow
+                label="Latitude"
+                value={canShowMap ? String(organization.latitude) : "-"}
+                mono
+              />
+              <FieldRow
+                label="Longitude"
+                value={canShowMap ? String(organization.longitude) : "-"}
+                mono
+              />
+            </div>
+          </div>
+
+          <Separator />
+
+          <div className="grid gap-5 md:grid-cols-2">
+            <FieldRow label="Loại" value={typeLabel(organization.type)} />
+            <FieldRow
+              label="Trạng thái"
+              value={(organization.status ?? "-").toString()}
+            />
+          </div>
         </div>
       </DialogContent>
     </Dialog>

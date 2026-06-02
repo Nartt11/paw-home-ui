@@ -5,6 +5,9 @@ import {
   RescueCaseMarkers,
   RescueCaseNearByParams,
   RescueCasePayload,
+  CompleteRescuePayload,
+  RescueCompletion,
+  RescueCompletionQueryParams,
 } from "@/types/rescue-case.type";
 
 import { ListParams } from "@/types/api.type";
@@ -35,6 +38,15 @@ export const rescueCaseKeys = {
 
   boundingBox: (params: RescueCaseBoundingBoxParams) =>
     [...rescueCaseKeys.boundingBoxes(), params] as const,
+
+  completionsLists: () => [...rescueCaseKeys.all, "completions"] as const,
+
+  completionsList: (params: RescueCompletionQueryParams) =>
+    [...rescueCaseKeys.completionsLists(), params] as const,
+
+  completionDetails: () => [...rescueCaseKeys.all, "completion-detail"] as const,
+
+  completionDetail: (id: string) => [...rescueCaseKeys.completionDetails(), id] as const,
 };
 
 export function useRescueCases(params: ListParams) {
@@ -170,6 +182,87 @@ export function useUpdateRescueCaseStatus() {
         queryKey: rescueCaseKeys.markers(),
       });
 
+      queryClient.invalidateQueries({
+        queryKey: rescueCaseKeys.boundingBoxes(),
+      });
+    },
+  });
+}
+
+export function useCompleteRescue() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      id,
+      payload,
+    }: {
+      id: string;
+      payload: CompleteRescuePayload;
+    }) => rescueService.completeRescue(id, payload),
+
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: rescueCaseKeys.lists(),
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: rescueCaseKeys.detail(variables.id),
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: rescueCaseKeys.nearbyLists(),
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: rescueCaseKeys.markers(),
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: rescueCaseKeys.boundingBoxes(),
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: rescueCaseKeys.completionsLists(),
+      });
+    },
+  });
+}
+
+export function useRescueCompletions(params: RescueCompletionQueryParams) {
+  return useQuery({
+    queryKey: rescueCaseKeys.completionsList(params),
+    queryFn: () => rescueService.getRescueCompletions(params),
+  });
+}
+
+export function useRescueCompletionDetail(id?: string) {
+  return useQuery({
+    queryKey: rescueCaseKeys.completionDetail(id ?? ""),
+    queryFn: () => rescueService.getRescueCompletionById(id as string),
+    enabled: !!id,
+  });
+}
+
+export function useApproveRescueCompletion() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => rescueService.approveRescueCompletion(id),
+
+    onSuccess: (data, id) => {
+      queryClient.invalidateQueries({
+        queryKey: rescueCaseKeys.completionsLists(),
+      });
+      queryClient.invalidateQueries({
+        queryKey: rescueCaseKeys.completionDetail(id),
+      });
+      queryClient.invalidateQueries({
+        queryKey: rescueCaseKeys.lists(),
+      });
+      queryClient.invalidateQueries({
+        queryKey: rescueCaseKeys.markers(),
+      });
       queryClient.invalidateQueries({
         queryKey: rescueCaseKeys.boundingBoxes(),
       });

@@ -6,31 +6,50 @@ import { useRouter } from "next/navigation";
 import { APP_ROUTES } from "@/constants/routes";
 import { tokenStorage } from "@/lib/http";
 import { useCurrentUser } from "@/hooks/use-current-user";
+import LoadingScreen from "@/app/loading";
+import { canAccessByRoles } from "@/lib/permission";
+
+
+export type RequireAuthProps = {
+  children: React.ReactNode;
+  /** @deprecated Use allowedSystemRoles instead */
+  allowedRoles?: string[];
+  allowedSystemRoles?: string[];
+  allowedOrganizationRoles?: string[];
+  fallback?: React.ReactNode;
+};
 
 export default function RequireAuth({
   children,
   allowedRoles,
-}: {
-  children: React.ReactNode;
-  allowedRoles?: string[];
-}) {
+  allowedSystemRoles,
+  allowedOrganizationRoles,
+  fallback,
+}: RequireAuthProps) {
   const router = useRouter();
   const hasToken = Boolean(tokenStorage.getAccessToken());
   const currentUserQuery = useCurrentUser();
-  const effectiveRoles = React.useMemo(() => {
-    const roles = currentUserQuery.data?.roles ?? [];
-    const organizationRole = currentUserQuery.data?.organizationRole;
 
-    return new Set(
-      [...roles, organizationRole]
-        .filter((role): role is string => Boolean(role))
-        .map((role) => role.toUpperCase()),
-    );
-  }, [currentUserQuery.data?.organizationRole, currentUserQuery.data?.roles]);
+  const systemRoles = currentUserQuery.data?.roles ?? [];
+  const organizationRole = currentUserQuery.data?.organizationRole;
 
-  const hasRequiredRole =
-    !allowedRoles?.length ||
-    allowedRoles.some((role) => effectiveRoles.has(role.toUpperCase()));
+  // Backward compatibility mapping
+  const effectiveSystemRoles = React.useMemo(() => {
+    return allowedSystemRoles ?? allowedRoles ?? [];
+  }, [allowedSystemRoles, allowedRoles]);
+
+  const hasRequiredRole = React.useMemo(() => {
+    // If no roles specified, default to true or fallback to canAccessByRoles logic
+    if (effectiveSystemRoles.length === 0 && (!allowedOrganizationRoles || allowedOrganizationRoles.length === 0)) {
+      return true;
+    }
+    return canAccessByRoles({
+      userSystemRoles: systemRoles,
+      userOrganizationRole: organizationRole,
+      allowedSystemRoles: effectiveSystemRoles,
+      allowedOrganizationRoles: allowedOrganizationRoles,
+    });
+  }, [systemRoles, organizationRole, effectiveSystemRoles, allowedOrganizationRoles]);
 
   React.useEffect(() => {
     if (!hasToken) {
@@ -56,11 +75,7 @@ export default function RequireAuth({
   ]);
 
   if (!hasToken || currentUserQuery.isPending) {
-    return (
-      <div className="flex min-h-[40vh] items-center justify-center text-sm text-muted-foreground">
-        Đang kiểm tra phiên đăng nhập...
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   if (currentUserQuery.isError) {
@@ -69,9 +84,11 @@ export default function RequireAuth({
 
   if (!hasRequiredRole) {
     return (
-      <div className="flex min-h-[40vh] items-center justify-center text-sm text-muted-foreground">
-        Bạn không có quyền truy cập khu vực này.
-      </div>
+      fallback ?? (
+        <div className="flex min-h-[40vh] items-center justify-center text-sm text-muted-foreground">
+          Bạn không có quyền truy cập khu vực này.
+        </div>
+      )
     );
   }
 

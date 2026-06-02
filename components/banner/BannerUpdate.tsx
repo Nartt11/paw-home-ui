@@ -4,7 +4,7 @@ import * as React from "react";
 import Image from "next/image";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Controller, useForm, useWatch } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 
 import {
   BANNER_LINK_TYPES,
@@ -13,6 +13,7 @@ import {
   updateBannerFormSchema,
   type UpdateBannerFormValues,
 } from "@/lib/schemas/banner";
+import { useUploadTempMedia } from "@/hooks/use-media";
 import type { Banner } from "@/types/banner.type";
 
 import { Button } from "@/components/ui/button";
@@ -41,6 +42,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { toast } from "sonner";
 
 export interface BannerUpdateProps {
   open: boolean;
@@ -59,18 +61,14 @@ export function BannerUpdate({
   banner,
   onSubmit,
 }: BannerUpdateProps) {
+  const uploadTempMediaMutation = useUploadTempMedia();
   const form = useForm<UpdateBannerFormValues>({
     resolver: zodResolver(updateBannerFormSchema),
     defaultValues: getUpdateBannerDefaultValues(),
   });
 
   const imageInputRef = React.useRef<HTMLInputElement | null>(null);
-  const imageFile = useWatch({
-    control: form.control,
-    name: "imageFile",
-  });
-
-  const [previewUrl, setPreviewUrl] = React.useState("");
+  const [uploadedPreviewUrl, setUploadedPreviewUrl] = React.useState("");
 
   React.useEffect(() => {
     if (!open) {
@@ -90,18 +88,83 @@ export function BannerUpdate({
     }
   }, [banner, form, open]);
 
-
   const {
     control,
     formState: { errors },
     handleSubmit,
     register,
+    setValue,
   } = form;
 
-  const isBusy = loading || submitting;
+  const handleImageChange = React.useCallback(
+    async (
+      event: React.ChangeEvent<HTMLInputElement>,
+      onChange: (value: File | null) => void,
+    ) => {
+      const file = event.target.files?.[0] ?? null;
+
+      onChange(file);
+
+      if (!file) {
+        setUploadedPreviewUrl("");
+        setValue("mediaId", banner?.mediaId ?? "", {
+          shouldDirty: true,
+          shouldTouch: true,
+          shouldValidate: true,
+        });
+        return;
+      }
+
+      try {
+        const media = await uploadTempMediaMutation.mutateAsync({
+          file,
+          folder: "temp/banners",
+        });
+
+        setValue("mediaId", media.mediaId, {
+          shouldDirty: true,
+          shouldTouch: true,
+          shouldValidate: true,
+        });
+        setUploadedPreviewUrl(media.url);
+        toast.success("Tai anh banner thanh cong");
+      } catch (error) {
+        setValue("mediaId", banner?.mediaId ?? "", {
+          shouldDirty: true,
+          shouldTouch: true,
+          shouldValidate: true,
+        });
+        setUploadedPreviewUrl("");
+        onChange(null);
+
+        if (imageInputRef.current) {
+          imageInputRef.current.value = "";
+        }
+
+        toast.error(
+          error instanceof Error ? error.message : "Khong the tai anh len",
+        );
+      }
+    },
+    [banner?.mediaId, setValue, uploadTempMediaMutation],
+  );
+
+  const handleDialogOpenChange = React.useCallback(
+    (nextOpen: boolean) => {
+      if (!nextOpen) {
+        setUploadedPreviewUrl("");
+      }
+
+      onOpenChange(nextOpen);
+    },
+    [onOpenChange],
+  );
+
+  const isBusy = loading || submitting || uploadTempMediaMutation.isPending;
+  const previewUrl = uploadedPreviewUrl || banner?.mediaUrl || "";
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleDialogOpenChange}>
       <DialogContent className="w-full p-0 sm:max-w-4xl">
         <DialogHeader className="px-6 pt-6">
           <DialogTitle>Cap nhat banner</DialogTitle>
@@ -217,12 +280,17 @@ export function BannerUpdate({
                           accept="image/jpeg,image/png,image/webp"
                           disabled={isBusy || !banner}
                           onChange={(event) =>
-                            field.onChange(event.target.files?.[0] ?? null)
+                            handleImageChange(event, field.onChange)
                           }
                         />
                       )}
                     />
                     <FieldError errors={[errors.imageFile]} />
+                    {uploadTempMediaMutation.isPending ? (
+                      <p className="text-sm text-muted-foreground">
+                        Dang tai anh len...
+                      </p>
+                    ) : null}
                     {previewUrl ? (
                       <div className="overflow-hidden rounded-lg border">
                         <div className="relative h-48 w-full">
@@ -348,13 +416,17 @@ export function BannerUpdate({
                 <Button
                   variant="secondary"
                   type="button"
-                  onClick={() => onOpenChange(false)}
+                  onClick={() => handleDialogOpenChange(false)}
                   disabled={isBusy}
                 >
                   Huy
                 </Button>
                 <Button type="submit" disabled={isBusy || !banner}>
-                  {submitting ? "Dang luu..." : "Luu thay doi"}
+                  {uploadTempMediaMutation.isPending
+                    ? "Dang tai anh..."
+                    : submitting
+                      ? "Dang luu..."
+                      : "Luu thay doi"}
                 </Button>
               </DialogFooter>
             </form>

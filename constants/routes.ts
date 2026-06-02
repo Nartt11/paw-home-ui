@@ -6,7 +6,7 @@ export const APP_ROUTES = {
   NEWS: "/tin-tuc",
   DONATION: "/ung-ho",
   ABOUT_US: "/ve-chung-toi",
-
+  USER_SETTING: "/ho-so-cua-toi",
   LOGIN: "/dang-nhap",
   SIGNUP: "/dang-ki",
   PROFILE: "/trang-ca-nhan",
@@ -15,6 +15,7 @@ export const APP_ROUTES = {
   DASHBOARD: "/dashboard",
   ADOPTION_MANAGEMENT: "/quan-ly-nhan-nuoi",
   PET_MANAGEMENT: "/quan-ly-thu-cung",
+  ORGANIZATION_MEMBER_MANAGEMENT: "/organization/members",
   RESCUE_CASE_MANAGEMENT: "/quan-ly-cuu-tro",
   CENTER_MANAGEMENT: "/quan-ly-trung-tam",
   BANNER_MANAGEMENT: "/quan-ly-banner",

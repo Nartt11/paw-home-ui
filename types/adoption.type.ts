@@ -46,4 +46,5 @@ export interface AdoptionListParams {
   page?: number;
   size?: number;
   status?: AdoptionStatus[];
+  organizationId?: string;
 }
