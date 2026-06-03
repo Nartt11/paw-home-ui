@@ -22,6 +22,7 @@ interface RescueCompletionCompareDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   caseId: string | null;
+  completionId: string | null;
   onSuccess?: () => void;
 }
 
@@ -30,23 +31,26 @@ export function RescueCompletionCompareDialog({
   onOpenChange,
   caseId,
   onSuccess,
+  completionId,
 }: RescueCompletionCompareDialogProps) {
   const caseQuery = useRescueCaseDetail(caseId ?? undefined);
-  const completionQuery = useRescueCompletionDetail(caseId ?? undefined);
+  const completionQuery = useRescueCompletionDetail(completionId ?? undefined);
   const approveMutation = useApproveRescueCompletion();
 
   const isPending = caseQuery.isPending || completionQuery.isPending;
   const isBusy = approveMutation.isPending;
 
   const handleApprove = async () => {
-    if (!caseId) return;
+    if (!completionId) return;
     try {
-      await approveMutation.mutateAsync(caseId);
+      await approveMutation.mutateAsync(completionId);
       toast.success("Duyệt hoàn thành ca cứu hộ thành công!");
       onSuccess?.();
       onOpenChange(false);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Có lỗi xảy ra khi duyệt.");
+      toast.error(
+        err instanceof Error ? err.message : "Có lỗi xảy ra khi duyệt.",
+      );
     }
   };
 
@@ -59,7 +63,8 @@ export function RescueCompletionCompareDialog({
         <DialogHeader className="px-6 pt-6">
           <DialogTitle>So sánh & Duyệt hoàn thành cứu hộ</DialogTitle>
           <DialogDescription>
-            Đối chiếu thông tin báo cáo ban đầu và thực tế cứu hộ thành công trước khi phê duyệt.
+            Đối chiếu thông tin báo cáo ban đầu và thực tế cứu hộ thành công
+            trước khi phê duyệt.
           </DialogDescription>
         </DialogHeader>
 
@@ -84,24 +89,40 @@ export function RescueCompletionCompareDialog({
                   Báo cáo ca cứu hộ ban đầu
                 </h3>
                 <Separator />
-                
+
                 <div className="space-y-3">
                   <div className="grid grid-cols-2 gap-3 text-sm">
                     <div>
-                      <span className="text-xs text-muted-foreground block">Loài</span>
-                      <span className="font-medium text-foreground">{rescueCase.species || "—"}</span>
+                      <span className="text-xs text-muted-foreground block">
+                        Loài
+                      </span>
+                      <span className="font-medium text-foreground">
+                        {rescueCase.species || "—"}
+                      </span>
                     </div>
                     <div>
-                      <span className="text-xs text-muted-foreground block">Mức độ ưu tiên</span>
-                      <span className="font-medium text-foreground">{rescueCase.priority || "—"}</span>
+                      <span className="text-xs text-muted-foreground block">
+                        Mức độ ưu tiên
+                      </span>
+                      <span className="font-medium text-foreground">
+                        {rescueCase.priority || "—"}
+                      </span>
                     </div>
                     <div>
-                      <span className="text-xs text-muted-foreground block">Màu sắc</span>
-                      <span className="font-medium text-foreground">{rescueCase.color || "—"}</span>
+                      <span className="text-xs text-muted-foreground block">
+                        Màu sắc
+                      </span>
+                      <span className="font-medium text-foreground">
+                        {rescueCase.color || "—"}
+                      </span>
                     </div>
                     <div>
-                      <span className="text-xs text-muted-foreground block">Kích thước</span>
-                      <span className="font-medium text-foreground">{rescueCase.size || "—"}</span>
+                      <span className="text-xs text-muted-foreground block">
+                        Kích thước
+                      </span>
+                      <span className="font-medium text-foreground">
+                        {rescueCase.size || "—"}
+                      </span>
                     </div>
                   </div>
 
@@ -124,17 +145,30 @@ export function RescueCompletionCompareDialog({
                   </div>
 
                   <div>
-                    <span className="text-xs text-muted-foreground block mb-1">Ảnh hiện trường ban đầu</span>
+                    <span className="text-xs text-muted-foreground block mb-1">
+                      Ảnh hiện trường ban đầu
+                    </span>
                     {rescueCase.imageUrls && rescueCase.imageUrls.length > 0 ? (
                       <div className="grid grid-cols-3 gap-2">
                         {rescueCase.imageUrls.map((url, idx) => (
-                          <div key={idx} className="relative aspect-square rounded-lg overflow-hidden border">
-                            <Image src={url} alt={`Report original ${idx}`} fill className="object-cover" unoptimized />
+                          <div
+                            key={idx}
+                            className="relative aspect-square rounded-lg overflow-hidden border"
+                          >
+                            <Image
+                              src={url}
+                              alt={`Report original ${idx}`}
+                              fill
+                              className="object-cover"
+                              unoptimized
+                            />
                           </div>
                         ))}
                       </div>
                     ) : (
-                      <span className="text-sm text-muted-foreground italic">Không có ảnh đi kèm</span>
+                      <span className="text-sm text-muted-foreground italic">
+                        Không có ảnh đi kèm
+                      </span>
                     )}
                   </div>
                 </div>
@@ -152,7 +186,8 @@ export function RescueCompletionCompareDialog({
                   <div className="grid grid-cols-2 gap-3 text-sm">
                     <div>
                       <span className="text-xs text-muted-foreground block flex items-center gap-1">
-                        <Calendar className="h-3 w-3" /> Thời gian cứu thành công
+                        <Calendar className="h-3 w-3" /> Thời gian cứu thành
+                        công
                       </span>
                       <span className="font-medium text-foreground block mt-0.5">
                         {new Date(completion.rescuedAt).toLocaleString("vi-VN")}
@@ -187,17 +222,31 @@ export function RescueCompletionCompareDialog({
                   </div>
 
                   <div>
-                    <span className="text-xs text-muted-foreground block mb-1">Ảnh xác thực hoàn thành</span>
-                    {completion.verificationImagesUrl && completion.verificationImagesUrl.length > 0 ? (
+                    <span className="text-xs text-muted-foreground block mb-1">
+                      Ảnh xác thực hoàn thành
+                    </span>
+                    {completion.verificationImagesUrl &&
+                    completion.verificationImagesUrl.length > 0 ? (
                       <div className="grid grid-cols-3 gap-2">
                         {completion.verificationImagesUrl.map((url, idx) => (
-                          <div key={idx} className="relative aspect-square rounded-lg overflow-hidden border border-emerald-100">
-                            <Image src={url} alt={`Verification ${idx}`} fill className="object-cover" unoptimized />
+                          <div
+                            key={idx}
+                            className="relative aspect-square rounded-lg overflow-hidden border border-emerald-100"
+                          >
+                            <Image
+                              src={url}
+                              alt={`Verification ${idx}`}
+                              fill
+                              className="object-cover"
+                              unoptimized
+                            />
                           </div>
                         ))}
                       </div>
                     ) : (
-                      <span className="text-sm text-muted-foreground italic">Không có ảnh xác thực</span>
+                      <span className="text-sm text-muted-foreground italic">
+                        Không có ảnh xác thực
+                      </span>
                     )}
                   </div>
                 </div>
