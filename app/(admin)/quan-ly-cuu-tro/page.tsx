@@ -27,6 +27,7 @@ import type { RescueCaseBoundingBoxParams, RescueCaseMarkers, RescueCasePayload,
 import { useCurrentUser } from "@/hooks/use-current-user";
 import RequireAuth from "@/components/auth/RequireAuth";
 import { SYSTEM_ROLES, ORGANIZATION_ROLES } from "@/constants/roles";
+import { set } from "zod";
 
 const Map = dynamic(() => import("@/components/map-rescue/MapRescue"), {
   ssr: false,
@@ -78,6 +79,7 @@ export default function RescueCaseManagementPage() {
   } | null>(null);
   const [compareOpen, setCompareOpen] = React.useState(false);
   const [selectedCompletionCaseId, setSelectedCompletionCaseId] = React.useState<string | null>(null);
+  const [selectedCaseId, setSelectedCaseId] = React.useState<string | null>(null);
 
   const { data: currentUser } = useCurrentUser();
   const isOrganizationUser = currentUser?.roles.includes("MEMBERSHIP") && !!currentUser?.organizationRole;
@@ -380,187 +382,196 @@ export default function RescueCaseManagementPage() {
           handleOpenModal={() => setCreateOpen(true)}
         />
 
-      {/* Yêu cầu hoàn thành cần duyệt section */}
-      <div className="space-y-3">
-        <div className="flex items-center gap-2">
-          <h2 className="text-base font-semibold">Yêu cầu hoàn thành cần phê duyệt</h2>
-          {completionsQuery.data?.totalElements ? (
-            <span className="rounded-full bg-rose-50 px-2 py-0.5 text-xs font-semibold text-rose-700 border border-rose-100">
-              {completionsQuery.data.totalElements} ca
-            </span>
-          ) : null}
-        </div>
-
-        {completionsQuery.isPending ? (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {[...Array(4)].map((_, index) => (
-              <div key={index} className="h-24 animate-pulse rounded-xl bg-muted" />
-            ))}
+        {/* Yêu cầu hoàn thành cần duyệt section */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <h2 className="text-base font-semibold">
+              Yêu cầu hoàn thành cần phê duyệt
+            </h2>
+            {completionsQuery.data?.totalElements ? (
+              <span className="rounded-full bg-rose-50 px-2 py-0.5 text-xs font-semibold text-rose-700 border border-rose-100">
+                {completionsQuery.data.totalElements} ca
+              </span>
+            ) : null}
           </div>
-        ) : !completionsQuery.data?.content || completionsQuery.data.content.length === 0 ? (
-          <div className="rounded-xl border border-dashed bg-muted/10 p-6 flex flex-col items-center justify-center text-center gap-1.5 text-muted-foreground">
-            <CheckCircle2 className="h-6 w-6 text-emerald-500" />
-            <div>
-              <p className="font-semibold text-sm text-foreground">Không có yêu cầu nào cần duyệt</p>
-              <p className="text-xs">Tất cả các báo cáo hoàn thành cứu hộ đã được xử lý.</p>
+
+          {completionsQuery.isPending ? (
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {[...Array(4)].map((_, index) => (
+                <div
+                  key={index}
+                  className="h-24 animate-pulse rounded-xl bg-muted"
+                />
+              ))}
             </div>
+          ) : !completionsQuery.data?.content ||
+            completionsQuery.data.content.length === 0 ? (
+            <div className="rounded-xl border border-dashed bg-muted/10 p-6 flex flex-col items-center justify-center text-center gap-1.5 text-muted-foreground">
+              <CheckCircle2 className="h-6 w-6 text-emerald-500" />
+              <div>
+                <p className="font-semibold text-sm text-foreground">
+                  Không có yêu cầu nào cần duyệt
+                </p>
+                <p className="text-xs">
+                  Tất cả các báo cáo hoàn thành cứu hộ đã được xử lý.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {completionsQuery.data.content.map((item) => (
+                <button
+                  key={item.completionId}
+                  type="button"
+                  onClick={() => {
+                    setSelectedCompletionCaseId(item.completionId);
+                    setSelectedCaseId(item.caseId);
+                    setCompareOpen(true);
+                  }}
+                  className="w-full text-left rounded-xl border p-4 hover:border-primary hover:bg-muted/40 transition-all flex flex-col justify-between h-28 bg-white shadow-sm"
+                >
+                  <div className="flex items-start justify-between gap-3 w-full">
+                    <div className="min-w-0">
+                      <p className="font-mono text-[10px] text-muted-foreground">
+                        Mã ca: {item.caseId.substring(0, 8)}...
+                      </p>
+                      <p className="mt-1 font-semibold text-foreground text-sm line-clamp-1">
+                        {item.rescueNote || "Không có ghi chú"}
+                      </p>
+                    </div>
+                    <span className="shrink-0 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700 border border-amber-100">
+                      Chờ duyệt
+                    </span>
+                  </div>
+                  <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground w-full border-t pt-2">
+                    <span className="truncate max-w-[150px] flex items-center gap-1">
+                      <User className="h-3 w-3" /> {item.verifiedByName}
+                    </span>
+                    <span className="shrink-0">
+                      {new Date(item.rescuedAt).toLocaleDateString("vi-VN")}
+                    </span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="grid h-[70vh] gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+          <div className="h-full overflow-hidden rounded-2xl border bg-card">
+            <Map
+              className="h-full w-full"
+              rescueMarkers={rescueMarkers}
+              organizationMarkers={organizationMarkers}
+              loading={isLoadingMap}
+              onRescueMarkerClick={handleOpenDetail}
+              onOrganizationMarkerClick={handleOpenOrganizationDetail}
+              zoomToLocation={zoomToLocation}
+            />
           </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {completionsQuery.data.content.map((item) => (
-              <button
-                key={item.completionId}
-                type="button"
-                onClick={() => {
-                  setSelectedCompletionCaseId(item.caseId);
-                  setCompareOpen(true);
-                }}
-                className="w-full text-left rounded-xl border p-4 hover:border-primary hover:bg-muted/40 transition-all flex flex-col justify-between h-28 bg-white shadow-sm"
+
+          <div className="flex h-full min-h-0 flex-col rounded-2xl border bg-card">
+            <div className="border-b px-5 py-4">
+              <h2 className="text-base font-semibold">Ca cứu trợ trong vùng</h2>
+              <p className="text-sm text-muted-foreground">
+                Chọn một ca để xem chi tiết nhanh.
+              </p>
+            </div>
+
+            <Tabs defaultValue="all" className="min-h-0 flex-1 gap-0">
+              <TabsList className="mx-4 mt-4 grid w-auto grid-cols-3">
+                <TabsTrigger value="all">Tất cả</TabsTrigger>
+                <TabsTrigger value="rescue">Ca cần hỗ trợ</TabsTrigger>
+                <TabsTrigger value="organizations">Trung tâm</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="all" className="min-h-0 overflow-y-auto p-4">
+                <div className="space-y-5">
+                  <section className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-sm font-semibold text-foreground">
+                        Ca cứu trợ
+                      </h3>
+                      <span className="text-xs text-muted-foreground">
+                        {totalRescueCases} mục
+                      </span>
+                    </div>
+                    <div className="space-y-3">
+                      {renderRescueList(
+                        rescueCases,
+                        "Chưa có ca cứu trợ trong vùng hiển thị.",
+                      )}
+                    </div>
+                  </section>
+
+                  <section className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-sm font-semibold text-foreground">
+                        Trung tâm hỗ trợ
+                      </h3>
+                      <span className="text-xs text-muted-foreground">
+                        {totalOrganizations} mục
+                      </span>
+                    </div>
+                    <div className="space-y-3">
+                      {renderOrganizationList(organizations)}
+                    </div>
+                  </section>
+                </div>
+              </TabsContent>
+
+              <TabsContent
+                value="rescue"
+                className="min-h-0 overflow-y-auto p-4"
               >
-                <div className="flex items-start justify-between gap-3 w-full">
-                  <div className="min-w-0">
-                    <p className="font-mono text-[10px] text-muted-foreground">
-                      Mã ca: {item.caseId.substring(0, 8)}...
-                    </p>
-                    <p className="mt-1 font-semibold text-foreground text-sm line-clamp-1">
-                      {item.rescueNote || "Không có ghi chú"}
-                    </p>
-                  </div>
-                  <span className="shrink-0 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700 border border-amber-100">
-                    Chờ duyệt
-                  </span>
+                <div className="space-y-3">
+                  {renderRescueList(
+                    allRescueCases,
+                    "Chưa có ca cứu trợ nào cần hỗ trợ.",
+                  )}
                 </div>
-                <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground w-full border-t pt-2">
-                  <span className="truncate max-w-[150px] flex items-center gap-1">
-                    <User className="h-3 w-3" /> {item.verifiedByName}
-                  </span>
-                  <span className="shrink-0">
-                    {new Date(item.rescuedAt).toLocaleDateString("vi-VN")}
-                  </span>
-                </div>
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
+              </TabsContent>
 
-      <div className="grid h-[70vh] gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
-        <div className="h-full overflow-hidden rounded-2xl border bg-card">
-          <Map
-            className="h-full w-full"
-            rescueMarkers={rescueMarkers}
-            organizationMarkers={organizationMarkers}
-            loading={isLoadingMap}
-            onRescueMarkerClick={handleOpenDetail}
-            onOrganizationMarkerClick={handleOpenOrganizationDetail}
-            zoomToLocation={zoomToLocation}
-          />
+              <TabsContent
+                value="organizations"
+                className="min-h-0 overflow-y-auto p-4"
+              >
+                <div className="space-y-3">
+                  {renderOrganizationList(organizations)}
+                </div>
+              </TabsContent>
+            </Tabs>
+          </div>
         </div>
 
-        <div className="flex h-full min-h-0 flex-col rounded-2xl border bg-card">
-          <div className="border-b px-5 py-4">
-            <h2 className="text-base font-semibold">Ca cứu trợ trong vùng</h2>
-            <p className="text-sm text-muted-foreground">
-              Chọn một ca để xem chi tiết nhanh.
-            </p>
-          </div>
-
-          <Tabs defaultValue="all" className="min-h-0 flex-1 gap-0">
-            <TabsList className="mx-4 mt-4 grid w-auto grid-cols-3">
-              <TabsTrigger value="all">Tất cả</TabsTrigger>
-              <TabsTrigger value="rescue">Ca cần hỗ trợ</TabsTrigger>
-              <TabsTrigger value="organizations">Trung tâm</TabsTrigger>
-            </TabsList>
-
-            <TabsContent
-              value="all"
-              className="min-h-0 overflow-y-auto p-4"
-            >
-              <div className="space-y-5">
-                <section className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-semibold text-foreground">
-                      Ca cứu trợ
-                    </h3>
-                    <span className="text-xs text-muted-foreground">
-                      {totalRescueCases} mục
-                    </span>
-                  </div>
-                  <div className="space-y-3">
-                    {renderRescueList(
-                      rescueCases,
-                      "Chưa có ca cứu trợ trong vùng hiển thị.",
-                    )}
-                  </div>
-                </section>
-
-                <section className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-semibold text-foreground">
-                      Trung tâm hỗ trợ
-                    </h3>
-                    <span className="text-xs text-muted-foreground">
-                      {totalOrganizations} mục
-                    </span>
-                  </div>
-                  <div className="space-y-3">
-                    {renderOrganizationList(organizations)}
-                  </div>
-                </section>
-              </div>
-            </TabsContent>
-
-            <TabsContent
-              value="rescue"
-              className="min-h-0 overflow-y-auto p-4"
-            >
-              <div className="space-y-3">
-                {renderRescueList(
-                  allRescueCases,
-                  "Chưa có ca cứu trợ nào cần hỗ trợ.",
-                )}
-              </div>
-            </TabsContent>
-
-            <TabsContent
-              value="organizations"
-              className="min-h-0 overflow-y-auto p-4"
-            >
-              <div className="space-y-3">
-                {renderOrganizationList(organizations)}
-              </div>
-            </TabsContent>
-          </Tabs>
-        </div>
-      </div>
-
-      <RescueCaseCreate
-        open={createOpen}
-        onOpenChange={setCreateOpen}
-        submitting={createRescueCaseMutation.isPending}
-        onSubmit={handleCreateRescueCase}
-      />
-
-      <RescueCaseViewDetail
-        open={rescueViewOpen}
-        onOpenChange={handleRescueViewOpenChange}
-        rescueCase={detailQuery.data ?? null}
-      />
-
-      {organizationDetailQuery.data ? (
-        <OrganizationViewDetail
-          open={organizationViewOpen}
-          onOpenChange={handleOrganizationViewOpenChange}
-          organization={organizationDetailQuery.data}
+        <RescueCaseCreate
+          open={createOpen}
+          onOpenChange={setCreateOpen}
+          submitting={createRescueCaseMutation.isPending}
+          onSubmit={handleCreateRescueCase}
         />
-      ) : null}
 
-      <RescueCompletionCompareDialog
-        open={compareOpen}
-        onOpenChange={setCompareOpen}
-        caseId={selectedCompletionCaseId}
-      />
-    </div>
+        <RescueCaseViewDetail
+          open={rescueViewOpen}
+          onOpenChange={handleRescueViewOpenChange}
+          rescueCase={detailQuery.data ?? null}
+        />
+
+        {organizationDetailQuery.data ? (
+          <OrganizationViewDetail
+            open={organizationViewOpen}
+            onOpenChange={handleOrganizationViewOpenChange}
+            organization={organizationDetailQuery.data}
+          />
+        ) : null}
+
+        <RescueCompletionCompareDialog
+          open={compareOpen}
+          onOpenChange={setCompareOpen}
+          caseId={selectedCaseId}
+          completionId={selectedCompletionCaseId}
+        />
+      </div>
     </RequireAuth>
   );
 }
