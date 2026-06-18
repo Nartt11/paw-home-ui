@@ -7,7 +7,8 @@ export interface PaginatedResponse<T> {
   last: boolean;
 }
 
-export interface ListParams{
+export interface ListParams {
   page?: number;
   size?: number;
+  search?: string;
 }
