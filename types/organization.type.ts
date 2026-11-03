@@ -24,7 +24,9 @@ export interface OrganizationListParams {
 export interface Organization extends OrganizationSummary {
   description: string;
   streetAddress: string;
+  wardCode: string;
   wardName: string;
+  provinceCode: string;
   provinceName: string;
   phone: string;
   email: string;
@@ -50,7 +52,7 @@ export interface OrganizationMember {
 export interface OrganizationCreatePayload {
   name: string;
   description: string;
-  type: string;
+  type: OrganizationType;
   streetAddress: string;
   wardCode: string;
   wardName: string;
@@ -58,7 +60,7 @@ export interface OrganizationCreatePayload {
   provinceName: string;
   phone: string;
   email: string;
-  imageUrl: string;
+  imageUrl?: string;
   officialLink: string;
   latitude: number;
   longitude: number;
@@ -74,7 +76,7 @@ export interface OrganizationUpdatePayload {
   provinceName: string;
   phone: string;
   email: string;
-  imageUrl: string;
+  imageUrl?: string;
   officialLink: string;
   latitude: number;
   longitude: number;
