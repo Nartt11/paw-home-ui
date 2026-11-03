@@ -4,9 +4,7 @@ import apiEndpoints from "@/services/endpoint";
 import type { ApiEntity, ListParams, PageDto } from "../api-dto";
 
 export type RoleDto = ApiEntity;
-export type PermissionDto = ApiEntity;
 export type CreateRolePayload = ApiEntity;
-export type AssignPermissionsPayload = ApiEntity;
 
 const roleService = {
   async getAllRoles(params: ListParams): Promise<PageDto<RoleDto>> {
@@ -25,19 +23,6 @@ const roleService = {
     await http.delete(apiEndpoints.roles.byId(id));
   },
 
-  async getRolePermissions(id: string | number): Promise<PermissionDto[]> {
-    return http.get<PermissionDto[]>(apiEndpoints.roles.permissions(id));
-  },
-
-  async assignPermissions(
-    id: string | number,
-    payload: AssignPermissionsPayload,
-  ): Promise<RoleDto> {
-    return http.post<RoleDto, AssignPermissionsPayload>(
-      apiEndpoints.roles.permissions(id),
-      payload,
-    );
-  },
 };
 
 export default roleService;

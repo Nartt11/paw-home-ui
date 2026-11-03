@@ -1,5 +1,3 @@
-import { create } from "domain";
-
 type Id = string | number;
 
 const byId = (basePath: string, id: Id) => `${basePath}/${id}`;
@@ -30,9 +28,6 @@ export const apiEndpoints = {
     members: (id: string) => `/organizations/${id}/members`,
     memberByUser: (id: string, userId: string) =>
       `/organizations/${id}/members/${userId}`,
-    pending: "/organizations/pending",
-    inactive: "/organizations/inactive",
-    active: "/organizations/active",
     map: {
       boundingBox: "/organizations/map/bounding-box",
       markers: "/organizations/map/markers",
@@ -102,7 +97,6 @@ export const apiEndpoints = {
   roles: {
     root: "/roles",
     byId: (id: string | number) => byId("/roles", id),
-    permissions: (id: string | number) => `/roles/${id}/permissions`,
   },
   media: {
     byId: (id: string) => `/media/${id}`,
