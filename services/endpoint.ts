@@ -1,5 +1,3 @@
-import { create } from "domain";
-
 type Id = string | number;
 
 const byId = (basePath: string, id: Id) => `${basePath}/${id}`;
@@ -30,9 +28,6 @@ export const apiEndpoints = {
     members: (id: string) => `/organizations/${id}/members`,
     memberByUser: (id: string, userId: string) =>
       `/organizations/${id}/members/${userId}`,
-    pending: "/organizations/pending",
-    inactive: "/organizations/inactive",
-    active: "/organizations/active",
     map: {
       boundingBox: "/organizations/map/bounding-box",
       markers: "/organizations/map/markers",
@@ -40,13 +35,8 @@ export const apiEndpoints = {
   },
   pets: {
     root: "/pets",
-    createByShelter: "/pets/shelter",
     byId: (id: string) => byId("/pets", id),
-    available: "/pets/available",
-    byOrganization: (organizationId: string) =>
-      `/pets/by-organization/${organizationId}`,
-    byUser: (userId: string) => `/pets/by-user/${userId}`,
-    shelter: "/pets/shelter",
+    taxonomy: "/pets/taxonomy",
     status: (id: string) => `/pets/${id}/status`,
     transferOwnership: (id: string) => `/pets/${id}/transfer-ownership`,
     medicalRecords: (petId: string) => `/pets/${petId}/medical-records`,
@@ -63,7 +53,6 @@ export const apiEndpoints = {
   rescueCases: {
     root: "/rescue-cases",
     byId: (id: string) => byId("/rescue-cases", id),
-    nearby: "/rescue-cases/nearby",
     status: (id: string) => `/rescue-cases/${id}/status`,
     complete: (id: string) => `/rescue-cases/${id}/complete`,
     completions: "/rescue-cases/completions",
@@ -71,7 +60,6 @@ export const apiEndpoints = {
     approveCompletion: (id: string) => `/rescue-cases/completions/${id}/approve`,
     map: {
       markers: "/rescue-cases/map/markers",
-      boundingBox: "/rescue-cases/map/bounding-box",
     },
   },
   banners: {
@@ -109,18 +97,15 @@ export const apiEndpoints = {
   roles: {
     root: "/roles",
     byId: (id: string | number) => byId("/roles", id),
-    permissions: (id: string | number) => `/roles/${id}/permissions`,
   },
   media: {
     byId: (id: string) => `/media/${id}`,
     uploadTemp: "/media/upload/temp",
     confirm: (id: string) => `/media/${id}/confirm`,
   },
-  geo: {
-    nearby: "/geo/nearby",
-    me: {
-      location: "/geo/me/location",
-    },
+  locations: {
+    provinces: "/locations/p",
+    provinceByCode: (code: string | number) => `/locations/p/${code}`,
   },
   admin: {
     users: {
@@ -133,8 +118,15 @@ export const apiEndpoints = {
         `/admin/organizations/${organizationId}/accounts`,
       members: (organizationId: string) =>
         `/admin/organizations/${organizationId}/members`,
-      userPets: (organizationId: string, userId: string) =>
-        `/admin/organizations/${organizationId}/users/${userId}/pets`,
+      pets: (organizationId: string) =>
+        `/admin/organizations/${organizationId}/pets`,
+    },
+    dashboard: {
+      overview: "/admin/dashboard/overview",
+      adoptionTrend: "/admin/dashboard/adoption-trend",
+      rescueSummary: "/admin/dashboard/rescue-summary",
+      topOrganizations: "/admin/dashboard/top-organizations",
+      pendingTasks: "/admin/dashboard/pending-tasks",
     },
   },
 } as const;

@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 
+import { useResolveLocation } from "@/hooks/use-location";
 import { useUploadTempMedia } from "@/hooks/use-media";
 import type { RescueCasePayload, RescueCasePriority } from "@/types/rescue-case.type";
 
@@ -58,8 +59,6 @@ const PRIORITIES: Array<{ value: RescueCasePriority; label: string }> = [
 ];
 
 const DEFAULT_VALUES: RescueCaseCreateValues = {
-  petId: "",
-  organizationId: "",
   species: "",
   color: "",
   size: "",
@@ -91,6 +90,7 @@ export function RescueCaseCreate({
   const fileInputRef = React.useRef<HTMLInputElement | null>(null);
 
   const uploadMediaMutation = useUploadTempMedia();
+  const resolveLocation = useResolveLocation();
 
   const handleOpenChange = React.useCallback(
     (nextOpen: boolean) => {
@@ -272,26 +272,18 @@ export function RescueCaseCreate({
                     update("longitude", longitude);
                     
                     try {
-                      const res = await fetch(
-                        `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&accept-language=vi`
-                      );
-                      const data = await res.json();
-                      if (data && data.address) {
-                        const addr = data.address;
-                        const ward = addr.suburb || addr.quarter || addr.town || addr.village || addr.ward || "";
-                        const province = addr.city || addr.state || addr.province || "";
-                        
-                        setValues((prev) => ({
-                          ...prev,
-                          latitude,
-                          longitude,
-                          wardName: ward,
-                          provinceName: province,
-                          locationText: data.display_name || prev.locationText,
-                          provinceCode: addr.postcode || prev.provinceCode || "79",
-                          wardCode: addr.postcode ? addr.postcode.substring(0, 5) : prev.wardCode || "00001",
-                        }));
-                      }
+                      const location = await resolveLocation(latitude, longitude);
+
+                      setValues((prev) => ({
+                        ...prev,
+                        latitude,
+                        longitude,
+                        wardName: location.wardName,
+                        wardCode: location.wardCode,
+                        provinceName: location.provinceName,
+                        provinceCode: location.provinceCode,
+                        locationText: location.displayName || prev.locationText,
+                      }));
                     } catch (err) {
                       console.error("Reverse geocoding failed", err);
                     }

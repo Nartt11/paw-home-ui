@@ -31,7 +31,6 @@ import type { OrganizationSummary } from "@/types/organization.type";
 import type {
   RescueCaseBoundingBoxParams,
   RescueCaseMarkers,
-  RescueCasePayload,
   RescueCaseSummary,
 } from "@/types/rescue-case.type";
 
@@ -50,7 +49,7 @@ const VIETNAM_BOUNDS: RescueCaseBoundingBoxParams = {
   minLng: 102.1,
   maxLng: 109.5,
   page: 0,
-  size: 100,
+  pageSize: 100,
 };
 
 const VIETNAM_MARKER_BOUNDS: RescueCaseMarkers = {
@@ -59,14 +58,6 @@ const VIETNAM_MARKER_BOUNDS: RescueCaseMarkers = {
   minLng: 102.1,
   maxLng: 109.5,
 };
-
-function toCreateRescuePayload(
-  values: RescueCaseCreateValues,
-): RescueCasePayload {
-  return {
-    ...values,
-  };
-}
 
 export default function MapRescuePage() {
   const [createOpen, setCreateOpen] = useState(false);
@@ -202,7 +193,7 @@ export default function MapRescuePage() {
 
   const handleCreateRescueCase = useCallback(
     async (values: RescueCaseCreateValues) => {
-      await createRescueCaseMutation.mutateAsync(toCreateRescuePayload(values));
+      await createRescueCaseMutation.mutateAsync(values);
       setCreateOpen(false);
     },
     [createRescueCaseMutation],

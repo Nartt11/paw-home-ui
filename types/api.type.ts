@@ -9,5 +9,5 @@ export interface PaginatedResponse<T> {
 
 export interface ListParams{
   page?: number;
-  size?: number;
+  pageSize?: number;
 }

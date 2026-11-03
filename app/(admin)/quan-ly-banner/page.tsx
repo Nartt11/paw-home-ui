@@ -27,13 +27,13 @@ import {
 import { useListUrlState } from "@/hooks/use-list-url-state";
 
 function getErrorMessage(error: unknown) {
-  return error instanceof Error ? error.message : "Co loi xay ra";
+  return error instanceof Error ? error.message : "Có lỗi xảy ra";
 }
 
 export default function BannerManagementPage() {
   const { page, size, setPage, setSize } = useListUrlState();
 
-  const listQuery = useBanners({ page, size });
+  const listQuery = useBanners({ page, pageSize: size });
 
   const [deleteOpen, setDeleteOpen] = React.useState(false);
   const [deleteId, setDeleteId] = React.useState<string | null>(null);
@@ -57,7 +57,7 @@ export default function BannerManagementPage() {
         await createBannerMutation.mutateAsync(toBannerPayload(values));
 
         setCreateOpen(false);
-        toast.success("Tao banner thanh cong");
+        toast.success("Tạo banner thành công");
       } catch (error) {
         toast.error(getErrorMessage(error));
       }
@@ -77,7 +77,7 @@ export default function BannerManagementPage() {
 
         setEditOpen(false);
         setSelectedId(null);
-        toast.success("Cap nhat banner thanh cong");
+        toast.success("Cập nhật banner thành công");
       } catch (error) {
         toast.error(getErrorMessage(error));
       }
@@ -92,7 +92,7 @@ export default function BannerManagementPage() {
       await deleteBannerMutation.mutateAsync(deleteId);
       setDeleteOpen(false);
       setDeleteId(null);
-      toast.success("Xoa banner thanh cong");
+      toast.success("Xóa banner thành công");
     } catch (error) {
       toast.error(getErrorMessage(error));
     }
@@ -102,7 +102,7 @@ export default function BannerManagementPage() {
     async (id: string) => {
       try {
         await toggleBannerMutation.mutateAsync(id);
-        toast.success("Cap nhat trang thai thanh cong");
+        toast.success("Cập nhật trạng thái thành công");
       } catch (error) {
         toast.error(getErrorMessage(error));
       }
@@ -113,9 +113,9 @@ export default function BannerManagementPage() {
   return (
     <div className="space-y-6">
       <TitlePerPage
-        title="Quan ly banner"
-        description="Danh sach banner hien thi tren trang chu"
-        buttonText="Them banner"
+        title="Quản lý banner"
+        description="Danh sách banner hiển thị trên trang chủ"
+        buttonText="Thêm banner"
         handleOpenModal={() => {
           setCreateOpen(true);
         }}
@@ -191,8 +191,8 @@ export default function BannerManagementPage() {
             setDeleteId(null);
           }
         }}
-        title="Xoa banner"
-        description="Ban co chac muon xoa banner nay khong? Hanh dong khong the hoan tac."
+        title="Xóa banner"
+        description="Bạn có chắc muốn xóa banner này không? Hành động không thể hoàn tác."
         confirming={deleteBannerMutation.isPending}
         onConfirm={handleDeleteBanner}
       />

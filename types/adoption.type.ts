@@ -44,7 +44,7 @@ export interface AdoptionCreatePayload {
 
 export interface AdoptionListParams {
   page?: number;
-  size?: number;
+  pageSize?: number;
   status?: AdoptionStatus[];
   organizationId?: string;
 }

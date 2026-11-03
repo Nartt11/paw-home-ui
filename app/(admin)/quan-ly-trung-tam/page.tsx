@@ -4,15 +4,8 @@ import { useCallback, useState } from "react";
 
 import { DeleteModal } from "@/components/common/admin/DeleteModal";
 import TitlePerPage from "@/components/common/admin/TitlePerPage";
-import {
-  OrganizationCreateNew,
-  type OrganizationCreateNewValues,
-} from "@/components/organization/OrganizationCreateNew";
+import { OrganizationFormDialog } from "@/components/organization/OrganizationFormDialog";
 import { OrganizationListTable } from "@/components/organization/OrganizationListTable";
-import {
-  OrganizationUpdate,
-  type OrganizationUpdateValues,
-} from "@/components/organization/OrganizationUpdate";
 import { OrganizationViewDetail } from "@/components/organization/OrganizationViewDetail";
 import {
   getOptionalSearchParam,
@@ -25,79 +18,11 @@ import {
   useOrganizations,
   useUpdateOrganization,
 } from "@/hooks/use-organization";
-import type {
-  OrganizationCreatePayload,
-  OrganizationUpdatePayload,
-} from "@/types/organization.type";
+import type { OrganizationCreatePayload } from "@/types/organization.type";
 import { SearchIcon } from "lucide-react";
+import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { PageControls } from "@/components/common/PageControl";
-
-function parseCoordinate(value: string) {
-  const trimmed = value.trim();
-  if (!trimmed) return undefined;
-  const parsed = Number(trimmed);
-  return Number.isFinite(parsed) ? parsed : undefined;
-}
-
-function toOptionalTrimmed(value: string) {
-  const v = value.trim();
-  return v ? v : undefined;
-}
-
-function toCreateOrganizationPayload(
-  values: OrganizationCreateNewValues,
-): OrganizationCreatePayload {
-  const latitude = parseCoordinate(values.latitude);
-  const longitude = parseCoordinate(values.longitude);
-
-  return {
-    name: values.name.trim(),
-    type: values.type,
-    description: values.description.trim() || "",
-    email: toOptionalTrimmed(values.email) ?? "",
-    phone: toOptionalTrimmed(values.phone) ?? "",
-    officialLink: toOptionalTrimmed(values.officialLink) ?? "",
-    streetAddress: toOptionalTrimmed(values.streetAddress) ?? "",
-
-    // tạm thời cho nhập tay / chọn từ map
-    wardCode: "",
-    wardName: toOptionalTrimmed(values.wardName) ?? "",
-    provinceCode: "",
-    provinceName: toOptionalTrimmed(values.provinceName) ?? "",
-
-    imageUrl: "",
-    latitude: latitude ?? 0,
-    longitude: longitude ?? 0,
-  };
-}
-
-function toUpdateOrganizationPayload(
-  values: OrganizationUpdateValues,
-): OrganizationUpdatePayload {
-  const latitude = parseCoordinate(values.latitude);
-  const longitude = parseCoordinate(values.longitude);
-
-  return {
-    name: values.name.trim(),
-    type: values.type,
-    description: values.description.trim() || "",
-    email: toOptionalTrimmed(values.email) ?? "",
-    phone: toOptionalTrimmed(values.phone) ?? "",
-    officialLink: toOptionalTrimmed(values.officialLink) ?? "",
-    streetAddress: toOptionalTrimmed(values.streetAddress) ?? "",
-
-    // tạm thời cho nhập tay / chọn từ map
-    wardCode: "",
-    wardName: toOptionalTrimmed(values.wardName) ?? "",
-    provinceCode: "",
-    provinceName: toOptionalTrimmed(values.provinceName) ?? "",
-
-    imageUrl: "",
-    latitude: latitude ?? 0,
-    longitude: longitude ?? 0,
-  };
-}
 
 export default function CenterManagementPage() {
   const { searchParams, page, size, setParams, setPage, setSize } =
@@ -116,7 +41,7 @@ export default function CenterManagementPage() {
 
   const organizationsQuery = useOrganizations({
     page,
-    size,
+    pageSize: size,
     status,
   });
   const organizationDetailQuery = useOrganizationDetail(
@@ -130,35 +55,34 @@ export default function CenterManagementPage() {
   const selectedOrganization = organizationDetailQuery.data ?? null;
 
   const handleCreateOrganization = useCallback(
-    (values: OrganizationCreateNewValues) => {
-      if (!values.name.trim()) throw new Error("Tên trung tâm là bắt buộc");
-      if (!values.type) throw new Error("Loại trung tâm là bắt buộc");
-
-      createOrganizationMutation.mutate(toCreateOrganizationPayload(values), {
+    (payload: OrganizationCreatePayload) => {
+      createOrganizationMutation.mutate(payload, {
         onSuccess: () => {
           setOpenCreate(false);
+          toast.success("Tạo trung tâm thành công");
         },
+        onError: (error) => toast.error(error.message),
       });
     },
     [createOrganizationMutation],
   );
 
   const handleUpdateOrganization = useCallback(
-    (values: OrganizationUpdateValues) => {
-      if (!selectedId) throw new Error("Missing updateId");
-      if (!values.name.trim()) throw new Error("Tên trung tâm là bắt buộc");
-      if (!values.type) throw new Error("Loại trung tâm là bắt buộc");
+    (payload: OrganizationCreatePayload) => {
+      if (!selectedId) return;
 
       updateOrganizationMutation.mutate(
         {
           id: selectedId,
-          payload: toUpdateOrganizationPayload(values),
+          payload,
         },
         {
           onSuccess: () => {
             setOpenUpdate(false);
             setSelectedId(null);
+            toast.success("Cập nhật trung tâm thành công");
           },
+          onError: (error) => toast.error(error.message),
         },
       );
     },
@@ -191,7 +115,7 @@ export default function CenterManagementPage() {
         <Input
           placeholder="Tìm tổ chức..."
           value={keyword}
-          onChange={(e) => setParams({ keyword: e.target.value, page: 1 })}
+          onChange={(e) => setParams({ keyword: e.target.value, page: 0 })}
           className="pl-9"
         />
       </div>
@@ -236,15 +160,18 @@ export default function CenterManagementPage() {
         />
       )}
 
-      <OrganizationCreateNew
+      <OrganizationFormDialog
+        mode="create"
         open={openCreate}
         onOpenChange={setOpenCreate}
         submitting={createOrganizationMutation.isPending}
         onSubmit={handleCreateOrganization}
       />
 
-      <OrganizationUpdate
+      <OrganizationFormDialog
+        mode="update"
         open={openUpdate}
+        loading={organizationDetailQuery.isPending}
         onOpenChange={(open) => {
           setOpenUpdate(open);
           if (!open) {

@@ -15,7 +15,7 @@ export interface CursorPageDto<T> {
 
 export interface ListParams {
   page?: number;
-  size?: number;
+  pageSize?: number;
 }
 
 export type ApiEntity = Record<string, unknown>;

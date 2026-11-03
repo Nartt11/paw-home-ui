@@ -1,4 +1,9 @@
-export type UserStatus = "PENDING_VERIFICATION" | "ACTIVE" | "DISABLED";
+export type UserStatus =
+  | "PENDING_VERIFICATION"
+  | "ACTIVE"
+  | "LOCKED"
+  | "INACTIVE"
+  | "BANNED";
 export interface UserSummary {
   userId: string;
   userCode: string;
@@ -26,14 +31,23 @@ export interface User extends UserSummary {
 }
 export interface UserListParams {
   page?: number;
-  size?: number;
-  searchName?: string;
+  pageSize?: number;
+  search?: string;
 }
 export interface Reputation {
   userId: string;
   score: number;
   level: string;
   updatedAt: string;
+}
+
+export interface CreateAccountPayload {
+  username: string;
+  email: string;
+  password: string;
+  systemRole?: string;
+  fullName?: string;
+  phone?: string;
 }
 
 export interface ProfileUpdatePayload {

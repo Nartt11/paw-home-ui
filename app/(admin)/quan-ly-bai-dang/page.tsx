@@ -23,25 +23,14 @@ import {
 } from "@/hooks/use-post";
 import type { PostCreatePayload, PostUpdatePayload } from "@/types/post.type";
 
-function parseCommaSeparatedValues(value: string | undefined) {
-  if (!value) return [];
-
-  return value
-    .split(",")
-    .map((item) => item.trim())
-    .filter(Boolean);
-}
-
 function buildCreatePostPayload(
   values: PostFormValues,
 ): PostCreatePayload {
-  const rescueCaseId = values.rescueCaseId?.trim();
-
   return {
-    content: values.content.trim(),
-    rescueCaseId: rescueCaseId || undefined,
-    mediaIds: parseCommaSeparatedValues(values.mediaIdsText),
-    tagCodes: parseCommaSeparatedValues(values.tagCodesText),
+    content: values.content,
+    rescueCaseId: values.rescueCaseId || undefined,
+    mediaIds: values.media.map((item) => item.mediaId),
+    tagCodes: values.tagCodes,
   };
 }
 
@@ -49,9 +38,9 @@ function buildUpdatePostPayload(
   values: PostFormValues,
 ): PostUpdatePayload {
   return {
-    content: values.content.trim(),
-    mediaIds: parseCommaSeparatedValues(values.mediaIdsText),
-    tagCodes: parseCommaSeparatedValues(values.tagCodesText),
+    content: values.content,
+    mediaIds: values.media.map((item) => item.mediaId),
+    tagCodes: values.tagCodes,
   };
 }
 
@@ -72,7 +61,7 @@ export default function PostManagementPage() {
   const [deleteOpen, setDeleteOpen] = React.useState(false);
   const [deleteId, setDeleteId] = React.useState<string | null>(null);
 
-  const listQuery = usePosts({ page, size });
+  const listQuery = usePosts({ page, pageSize: size });
   const detailQuery = usePostDetail(
     selectedId && (viewOpen || editOpen) ? selectedId : undefined,
   );

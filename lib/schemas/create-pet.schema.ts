@@ -8,6 +8,7 @@ export const ACCEPTED_PET_IMAGE_TYPES = [
 ] as const;
 
 export const MAX_PET_IMAGE_SIZE = 5 * 1024 * 1024;
+export const MAX_PET_IMAGES = 10;
 const PET_GENDER_VALUES = ["MALE", "FEMALE", "UNKNOWN"] as const;
 export const PET_HEALTH_STATUS_VALUES = [
   "HEALTHY",
@@ -16,32 +17,41 @@ export const PET_HEALTH_STATUS_VALUES = [
   "SPECIAL_NEEDS",
 ] as const;
 
-const optionalText = z.string().trim();
-
 export const createPetSchema = z.object({
-  name: z.string().trim().min(1, "Tên thú cưng không được để trống"),
-  species: z.string().trim().min(1, "Loài không được để trống"),
-  breed: optionalText,
-  age: z.coerce.number().min(0, "Tuổi không được nhỏ hơn 0"),
+  name: z
+    .string()
+    .trim()
+    .min(1, "Tên thú cưng không được để trống")
+    .max(100, "Tên thú cưng không được vượt quá 100 ký tự"),
+  speciesId: z.string().min(1, "Vui lòng chọn loài"),
+  breedId: z.string(),
+  age: z.coerce
+    .number()
+    .min(0, "Tuổi không được nhỏ hơn 0")
+    .max(6000, "Tuổi không được vượt quá 6000"),
   gender: z.enum(PET_GENDER_VALUES),
-  color: optionalText,
+  color: z.string().trim().max(50, "Màu sắc không được vượt quá 50 ký tự"),
   weight: z.coerce
     .number({
       error: "Vui lòng nhập cân nặng",
     })
-    .positive("Cân nặng phải lớn hơn 0"),
-  description: optionalText,
+    .positive("Cân nặng phải lớn hơn 0")
+    .max(500, "Cân nặng không được vượt quá 500kg"),
+  description: z
+    .string()
+    .trim()
+    .max(2000, "Mô tả không được vượt quá 2000 ký tự"),
   vaccinated: z.boolean(),
   neutered: z.boolean(),
   healthStatus: z.enum(PET_HEALTH_STATUS_VALUES),
-  rescueDate: z.string(),
-  rescueLocation: optionalText,
+  // imageUrls chỉ dùng để xem trước, backend nhận ảnh qua mediaIds
   imageUrls: z
     .array(z.string().trim().url("Ảnh tải lên không hợp lệ"))
-    .min(1, "Vui lòng tải lên ít nhất 1 ảnh"),
+    .min(1, "Vui lòng tải lên ít nhất 1 ảnh")
+    .max(MAX_PET_IMAGES, `Chỉ được tải lên tối đa ${MAX_PET_IMAGES} ảnh`),
   mediaIds: z.array(z.string().trim()).default([]),
-  shelterId: z.string(),
-  rescueCaseId: optionalText,
+  shelterId: z.string().min(1, "Vui lòng chọn trung tâm"),
+  rescueCaseId: z.string(),
 });
 
 export type CreatePetFormInput = z.input<typeof createPetSchema>;
@@ -49,8 +59,8 @@ export type CreatePetFormValues = z.output<typeof createPetSchema>;
 
 export const createPetDefaultValues: CreatePetFormInput = {
   name: "",
-  species: "",
-  breed: "",
+  speciesId: "",
+  breedId: "",
   age: 0,
   gender: "UNKNOWN",
   color: "",
@@ -59,8 +69,6 @@ export const createPetDefaultValues: CreatePetFormInput = {
   vaccinated: false,
   neutered: false,
   healthStatus: "HEALTHY",
-  rescueDate: "",
-  rescueLocation: "",
   imageUrls: [],
   mediaIds: [],
   shelterId: "",
@@ -71,22 +79,19 @@ export function toCreatePetPayload(
   values: CreatePetFormValues,
 ): Partial<PetCreatePayload> {
   return {
-    name: values.name.trim(),
-    species: values.species.trim(),
-    breed: values.breed.trim(),
+    name: values.name,
+    speciesId: values.speciesId,
+    breedId: values.breedId || undefined,
     age: values.age,
     gender: values.gender,
-    color: values.color.trim(),
+    color: values.color,
     weight: values.weight,
-    description: values.description.trim(),
+    description: values.description,
     vaccinated: values.vaccinated,
     neutered: values.neutered,
     healthStatus: values.healthStatus,
-    rescueDate: values.rescueDate,
-    rescueLocation: values.rescueLocation.trim(),
-    imageUrls: values.imageUrls,
     mediaIds: values.mediaIds,
-    shelterId: values.shelterId.trim(),
-    rescueCaseId: values.rescueCaseId.trim() || undefined,
+    shelterId: values.shelterId,
+    rescueCaseId: values.rescueCaseId || undefined,
   };
 }

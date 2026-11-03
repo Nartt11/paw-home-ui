@@ -18,6 +18,7 @@ export const petKeys = {
   lists: () => [...petKeys.all, "list"] as const,
   list: (params: PetListParams) => [...petKeys.lists(), params] as const,
 
+  taxonomy: () => [...petKeys.all, "taxonomy"] as const,
   availableLists: () => [...petKeys.all, "available"] as const,
   availableList: (params: PetListParams) =>
     [...petKeys.availableLists(), params] as const,
@@ -61,6 +62,14 @@ export function usePetDetail(petId?: string) {
     queryKey: petKeys.detail(petId ?? ""),
     queryFn: () => petService.getPetById(petId as string),
     enabled: !!petId,
+  });
+}
+
+export function usePetTaxonomy() {
+  return useQuery({
+    queryKey: petKeys.taxonomy(),
+    queryFn: () => petService.getTaxonomy(),
+    staleTime: 60 * 60 * 1000,
   });
 }
 
@@ -137,24 +146,6 @@ export function useCreatePet() {
   return useMutation({
     mutationFn: (payload: Partial<PetCreatePayload>) =>
       petService.createPet(payload),
-
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: petKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: petKeys.availableLists() });
-      queryClient.invalidateQueries({ queryKey: petKeys.byUserLists() });
-      queryClient.invalidateQueries({
-        queryKey: petKeys.byOrganizationLists(),
-      });
-    },
-  });
-}
-
-export function useCreatePetByShelter() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (payload: Partial<PetCreatePayload>) =>
-      petService.createPetByShelter(payload),
 
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: petKeys.lists() });

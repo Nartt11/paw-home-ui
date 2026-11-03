@@ -146,7 +146,7 @@ export default function AdoptionPetDetailPage() {
       petDetailsService.getMedicalRecords(petId as string, {
         petId: petId as string,
         page: 0,
-        size: 3,
+        pageSize: 3,
       }),
     enabled: Boolean(petId),
   });

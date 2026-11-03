@@ -85,12 +85,6 @@ const data = {
   ],
   navContent: [
     {
-      title: "Quản lý bài tin tức",
-      url: `${APP_ROUTES.NEWS_MANAGEMENT}`,
-      icon: <LayoutDashboardIcon />,
-      allowedSystemRoles: [SYSTEM_ROLES.ADMIN],
-    },
-    {
       title: "Quản lý banner",
       url: `${APP_ROUTES.BANNER_MANAGEMENT}`,
       icon: <LayoutDashboardIcon />,

@@ -198,7 +198,7 @@ export default function ProfilePage() {
             <div className="grid gap-4 md:grid-cols-2">
               <div>
                 <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  So dien thoai
+                  Số điện thoại
                 </div>
                 <div className="mt-2 text-sm">
                   {readOnlyValue(currentUser.phone)}
@@ -206,7 +206,7 @@ export default function ProfilePage() {
               </div>
               <div>
                 <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  Gioi tinh
+                  Giới tính
                 </div>
                 <div className="mt-2 text-sm">
                   {readOnlyValue(currentUser.gender)}
@@ -235,7 +235,7 @@ export default function ProfilePage() {
             <div className="grid gap-4 md:grid-cols-3">
               <div>
                 <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  Dia chi
+                  Địa chỉ
                 </div>
                 <div className="mt-2 text-sm">
                   {readOnlyValue(currentUser.streetAddress)}

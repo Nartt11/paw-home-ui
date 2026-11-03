@@ -21,5 +21,4 @@ export const APP_ROUTES = {
   BANNER_MANAGEMENT: "/quan-ly-banner",
   POST_MANAGEMENT: "/quan-ly-bai-dang",
   USER_MANAGEMENT: "/quan-ly-nguoi-dung",
-  NEWS_MANAGEMENT: "/quan-ly-tin-tuc",
 };

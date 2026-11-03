@@ -8,12 +8,12 @@ export const PET_DETAIL_IMAGE_FALLBACK =
 
 export const PET_DETAIL_SECTION_QUERY = {
   page: 0,
-  size: 10,
+  pageSize: 10,
 } as const;
 
 export const PET_DETAIL_MEDIA_QUERY = {
   page: 0,
-  size: 8,
+  pageSize: 8,
 } as const;
 
 export const PET_GENDER_LABELS: Record<string, string> = {

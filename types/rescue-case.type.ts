@@ -71,8 +71,8 @@ export interface RescueCaseBoundingBoxParams extends ListParams {
 }
 
 export interface RescueCasePayload {
-  petId: string;
-  organizationId: string;
+  petId?: string;
+  organizationId?: string;
   species: string;
   color: string;
   size: string;
