@@ -1,18 +1,23 @@
 "use client";
 
 import * as React from "react";
+import Image from "next/image";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
+import { toast } from "sonner";
 
 import {
+  MAX_POST_MEDIA,
   postFormDefaultValues,
   postFormSchema,
   type PostFormValues,
 } from "@/lib/schemas/post";
 import type { Post } from "@/types/post.type";
 
+import { RescueCaseSelect } from "@/components/rescue-case/RescueCaseSelect";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -31,6 +36,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
+import { useUploadTempMedia } from "@/hooks/use-media";
+import { useTags } from "@/hooks/use-tag";
+
+const ACCEPTED_POST_IMAGE_TYPES = "image/jpeg,image/png,image/webp";
+const TAG_LIST_PARAMS = { page: 0, pageSize: 100 };
 
 export interface PostFormDialogProps {
   mode: "create" | "update";
@@ -48,8 +58,8 @@ function getInitialValues(post?: Post | null): PostFormValues {
   return {
     content: post.content,
     rescueCaseId: post.rescueCaseId ?? "",
-    mediaIdsText: post.media.map((item) => item.mediaId).join(", "),
-    tagCodesText: post.tags.join(", "),
+    media: post.media.map(({ mediaId, url }) => ({ mediaId, url })),
+    tagCodes: post.tags,
   };
 }
 
@@ -68,11 +78,18 @@ export function PostFormDialog({
   });
 
   const {
+    control,
     formState: { errors },
+    getValues,
     handleSubmit,
     register,
     reset,
+    setValue,
   } = form;
+
+  const uploadTempMediaMutation = useUploadTempMedia();
+  const tagsQuery = useTags(TAG_LIST_PARAMS);
+  const media = useWatch({ control, name: "media" });
 
   React.useEffect(() => {
     if (!open) {
@@ -83,8 +100,50 @@ export function PostFormDialog({
     reset(getInitialValues(post));
   }, [open, post, reset]);
 
-  const isBusy = Boolean(loading) || Boolean(submitting);
+  const handleImageChange = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const files = Array.from(event.target.files ?? []);
+    event.target.value = "";
+    if (files.length === 0) return;
+
+    if (getValues("media").length + files.length > MAX_POST_MEDIA) {
+      toast.error(`Chỉ được đính kèm tối đa ${MAX_POST_MEDIA} ảnh`);
+      return;
+    }
+
+    try {
+      const uploads = await Promise.all(
+        files.map((file) => uploadTempMediaMutation.mutateAsync({ file })),
+      );
+
+      setValue(
+        "media",
+        [
+          ...getValues("media"),
+          ...uploads.map(({ mediaId, url }) => ({ mediaId, url })),
+        ],
+        { shouldDirty: true, shouldValidate: true },
+      );
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Không thể tải ảnh lên",
+      );
+    }
+  };
+
+  const removeImage = (mediaId: string) => {
+    setValue(
+      "media",
+      getValues("media").filter((item) => item.mediaId !== mediaId),
+      { shouldDirty: true, shouldValidate: true },
+    );
+  };
+
+  const isBusy =
+    Boolean(loading) || Boolean(submitting) || uploadTempMediaMutation.isPending;
   const isCreate = mode === "create";
+  const tags = tagsQuery.data?.content ?? [];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -95,8 +154,8 @@ export function PostFormDialog({
           </DialogTitle>
           <DialogDescription>
             {isCreate
-              ? "Nhập nội dung, rescue case, media IDs và tag codes cho bài đăng mới."
-              : "Cập nhật nội dung, media IDs và tag codes cho bài đăng."}
+              ? "Nhập nội dung, chọn ca cứu hộ, ảnh và thẻ cho bài đăng mới."
+              : "Cập nhật nội dung, ảnh và thẻ cho bài đăng."}
           </DialogDescription>
         </DialogHeader>
 
@@ -112,8 +171,8 @@ export function PostFormDialog({
               className="space-y-5"
               onSubmit={handleSubmit((values) => onSubmit?.(values))}
             >
-              <FieldGroup className="grid gap-5 md:grid-cols-2">
-                <Field className="md:col-span-2">
+              <FieldGroup className="grid gap-5">
+                <Field>
                   <FieldLabel htmlFor="post-content">Nội dung</FieldLabel>
                   <FieldContent>
                     <Textarea
@@ -129,47 +188,120 @@ export function PostFormDialog({
 
                 {isCreate ? (
                   <Field>
-                    <FieldLabel htmlFor="post-rescue-case-id">
-                      Rescue case ID
+                    <FieldLabel htmlFor="post-rescue-case">
+                      Ca cứu hộ (tùy chọn)
                     </FieldLabel>
                     <FieldContent>
-                      <Input
-                        id="post-rescue-case-id"
-                        placeholder="case_123"
-                        disabled={isBusy}
-                        aria-invalid={Boolean(errors.rescueCaseId)}
-                        {...register("rescueCaseId")}
+                      <Controller
+                        control={control}
+                        name="rescueCaseId"
+                        render={({ field }) => (
+                          <RescueCaseSelect
+                            id="post-rescue-case"
+                            value={field.value}
+                            onChange={field.onChange}
+                            disabled={isBusy}
+                            invalid={Boolean(errors.rescueCaseId)}
+                          />
+                        )}
                       />
                       <FieldError errors={[errors.rescueCaseId]} />
                     </FieldContent>
                   </Field>
                 ) : null}
 
-                <Field className={isCreate ? "" : "md:col-span-2"}>
-                  <FieldLabel htmlFor="post-media-ids">Media IDs</FieldLabel>
+                <Field>
+                  <FieldLabel htmlFor="post-images">Ảnh đính kèm</FieldLabel>
                   <FieldContent>
-                    <Textarea
-                      id="post-media-ids"
-                      placeholder="media-id-1, media-id-2"
+                    <Input
+                      id="post-images"
+                      type="file"
+                      multiple
+                      accept={ACCEPTED_POST_IMAGE_TYPES}
                       disabled={isBusy}
-                      aria-invalid={Boolean(errors.mediaIdsText)}
-                      {...register("mediaIdsText")}
+                      onChange={handleImageChange}
                     />
-                    <FieldError errors={[errors.mediaIdsText]} />
+                    <FieldError errors={[errors.media]} />
+                    {uploadTempMediaMutation.isPending ? (
+                      <p className="text-sm text-muted-foreground">
+                        Đang tải ảnh lên...
+                      </p>
+                    ) : null}
+                    {media.length > 0 ? (
+                      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                        {media.map((item, index) => (
+                          <div
+                            key={item.mediaId}
+                            className="overflow-hidden rounded-md border border-input bg-muted/30"
+                          >
+                            <div className="relative h-32 w-full">
+                              <Image
+                                src={item.url}
+                                alt={`Ảnh bài đăng ${index + 1}`}
+                                fill
+                                className="object-cover"
+                                unoptimized
+                              />
+                            </div>
+                            <div className="p-2">
+                              <Button
+                                type="button"
+                                variant="secondary"
+                                className="w-full"
+                                onClick={() => removeImage(item.mediaId)}
+                                disabled={isBusy}
+                              >
+                                Xóa ảnh này
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : null}
                   </FieldContent>
                 </Field>
 
-                <Field className="md:col-span-2">
-                  <FieldLabel htmlFor="post-tag-codes">Tag codes</FieldLabel>
+                <Field>
+                  <FieldLabel>Thẻ</FieldLabel>
                   <FieldContent>
-                    <Textarea
-                      id="post-tag-codes"
-                      placeholder="rescue, urgent, dog"
-                      disabled={isBusy}
-                      aria-invalid={Boolean(errors.tagCodesText)}
-                      {...register("tagCodesText")}
+                    <Controller
+                      control={control}
+                      name="tagCodes"
+                      render={({ field }) =>
+                        tags.length > 0 ? (
+                          <div className="grid max-h-44 gap-2 overflow-y-auto rounded-md border border-input p-3 sm:grid-cols-2">
+                            {tags.map((tag) => (
+                              <label
+                                key={tag.code}
+                                className="flex items-center gap-2 text-sm"
+                              >
+                                <Checkbox
+                                  checked={field.value.includes(tag.code)}
+                                  disabled={isBusy}
+                                  onCheckedChange={(checked) =>
+                                    field.onChange(
+                                      checked
+                                        ? [...field.value, tag.code]
+                                        : field.value.filter(
+                                            (code) => code !== tag.code,
+                                          ),
+                                    )
+                                  }
+                                />
+                                {tag.name}
+                              </label>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-sm text-muted-foreground">
+                            {tagsQuery.isPending
+                              ? "Đang tải danh sách thẻ..."
+                              : "Chưa có thẻ nào trong hệ thống."}
+                          </p>
+                        )
+                      }
                     />
-                    <FieldError errors={[errors.tagCodesText]} />
+                    <FieldError errors={[errors.tagCodes]} />
                   </FieldContent>
                 </Field>
               </FieldGroup>
