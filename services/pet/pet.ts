@@ -15,6 +15,7 @@ import {
   PetMedicalRecordCreatePayload,
   PetDetailParams,
   PetMediaCreatePayload,
+  PetTaxonomySpecies,
 } from "@/types/pet.type";
 
 const petService = {
@@ -65,13 +66,14 @@ const petService = {
     );
   },
 
-  // POST /api/v1/pets - Create a pet as a regular user (user-owned)
-  async createPet(payload: Partial<PetCreatePayload>): Promise<Pet> {
-    return await http.post<Pet>(apiEndpoints.pets.root, payload);
+  // GET /api/v1/pets/taxonomy - List all species with their breeds
+  async getTaxonomy(): Promise<PetTaxonomySpecies[]> {
+    return await http.get<PetTaxonomySpecies[]>(apiEndpoints.pets.taxonomy);
   },
 
-  async createPetByShelter(payload: Partial<PetCreatePayload>): Promise<Pet> {
-    return await http.post<Pet>(apiEndpoints.pets.createByShelter, payload);
+  // POST /api/v1/pets - Create a pet (shelter-owned when shelterId is set, otherwise user-owned)
+  async createPet(payload: Partial<PetCreatePayload>): Promise<Pet> {
+    return await http.post<Pet>(apiEndpoints.pets.root, payload);
   },
 
   // PUT /api/v1/pets/{id} - Update an existing pet

@@ -29,12 +29,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { RescueCaseSelect } from "@/components/rescue-case/RescueCaseSelect";
 import { useUploadTempMedia } from "@/hooks/use-media";
+import { usePetTaxonomy } from "@/hooks/use-pet";
 import {
   ACCEPTED_PET_IMAGE_TYPES,
   createPetDefaultValues,
   createPetSchema,
   MAX_PET_IMAGE_SIZE,
+  MAX_PET_IMAGES,
   PET_HEALTH_STATUS_VALUES,
   toCreatePetPayload,
   type CreatePetFormInput,
@@ -65,6 +68,8 @@ const GENDERS: Array<{ value: PetGender; label: string }> = [
   { value: "FEMALE", label: "Cái" },
   { value: "UNKNOWN", label: "Không rõ" },
 ];
+
+const NO_BREED = "none";
 
 const HEALTH_STATUSES: Array<{ value: PetHealthStatus; label: string }> = [
   { value: "HEALTHY", label: "Khỏe mạnh" },
@@ -105,6 +110,7 @@ export function PetCreateNew({
 }: CreateNewPetProps) {
   const imageInputRef = React.useRef<HTMLInputElement | null>(null);
   const uploadTempMediaMutation = useUploadTempMedia();
+  const taxonomyQuery = usePetTaxonomy();
 
   const form = useForm<CreatePetFormInput, unknown, CreatePetFormValues>({
     resolver: zodResolver(createPetSchema),
@@ -130,6 +136,26 @@ export function PetCreateNew({
     name: "mediaIds",
   });
 
+  const speciesId = useWatch({
+    control,
+    name: "speciesId",
+  });
+
+  const speciesOptions = taxonomyQuery.data ?? [];
+  const breedOptions =
+    speciesOptions.find((species) => species.speciesId === speciesId)?.breeds ??
+    [];
+
+  // Người dùng tổ chức chỉ có một lựa chọn trung tâm
+  const onlyOrganizationId =
+    organizations.length === 1 ? organizations[0].organizationId : undefined;
+
+  React.useEffect(() => {
+    if (open && onlyOrganizationId) {
+      setValue("shelterId", onlyOrganizationId);
+    }
+  }, [open, onlyOrganizationId, setValue]);
+
   React.useEffect(() => {
     if (!open) {
       reset(createPetDefaultValues);
@@ -146,6 +172,12 @@ export function PetCreateNew({
       if (files.length === 0) return;
 
       if (!validatePetImages(files)) {
+        event.target.value = "";
+        return;
+      }
+
+      if ((imageUrls ?? []).length + files.length > MAX_PET_IMAGES) {
+        toast.error(`Chỉ được tải lên tối đa ${MAX_PET_IMAGES} ảnh`);
         event.target.value = "";
         return;
       }
@@ -268,30 +300,69 @@ export function PetCreateNew({
               </Field>
 
               <Field>
-                <FieldLabel htmlFor="pet-species">Loài</FieldLabel>
+                <FieldLabel>Loài</FieldLabel>
                 <FieldContent>
-                  <Input
-                    id="pet-species"
-                    placeholder="Chó / Mèo"
-                    disabled={isBusy}
-                    aria-invalid={Boolean(errors.species)}
-                    {...register("species")}
+                  <Controller
+                    control={control}
+                    name="speciesId"
+                    render={({ field }) => (
+                      <Select
+                        value={field.value}
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                          setValue("breedId", "");
+                        }}
+                        disabled={isBusy || taxonomyQuery.isPending}
+                      >
+                        <SelectTrigger aria-invalid={Boolean(errors.speciesId)}>
+                          <SelectValue placeholder="Chọn loài" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {speciesOptions.map((species) => (
+                            <SelectItem
+                              key={species.speciesId}
+                              value={species.speciesId}
+                            >
+                              {species.nameVi || species.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
                   />
-                  <FieldError errors={[errors.species]} />
+                  <FieldError errors={[errors.speciesId]} />
                 </FieldContent>
               </Field>
 
               <Field>
-                <FieldLabel htmlFor="pet-breed">Giống</FieldLabel>
+                <FieldLabel>Giống (tùy chọn)</FieldLabel>
                 <FieldContent>
-                  <Input
-                    id="pet-breed"
-                    placeholder="Corgi"
-                    disabled={isBusy}
-                    aria-invalid={Boolean(errors.breed)}
-                    {...register("breed")}
+                  <Controller
+                    control={control}
+                    name="breedId"
+                    render={({ field }) => (
+                      <Select
+                        value={field.value || NO_BREED}
+                        onValueChange={(value) =>
+                          field.onChange(value === NO_BREED ? "" : value)
+                        }
+                        disabled={isBusy || !speciesId}
+                      >
+                        <SelectTrigger aria-invalid={Boolean(errors.breedId)}>
+                          <SelectValue placeholder="Chọn giống" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value={NO_BREED}>Không rõ giống</SelectItem>
+                          {breedOptions.map((breed) => (
+                            <SelectItem key={breed.breedId} value={breed.breedId}>
+                              {breed.nameVi || breed.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
                   />
-                  <FieldError errors={[errors.breed]} />
+                  <FieldError errors={[errors.breedId]} />
                 </FieldContent>
               </Field>
 
@@ -406,36 +477,6 @@ export function PetCreateNew({
                 </FieldContent>
               </Field>
 
-              <Field>
-                <FieldLabel htmlFor="pet-rescue-date">Ngày cứu hộ</FieldLabel>
-                <FieldContent>
-                  <Input
-                    id="pet-rescue-date"
-                    type="date"
-                    disabled={isBusy}
-                    aria-invalid={Boolean(errors.rescueDate)}
-                    {...register("rescueDate")}
-                  />
-                  <FieldError errors={[errors.rescueDate]} />
-                </FieldContent>
-              </Field>
-
-              <Field className="md:col-span-2">
-                <FieldLabel htmlFor="pet-rescue-location">
-                  Địa điểm cứu hộ
-                </FieldLabel>
-                <FieldContent>
-                  <Input
-                    id="pet-rescue-location"
-                    placeholder="Q.1, TP.HCM"
-                    disabled={isBusy}
-                    aria-invalid={Boolean(errors.rescueLocation)}
-                    {...register("rescueLocation")}
-                  />
-                  <FieldError errors={[errors.rescueLocation]} />
-                </FieldContent>
-              </Field>
-
               <Field className="md:col-span-2">
                 <FieldLabel>Trung tâm</FieldLabel>
                 <FieldContent>
@@ -469,16 +510,22 @@ export function PetCreateNew({
               </Field>
 
               <Field className="md:col-span-2">
-                <FieldLabel htmlFor="pet-rescue-case-id">
-                  Rescue case ID (tùy chọn)
+                <FieldLabel htmlFor="pet-rescue-case">
+                  Ca cứu hộ (tùy chọn)
                 </FieldLabel>
                 <FieldContent>
-                  <Input
-                    id="pet-rescue-case-id"
-                    placeholder="case_123"
-                    disabled={isBusy}
-                    aria-invalid={Boolean(errors.rescueCaseId)}
-                    {...register("rescueCaseId")}
+                  <Controller
+                    control={control}
+                    name="rescueCaseId"
+                    render={({ field }) => (
+                      <RescueCaseSelect
+                        id="pet-rescue-case"
+                        value={field.value}
+                        onChange={field.onChange}
+                        disabled={isBusy}
+                        invalid={Boolean(errors.rescueCaseId)}
+                      />
+                    )}
                   />
                   <FieldError errors={[errors.rescueCaseId]} />
                 </FieldContent>

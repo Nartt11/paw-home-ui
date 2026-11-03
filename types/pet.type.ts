@@ -96,10 +96,24 @@ export interface PetListParams extends ListParams {
   organizationId?: string;
 }
 
+export interface PetBreed {
+  breedId: string;
+  speciesId: string;
+  name: string;
+  nameVi: string;
+}
+
+export interface PetTaxonomySpecies {
+  speciesId: string;
+  name: string;
+  nameVi: string;
+  breeds: PetBreed[];
+}
+
 export interface PetCreatePayload {
   name: string;
-  species: string;
-  breed: string;
+  speciesId: string;
+  breedId?: string;
   age: number;
   gender: PetGender;
   color: string;
@@ -108,9 +122,6 @@ export interface PetCreatePayload {
   vaccinated: boolean;
   neutered: boolean;
   healthStatus: PetHealthStatus;
-  rescueDate: string;
-  rescueLocation: string;
-  imageUrls: string[];
   mediaIds: string[];
   shelterId: string;
   rescueCaseId?: string;
