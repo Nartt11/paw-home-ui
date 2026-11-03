@@ -32,12 +32,12 @@ const rescueService = {
     return await http.get<RescueCase>(apiEndpoints.rescueCases.byId(id));
   },
 
-  // GET /api/v1/rescue-cases/nearby - Find rescue cases near a location
+  // GET /api/v1/rescue-cases?lat=&lng=&distance= - Find rescue cases near a location
   async getNearbyRescueCases(
     params: RescueCaseNearByParams,
   ): Promise<PaginatedResponse<RescueCaseSummary>> {
     return await http.get<PaginatedResponse<RescueCaseSummary>>(
-      apiEndpoints.rescueCases.nearby,
+      apiEndpoints.rescueCases.root,
       { params },
     );
   },
@@ -54,12 +54,12 @@ const rescueService = {
     );
   },
 
-  // GET /api/v1/rescue-cases/bounding-box - Find rescue cases within bounding box
+  // GET /api/v1/rescue-cases?minLat=&minLng=&maxLat=&maxLng= - Find rescue cases within bounding box
   async getRescueCasesInBoundingBox(
     params: RescueCaseBoundingBoxParams,
   ): Promise<PaginatedResponse<RescueCaseSummary>> {
     return await http.get<PaginatedResponse<RescueCaseSummary>>(
-      apiEndpoints.rescueCases.map.boundingBox,
+      apiEndpoints.rescueCases.root,
       { params },
     );
   },

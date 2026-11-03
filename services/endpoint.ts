@@ -59,7 +59,6 @@ export const apiEndpoints = {
   rescueCases: {
     root: "/rescue-cases",
     byId: (id: string) => byId("/rescue-cases", id),
-    nearby: "/rescue-cases/nearby",
     status: (id: string) => `/rescue-cases/${id}/status`,
     complete: (id: string) => `/rescue-cases/${id}/complete`,
     completions: "/rescue-cases/completions",
@@ -67,7 +66,6 @@ export const apiEndpoints = {
     approveCompletion: (id: string) => `/rescue-cases/completions/${id}/approve`,
     map: {
       markers: "/rescue-cases/map/markers",
-      boundingBox: "/rescue-cases/map/bounding-box",
     },
   },
   banners: {
