@@ -72,7 +72,7 @@ export default function PostManagementPage() {
   const [deleteOpen, setDeleteOpen] = React.useState(false);
   const [deleteId, setDeleteId] = React.useState<string | null>(null);
 
-  const listQuery = usePosts({ page, size });
+  const listQuery = usePosts({ page, pageSize: size });
   const detailQuery = usePostDetail(
     selectedId && (viewOpen || editOpen) ? selectedId : undefined,
   );

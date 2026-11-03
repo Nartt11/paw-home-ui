@@ -33,7 +33,7 @@ function getErrorMessage(error: unknown) {
 export default function BannerManagementPage() {
   const { page, size, setPage, setSize } = useListUrlState();
 
-  const listQuery = useBanners({ page, size });
+  const listQuery = useBanners({ page, pageSize: size });
 
   const [deleteOpen, setDeleteOpen] = React.useState(false);
   const [deleteId, setDeleteId] = React.useState<string | null>(null);

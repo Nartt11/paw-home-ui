@@ -116,7 +116,7 @@ export default function CenterManagementPage() {
 
   const organizationsQuery = useOrganizations({
     page,
-    size,
+    pageSize: size,
     status,
   });
   const organizationDetailQuery = useOrganizationDetail(
@@ -191,7 +191,7 @@ export default function CenterManagementPage() {
         <Input
           placeholder="Tìm tổ chức..."
           value={keyword}
-          onChange={(e) => setParams({ keyword: e.target.value, page: 1 })}
+          onChange={(e) => setParams({ keyword: e.target.value, page: 0 })}
           className="pl-9"
         />
       </div>

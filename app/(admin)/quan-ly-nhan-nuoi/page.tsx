@@ -60,7 +60,7 @@ export default function AdoptionManagementPage() {
   const adoptionsParams = React.useMemo(() => {
     const params: AdoptionListParams = {
       page,
-      size: pageSize,
+      pageSize,
     };
     if (isOrganizationUser && currentOrgId) {
       params.organizationId = currentOrgId;
@@ -71,7 +71,7 @@ export default function AdoptionManagementPage() {
   const pendingParams = React.useMemo(() => {
     const params: AdoptionListParams = {
       page: 0,
-      size: 50,
+      pageSize: 50,
       status: ["PENDING", "APPROVED"],
     };
     if (isOrganizationUser && currentOrgId) {

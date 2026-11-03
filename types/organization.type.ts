@@ -19,7 +19,7 @@ export interface OrganizationSummary {
 export interface OrganizationListParams {
   status?: string[];
   page?: number;
-  size?: number;
+  pageSize?: number;
 }
 export interface Organization extends OrganizationSummary {
   description: string;

@@ -90,7 +90,7 @@ export interface PetListParams extends ListParams {
   species?: string;
   breed?: string;
   gender?: PetGender;
-  searchName?: string;
+  search?: string;
   status?: PetStatus[];
   userId?: string;
   organizationId?: string;

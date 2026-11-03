@@ -26,7 +26,7 @@ export interface Post extends PostSummary {
 }
 
 export interface PostFeedParams{
-  size: number;
+  pageSize: number;
   cursor?: string;
 }
 

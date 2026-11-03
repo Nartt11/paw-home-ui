@@ -50,7 +50,7 @@ const VIETNAM_BOUNDS: RescueCaseBoundingBoxParams = {
   minLng: 102.1,
   maxLng: 109.5,
   page: 0,
-  size: 100,
+  pageSize: 100,
 };
 
 const VIETNAM_MARKER_BOUNDS: RescueCaseMarkers = {

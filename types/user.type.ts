@@ -26,8 +26,8 @@ export interface User extends UserSummary {
 }
 export interface UserListParams {
   page?: number;
-  size?: number;
-  searchName?: string;
+  pageSize?: number;
+  search?: string;
 }
 export interface Reputation {
   userId: string;

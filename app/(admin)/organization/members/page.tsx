@@ -134,7 +134,7 @@ export default function OrganizationMembersPage() {
   // Fetching data
   const membersQuery = useOrganizationMembers(activeOrgId || undefined, {
     page,
-    size,
+    pageSize: size,
   });
 
   // Mutations

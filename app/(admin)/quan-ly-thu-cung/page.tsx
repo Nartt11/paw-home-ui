@@ -67,13 +67,13 @@ export default function PetManagementPage() {
   }, [page, size, isOrganizationUser, currentUser?.organizationId]);
 
   const petsQuery = usePets(
-    { page, size },
+    { page, pageSize: size },
     { enabled: !isOrganizationUser }
   );
 
   const orgPetsQuery = usePetsByOrganization(
     currentUser?.organizationId,
-    { page, size },
+    { page, pageSize: size },
     { enabled: isOrganizationUser && !!currentUser?.organizationId }
   );
 
@@ -81,7 +81,7 @@ export default function PetManagementPage() {
   const createPetMutation = useCreatePetByShelter();
   const organizationsQuery = useOrganizations({
     page: 0,
-    size: 100,
+    pageSize: 100,
     status: ["ACTIVE"],
   });
 

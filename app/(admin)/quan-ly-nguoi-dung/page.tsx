@@ -22,7 +22,7 @@ export default function UsersManagementPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const keyword = getOptionalSearchParam(searchParams.get("keyword")) ?? "";
-  const usersQuery = useUsers({ page, size });
+  const usersQuery = useUsers({ page, pageSize: size });
   const userDetailQuery = useUserDetail(selectedId ?? undefined);
 
   const data = usersQuery.data;
@@ -52,7 +52,7 @@ export default function UsersManagementPage() {
           <Input
             placeholder="Tìm người dùng..."
             value={keyword}
-            onChange={(e) => setParams({ keyword: e.target.value, page: 1 })}
+            onChange={(e) => setParams({ keyword: e.target.value, page: 0 })}
             className="pl-9"
           />
         </div>
