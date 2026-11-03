@@ -112,11 +112,9 @@ export const apiEndpoints = {
     uploadTemp: "/media/upload/temp",
     confirm: (id: string) => `/media/${id}/confirm`,
   },
-  geo: {
-    nearby: "/geo/nearby",
-    me: {
-      location: "/geo/me/location",
-    },
+  locations: {
+    provinces: "/locations/p",
+    provinceByCode: (code: string | number) => `/locations/p/${code}`,
   },
   admin: {
     users: {
