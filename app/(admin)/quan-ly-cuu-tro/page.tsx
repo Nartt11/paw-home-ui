@@ -22,7 +22,7 @@ import {
   useOrganizationsInBoundingBox,
 } from "@/hooks/use-organization";
 import type { OrganizationSummary } from "@/types/organization.type";
-import type { RescueCaseBoundingBoxParams, RescueCaseMarkers, RescueCasePayload, RescueCaseSummary, RescueCompletion } from "@/types/rescue-case.type";
+import type { RescueCaseBoundingBoxParams, RescueCaseMarkers, RescueCaseSummary, RescueCompletion } from "@/types/rescue-case.type";
 
 import { useCurrentUser } from "@/hooks/use-current-user";
 import RequireAuth from "@/components/auth/RequireAuth";
@@ -53,17 +53,6 @@ const VIETNAM_MARKER_BOUNDS: RescueCaseMarkers = {
   minLng: 102.1,
   maxLng: 109.5,
 };
-
-function toCreateRescuePayload(
-  values: RescueCaseCreateValues,
-): RescueCasePayload {
-  return {
-    ...values,
-    imageUrls: [],
-    mediaIds: [],
-    contactPhone: "",
-  };
-}
 
 export default function RescueCaseManagementPage() {
   const [createOpen, setCreateOpen] = React.useState(false);
@@ -236,7 +225,7 @@ export default function RescueCaseManagementPage() {
 
   const handleCreateRescueCase = React.useCallback(
     async (values: RescueCaseCreateValues) => {
-      await createRescueCaseMutation.mutateAsync(toCreateRescuePayload(values));
+      await createRescueCaseMutation.mutateAsync(values);
       setCreateOpen(false);
     },
     [createRescueCaseMutation],

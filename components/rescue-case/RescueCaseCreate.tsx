@@ -58,8 +58,6 @@ const PRIORITIES: Array<{ value: RescueCasePriority; label: string }> = [
 ];
 
 const DEFAULT_VALUES: RescueCaseCreateValues = {
-  petId: "",
-  organizationId: "",
   species: "",
   color: "",
   size: "",

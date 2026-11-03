@@ -60,14 +60,6 @@ const VIETNAM_MARKER_BOUNDS: RescueCaseMarkers = {
   maxLng: 109.5,
 };
 
-function toCreateRescuePayload(
-  values: RescueCaseCreateValues,
-): RescueCasePayload {
-  return {
-    ...values,
-  };
-}
-
 export default function MapRescuePage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [rescueViewOpen, setRescueViewOpen] = useState(false);
@@ -202,7 +194,7 @@ export default function MapRescuePage() {
 
   const handleCreateRescueCase = useCallback(
     async (values: RescueCaseCreateValues) => {
-      await createRescueCaseMutation.mutateAsync(toCreateRescuePayload(values));
+      await createRescueCaseMutation.mutateAsync(values);
       setCreateOpen(false);
     },
     [createRescueCaseMutation],
