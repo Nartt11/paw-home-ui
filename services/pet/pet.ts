@@ -33,36 +33,35 @@ const petService = {
     return await http.get<Pet>(apiEndpoints.pets.byId(petId));
   },
 
-  // GET /api/v1/pets/available - List available pets (paginated, optional filters)
+  // GET /api/v1/pets?availableOnly=true - List available pets (paginated, optional filters)
   async getAvailablePets(
     params: PetListParams,
   ): Promise<PaginatedResponse<PetSummary>> {
     return await http.get<PaginatedResponse<PetSummary>>(
-      apiEndpoints.pets.available,
-      { params },
+      apiEndpoints.pets.root,
+      { params: { ...params, availableOnly: true } },
     );
   },
 
-  // sai config
-  // GET /api/v1/pets/by-organization/{organizationId} - List pets by organization (paginated)
+  // GET /api/v1/pets?organizationId={organizationId} - List pets by organization (paginated)
   async getPetsByOrganization(
     organizationId: string,
     params: PetListParams,
   ): Promise<PaginatedResponse<PetSummary>> {
     return await http.get<PaginatedResponse<PetSummary>>(
-      apiEndpoints.pets.byOrganization(organizationId),
-      { params },
+      apiEndpoints.pets.root,
+      { params: { ...params, organizationId } },
     );
   },
 
-  // GET /api/v1/pets/by-user/{userId} - List pets by user (paginated)
+  // GET /api/v1/pets?userId={userId} - List pets by user (paginated, admin only)
   async getPetsByUser(
     userId: string,
     params: PetListParams,
   ): Promise<PaginatedResponse<PetSummary>> {
     return await http.get<PaginatedResponse<PetSummary>>(
-      apiEndpoints.pets.byUser(userId),
-      { params },
+      apiEndpoints.pets.root,
+      { params: { ...params, userId } },
     );
   },
 
