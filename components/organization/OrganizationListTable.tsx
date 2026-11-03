@@ -91,9 +91,6 @@ function getColumns(
           <div className="truncate font-medium text-slate-900">
             {row.original.name || "(Chưa có tên)"}
           </div>
-          <div className="truncate font-mono text-xs text-slate-500">
-            {row.original.organizationId}
-          </div>
         </div>
       ),
     },
@@ -107,32 +104,13 @@ function getColumns(
       ),
     },
     {
-      id: "contact",
-      header: "Liên hệ",
-      cell: ({ row }) => (
-        <div className="min-w-52">
-          <div className="truncate text-slate-700">
-            {row.original.phone || "—"}
-          </div>
-          <div className="truncate text-xs text-slate-500">
-            {row.original.email || "—"}
-          </div>
-        </div>
-      ),
-    },
-    {
       id: "address",
       header: "Địa chỉ",
       cell: ({ row }) => (
-        <div className="min-w-72">
-          <div className="truncate text-slate-700">
-            {row.original.streetAddress || "—"}
-          </div>
-          <div className="truncate text-xs text-slate-500">
-            {[row.original.wardName, row.original.provinceName]
-              .filter(Boolean)
-              .join(", ") || "—"}
-          </div>
+        <div className="min-w-72 truncate text-slate-700">
+          {[row.original.wardName, row.original.provinceName]
+            .filter(Boolean)
+            .join(", ") || "—"}
         </div>
       ),
     },
