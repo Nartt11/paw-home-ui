@@ -83,10 +83,10 @@ export function AdoptionDecisionDialog({
     });
   });
 
-  const title = isReject ? "Tu choi don nhan nuoi" : "Duyet don nhan nuoi";
+  const title = isReject ? "Từ chối đơn nhận nuôi" : "Duyệt đơn nhận nuôi";
   const description = applicantName || petName
-    ? `${applicantName || "Nguoi nop don"} -> ${petName || "Thu cung"}`
-    : "Xu ly don nhan nuoi hien tai.";
+    ? `${applicantName || "Người nộp đơn"} -> ${petName || "Thú cưng"}`
+    : "Xử lý đơn nhận nuôi hiện tại.";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -98,11 +98,11 @@ export function AdoptionDecisionDialog({
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="space-y-2">
-            <Label htmlFor={`${mode}-note`}>Ghi chu</Label>
+            <Label htmlFor={`${mode}-note`}>Ghi chú</Label>
             <Textarea
               id={`${mode}-note`}
               rows={4}
-              placeholder="Nhap ghi chu xu ly..."
+              placeholder="Nhập ghi chú xử lý..."
               disabled={submitting}
               {...form.register("note")}
             />
@@ -115,7 +115,7 @@ export function AdoptionDecisionDialog({
 
           <div className="space-y-2">
             <Label htmlFor={`${mode}-ready-at`}>
-              Ngay san sang ban giao
+              Ngày sẵn sàng bàn giao
             </Label>
             <Input
               id={`${mode}-ready-at`}
@@ -132,15 +132,15 @@ export function AdoptionDecisionDialog({
 
           <div className="space-y-2">
             <Label htmlFor={`${mode}-reject-reason`}>
-              {isReject ? "Ly do tu choi" : "Ghi chu bo sung"}
+              {isReject ? "Lý do từ chối" : "Ghi chú bổ sung"}
             </Label>
             <Textarea
               id={`${mode}-reject-reason`}
               rows={4}
               placeholder={
                 isReject
-                  ? "Nhap ly do tu choi don..."
-                  : "Neu can, ban co the de lai ghi chu bo sung."
+                  ? "Nhập lý do từ chối đơn..."
+                  : "Nếu cần, bạn có thể để lại ghi chú bổ sung."
               }
               disabled={submitting}
               {...form.register("rejectReason")}
@@ -159,14 +159,14 @@ export function AdoptionDecisionDialog({
               onClick={() => onOpenChange(false)}
               disabled={submitting}
             >
-              Huy
+              Hủy
             </Button>
             <Button type="submit" disabled={submitting}>
               {submitting
-                ? "Dang xu ly..."
+                ? "Đang xử lý..."
                 : isReject
-                  ? "Xac nhan tu choi"
-                  : "Xac nhan duyet"}
+                  ? "Xác nhận từ chối"
+                  : "Xác nhận duyệt"}
             </Button>
           </DialogFooter>
         </form>

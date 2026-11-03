@@ -114,7 +114,7 @@ export function BannerCreateNew({
           shouldValidate: true,
         });
         setUploadedPreviewUrl(media.url);
-        toast.success("Tai anh banner thanh cong");
+        toast.success("Tải ảnh banner thành công");
       } catch (error) {
         setValue("mediaId", "", {
           shouldDirty: true,
@@ -129,7 +129,7 @@ export function BannerCreateNew({
         }
 
         toast.error(
-          error instanceof Error ? error.message : "Khong the tai anh len",
+          error instanceof Error ? error.message : "Không thể tải ảnh lên",
         );
       }
     },
@@ -154,8 +154,8 @@ export function BannerCreateNew({
     <Dialog open={open} onOpenChange={handleDialogOpenChange}>
       <DialogContent className="w-full p-0 sm:max-w-3xl">
         <DialogHeader className="px-6 pt-6">
-          <DialogTitle>Them banner</DialogTitle>
-          <DialogDescription>Nhap thong tin banner moi.</DialogDescription>
+          <DialogTitle>Thêm banner</DialogTitle>
+          <DialogDescription>Nhập thông tin banner mới.</DialogDescription>
         </DialogHeader>
 
         <div className="max-h-[calc(100vh-12rem)] overflow-y-auto px-6 pb-6">
@@ -167,11 +167,11 @@ export function BannerCreateNew({
           >
             <FieldGroup className="grid gap-5 md:grid-cols-2">
               <Field className="md:col-span-2">
-                <FieldLabel htmlFor="banner-title">Tieu de</FieldLabel>
+                <FieldLabel htmlFor="banner-title">Tiêu đề</FieldLabel>
                 <FieldContent>
                   <Input
                     id="banner-title"
-                    placeholder="Banner khuyen mai thang 5"
+                    placeholder="Banner khuyến mãi tháng 5"
                     disabled={isBusy}
                     aria-invalid={Boolean(errors.title)}
                     {...register("title")}
@@ -181,11 +181,11 @@ export function BannerCreateNew({
               </Field>
 
               <Field className="md:col-span-2">
-                <FieldLabel htmlFor="banner-subtitle">Phu de</FieldLabel>
+                <FieldLabel htmlFor="banner-subtitle">Phụ đề</FieldLabel>
                 <FieldContent>
                   <Input
                     id="banner-subtitle"
-                    placeholder="Mo ta ngan..."
+                    placeholder="Mô tả ngắn..."
                     disabled={isBusy}
                     aria-invalid={Boolean(errors.subtitle)}
                     {...register("subtitle")}
@@ -207,7 +207,7 @@ export function BannerCreateNew({
                         disabled={isBusy}
                       >
                         <SelectTrigger aria-invalid={Boolean(errors.targetPage)}>
-                          <SelectValue placeholder="Chon trang" />
+                          <SelectValue placeholder="Chọn trang" />
                         </SelectTrigger>
                         <SelectContent>
                           {BANNER_TARGET_PAGES.map((item) => (
@@ -225,7 +225,7 @@ export function BannerCreateNew({
 
               <Field>
                 <FieldLabel htmlFor="banner-order">
-                  Thu tu hien thi
+                  Thứ tự hiển thị
                 </FieldLabel>
                 <FieldContent>
                   <Input
@@ -241,7 +241,7 @@ export function BannerCreateNew({
               </Field>
 
               <Field className="md:col-span-2">
-                <FieldLabel htmlFor="banner-image">Anh banner</FieldLabel>
+                <FieldLabel htmlFor="banner-image">Ảnh banner</FieldLabel>
                 <FieldContent>
                   <Controller
                     control={control}
@@ -262,7 +262,7 @@ export function BannerCreateNew({
                   <FieldError errors={[errors.imageFile]} />
                   {uploadTempMediaMutation.isPending ? (
                     <p className="text-sm text-muted-foreground">
-                      Dang tai anh len...
+                      Đang tải ảnh lên...
                     </p>
                   ) : null}
                   {previewUrl ? (
@@ -312,7 +312,7 @@ export function BannerCreateNew({
                         disabled={isBusy}
                       >
                         <SelectTrigger aria-invalid={Boolean(errors.linkType)}>
-                          <SelectValue placeholder="Chon loai link" />
+                          <SelectValue placeholder="Chọn loại liên kết" />
                         </SelectTrigger>
                         <SelectContent>
                           {BANNER_LINK_TYPES.map((item) => (
@@ -342,7 +342,7 @@ export function BannerCreateNew({
                     />
                   )}
                 />
-                <FieldLabel>Hoat dong</FieldLabel>
+                <FieldLabel>Hoạt động</FieldLabel>
               </Field>
             </FieldGroup>
 
@@ -385,15 +385,15 @@ export function BannerCreateNew({
                 onClick={() => handleDialogOpenChange(false)}
                 disabled={isBusy}
               >
-                Huy
+                Hủy
               </Button>
 
               <Button type="submit" disabled={isBusy}>
                 {uploadTempMediaMutation.isPending
-                  ? "Dang tai anh..."
+                  ? "Đang tải ảnh..."
                   : submitting
-                    ? "Dang tao..."
-                    : "Tao banner"}
+                    ? "Đang tạo..."
+                    : "Tạo banner"}
               </Button>
             </DialogFooter>
           </form>

@@ -79,12 +79,12 @@ export default function PetCard({
           <div className="absolute left-4 top-4 flex flex-wrap gap-2">
             {pet.vaccinated ? (
               <span className="rounded-full bg-emerald-500/95 px-3 py-1 text-[10px] font-bold text-white">
-                Da tiem vaccine
+                Đã tiêm vaccine
               </span>
             ) : null}
             {isPetDetail(pet) && pet.neutered ? (
               <span className="rounded-full bg-sky-500/95 px-3 py-1 text-[10px] font-bold text-white">
-                Da triet san
+                Đã triệt sản
               </span>
             ) : null}
           </div>
@@ -123,7 +123,7 @@ export default function PetCard({
           <div className="grid grid-cols-2 gap-3">
             <div className="rounded-2xl bg-slate-50 px-3 py-3">
               <div className="text-[11px] uppercase tracking-[0.18em] text-slate-400">
-                Suc khoe
+                Sức khỏe
               </div>
               <div className="mt-1 text-sm font-semibold text-slate-900">
                 {pet.healthStatus}
@@ -134,7 +134,7 @@ export default function PetCard({
                 To chuc
               </div>
               <div className="mt-1 line-clamp-1 text-sm font-semibold text-slate-900">
-                {pet.organization?.name || "Cong dong"}
+                {pet.organization?.name || "Cộng đồng"}
               </div>
             </div>
           </div>

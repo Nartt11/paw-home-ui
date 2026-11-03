@@ -35,23 +35,23 @@ function petStatusBadge(status: PetSummary["status"]) {
     { label: string; className?: string; variant?: "secondary" }
   > = {
     UNOWNED: {
-      label: "Chua co chu",
+      label: "Chưa có chủ",
       className: "bg-emerald-50 text-emerald-700 hover:bg-emerald-50",
     },
     PENDING: {
-      label: "Dang cho",
+      label: "Đang chờ",
       className: "bg-amber-50 text-amber-700 hover:bg-amber-50",
     },
     ADOPTED: {
-      label: "Da nhan nuoi",
+      label: "Đã nhận nuôi",
       className: "bg-sky-50 text-sky-700 hover:bg-sky-50",
     },
     FOSTERED: {
-      label: "Dang foster",
+      label: "Đang foster",
       className: "bg-violet-50 text-violet-700 hover:bg-violet-50",
     },
     UNAVAILABLE: {
-      label: "Khong kha dung",
+      label: "Không khả dụng",
     },
   };
 
@@ -67,19 +67,19 @@ function petStatusBadge(status: PetSummary["status"]) {
 function petHealthStatusBadge(status: string) {
   const map: Record<string, { label: string; className?: string }> = {
     HEALTHY: {
-      label: "Khoe manh",
+      label: "Khỏe mạnh",
       className: "bg-green-50 text-green-700 hover:bg-green-50",
     },
     UNDER_TREATMENT: {
-      label: "Dang dieu tri",
+      label: "Đang điều trị",
       className: "bg-red-50 text-red-700 hover:bg-red-50",
     },
     RECOVERING: {
-      label: "Dang hoi phuc",
+      label: "Đang hồi phục",
       className: "bg-yellow-50 text-yellow-700 hover:bg-yellow-50",
     },
     SPECIAL_NEEDS: {
-      label: "Cham soc dac biet",
+      label: "Chăm sóc đặc biệt",
       className: "bg-orange-50 text-orange-700 hover:bg-orange-50",
     },
   };
@@ -96,7 +96,7 @@ function petHealthStatusBadge(status: string) {
 const columns: ColumnDef<PetSummary>[] = [
   {
     accessorKey: "petCode",
-    header: "Ma",
+    header: "Mã",
     cell: ({ row }) => (
       <span className="font-mono text-xs text-slate-600">
         {row.original.petCode || "-"}
@@ -105,7 +105,7 @@ const columns: ColumnDef<PetSummary>[] = [
   },
   {
     accessorKey: "name",
-    header: "Thu cung",
+    header: "Thú cưng",
     cell: ({ row }) => (
       <div className="flex min-w-60 items-center gap-3">
         {row.original.imageUrl && (
@@ -129,7 +129,7 @@ const columns: ColumnDef<PetSummary>[] = [
   },
   {
     accessorKey: "species",
-    header: "Loai",
+    header: "Loại",
     cell: ({ row }) => (
       <span className="capitalize text-slate-700">
         {row.original.species || "-"}
@@ -138,33 +138,33 @@ const columns: ColumnDef<PetSummary>[] = [
   },
   {
     accessorKey: "breed",
-    header: "Giong",
+    header: "Giống",
     cell: ({ row }) => (
       <span className="text-slate-700">{row.original.breed || "-"}</span>
     ),
   },
   {
     accessorKey: "ageDisplay",
-    header: "Tuoi",
+    header: "Tuổi",
     cell: ({ row }) => (
       <span className="text-slate-700">{row.original.ageDisplay || "-"}</span>
     ),
   },
   {
     accessorKey: "vaccinated",
-    header: "Tiem",
+    header: "Tiêm",
     cell: ({ row }) =>
       row.original.vaccinated ? (
         <Badge className="bg-emerald-50 text-emerald-700 hover:bg-emerald-50">
-          Da tiem
+          Đã tiêm
         </Badge>
       ) : (
-        <Badge variant="secondary">Chua tiem</Badge>
+        <Badge variant="secondary">Chưa tiêm</Badge>
       ),
   },
   {
     accessorKey: "healthStatus",
-    header: "Suc khoe",
+    header: "Sức khỏe",
     cell: ({ row }) =>
       row.original.healthStatus
         ? petHealthStatusBadge(row.original.healthStatus)
@@ -172,12 +172,12 @@ const columns: ColumnDef<PetSummary>[] = [
   },
   {
     accessorKey: "status",
-    header: "Trang thai",
+    header: "Trạng thái",
     cell: ({ row }) => petStatusBadge(row.original.status),
   },
   {
     accessorKey: "organization",
-    header: "Trung tam",
+    header: "Trung tâm",
     cell: ({ row }) => (
       <div className="min-w-50 truncate text-slate-900">
         {row.original.organization?.name || "-"}
@@ -229,8 +229,8 @@ export function PetListTable({ data, loading = false }: PetListTableProps) {
             ) : table.getRowModel().rows.length === 0 ? (
               <AdminTableEmptyRow
                 colSpan={columns.length}
-                title="Chua co thu cung"
-                description="Danh sach thu cung se xuat hien tai day khi co du lieu."
+                title="Chưa có thú cưng"
+                description="Danh sách thú cưng sẽ xuất hiện tại đây khi có dữ liệu."
                 cellClassName="px-3 py-12"
               />
             ) : (

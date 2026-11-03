@@ -33,7 +33,7 @@ function validateBannerImage(
     if (required) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Vui long chon anh banner",
+        message: "Vui lòng chọn ảnh banner",
       });
     }
 
@@ -43,20 +43,20 @@ function validateBannerImage(
   if (!ACCEPTED_BANNER_IMAGE_TYPES.includes(file.type as never)) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
-      message: "Chi ho tro anh JPG, PNG hoac WEBP",
+      message: "Chỉ hỗ trợ ảnh JPG, PNG hoặc WEBP",
     });
   }
 
   if (file.size > MAX_BANNER_IMAGE_SIZE) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
-      message: "Anh banner khong duoc vuot qua 5MB",
+      message: "Ảnh banner không được vượt quá 5MB",
     });
   }
 }
 
 const baseBannerFormSchema = z.object({
-  title: z.string().trim().min(1, "Tieu de khong duoc de trong"),
+  title: z.string().trim().min(1, "Tiêu đề không được để trống"),
   subtitle: optionalText,
   mediaId: z.string().trim(),
   imageFile: z.custom<File | null>((value) => value === null || isFile(value)),
@@ -64,8 +64,8 @@ const baseBannerFormSchema = z.object({
   linkType: z.enum(BANNER_LINK_TYPES),
   displayOrder: z
     .number()
-    .int("Thu tu hien thi phai la so nguyen")
-    .min(1, "Thu tu hien thi phai lon hon 0"),
+    .int("Thứ tự hiển thị phải là số nguyên")
+    .min(1, "Thứ tự hiển thị phải lớn hơn 0"),
   startDate: z.string(),
   endDate: z.string(),
   active: z.boolean(),
@@ -86,7 +86,7 @@ export const updateBannerFormSchema = baseBannerFormSchema.superRefine(
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["imageFile"],
-        message: "Banner can co anh hien tai hoac anh moi",
+        message: "Banner cần có ảnh hiện tại hoặc ảnh mới",
       });
     }
   },

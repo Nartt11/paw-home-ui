@@ -8,7 +8,7 @@ export const approveAdoptionSchema = z.object({
 
 export const rejectAdoptionSchema = z.object({
   note: z.string().trim().max(1000),
-  rejectReason: z.string().trim().min(1, "Vui long nhap ly do tu choi."),
+  rejectReason: z.string().trim().min(1, "Vui lòng nhập lý do từ chối."),
   readyAt: z.string(),
 });
 
