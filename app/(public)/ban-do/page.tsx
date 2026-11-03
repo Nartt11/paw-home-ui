@@ -31,7 +31,6 @@ import type { OrganizationSummary } from "@/types/organization.type";
 import type {
   RescueCaseBoundingBoxParams,
   RescueCaseMarkers,
-  RescueCasePayload,
   RescueCaseSummary,
 } from "@/types/rescue-case.type";
 
