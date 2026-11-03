@@ -124,8 +124,15 @@ export const apiEndpoints = {
         `/admin/organizations/${organizationId}/accounts`,
       members: (organizationId: string) =>
         `/admin/organizations/${organizationId}/members`,
-      userPets: (organizationId: string, userId: string) =>
-        `/admin/organizations/${organizationId}/users/${userId}/pets`,
+      pets: (organizationId: string) =>
+        `/admin/organizations/${organizationId}/pets`,
+    },
+    dashboard: {
+      overview: "/admin/dashboard/overview",
+      adoptionTrend: "/admin/dashboard/adoption-trend",
+      rescueSummary: "/admin/dashboard/rescue-summary",
+      topOrganizations: "/admin/dashboard/top-organizations",
+      pendingTasks: "/admin/dashboard/pending-tasks",
     },
   },
 } as const;
