@@ -27,7 +27,6 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import NotifBell from "./NotifBell";
 
 type NavItem = {
   href: string;
@@ -68,7 +67,6 @@ export default function Header() {
   const [scrolled, setScrolled] = useState(false);
 
   const isLoggedIn = Boolean(currentUser);
-  const unread = 2; // Keep notification state if mock data is used
 
   useEffect(() => {
     const handleScroll = () => {
@@ -151,8 +149,6 @@ export default function Header() {
         <div className="hidden lg:flex items-center gap-3">
           {isLoggedIn && currentUser ? (
             <>
-              <NotifBell unread={unread} />
-
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
@@ -232,8 +228,6 @@ export default function Header() {
 
         {/* Mobile / Tablet Controls (Hamburger Menu) */}
         <div className="flex lg:hidden items-center gap-3">
-          {isLoggedIn && <NotifBell unread={unread} />}
-
           <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
             <SheetTrigger asChild>
               <Button
