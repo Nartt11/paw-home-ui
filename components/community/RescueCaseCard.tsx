@@ -1,12 +1,10 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
-import { MapPin, PawPrint, Share2 } from "lucide-react";
+import { Eye, MapPin, PawPrint, PenSquare } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { APP_ROUTES } from "@/constants/routes";
 import {
   RESCUE_PRIORITY_LABEL,
   RESCUE_STATUS_LABEL,
@@ -18,15 +16,18 @@ import { cn } from "@/lib/utils";
 
 export interface RescueCaseCardProps {
   rescueCase: RescueCaseBrief;
-  /** Shown only while the case still needs help. */
-  onShare?: (rescueCase: RescueCaseBrief) => void;
+  /** Opens the case on its own. */
+  onView?: (rescueCase: RescueCaseBrief) => void;
+  /** Starts a post about the case. Offered only while the case still needs help. */
+  onWritePost?: (rescueCase: RescueCaseBrief) => void;
   className?: string;
 }
 
-/** A rescue case as it appears inside the feed: enough to decide to help, without opening the map. */
+/** A rescue case shown on its own: in the open-cases block and as the attachment in the composer. */
 export function RescueCaseCard({
   rescueCase,
-  onShare,
+  onView,
+  onWritePost,
   className,
 }: RescueCaseCardProps) {
   const open = isOpenRescueStatus(rescueCase.status);
@@ -91,17 +92,31 @@ export function RescueCaseCard({
           </p>
         ) : null}
 
-        <div className="mt-auto flex flex-wrap gap-2 pt-1">
-          <Button asChild size="sm" variant="outline">
-            <Link href={APP_ROUTES.MAP}>Xem trên bản đồ</Link>
-          </Button>
-          {open && onShare ? (
-            <Button size="sm" type="button" onClick={() => onShare(rescueCase)}>
-              <Share2 className="size-3.5" />
-              Chia sẻ
-            </Button>
-          ) : null}
-        </div>
+        {onView || (open && onWritePost) ? (
+          <div className="mt-auto flex flex-wrap gap-2 pt-1">
+            {onView ? (
+              <Button
+                size="sm"
+                type="button"
+                variant="outline"
+                onClick={() => onView(rescueCase)}
+              >
+                <Eye className="size-3.5" />
+                Xem ca
+              </Button>
+            ) : null}
+            {open && onWritePost ? (
+              <Button
+                size="sm"
+                type="button"
+                onClick={() => onWritePost(rescueCase)}
+              >
+                <PenSquare className="size-3.5" />
+                Đăng bài về ca
+              </Button>
+            ) : null}
+          </div>
+        ) : null}
       </div>
     </div>
   );

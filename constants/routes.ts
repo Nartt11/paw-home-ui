@@ -2,6 +2,7 @@ export const APP_ROUTES = {
   HOME: "/",
   MAP: "/ban-do",
   COMMUNITY: "/cong-dong",
+  communityPost: (postId: string) => `/cong-dong/${postId}`,
   ADOPTION: "/nhan-nuoi",
   adoptionDetail: (petId: string) => `/nhan-nuoi/${petId}`,
   NEWS: "/tin-tuc",

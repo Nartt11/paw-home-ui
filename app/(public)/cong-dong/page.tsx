@@ -1,20 +1,18 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
 import { PenSquare } from "lucide-react";
-import { toast } from "sonner";
 
 import { EmptyState } from "@/components/common/EmptyState";
 import { NearbyCasesStrip } from "@/components/community/NearbyCasesStrip";
 import { PostCard } from "@/components/community/PostCard";
 import { PostComposerDialog } from "@/components/community/PostComposerDialog";
+import { RescueCaseDialog } from "@/components/community/RescueCaseDialog";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { APP_ROUTES } from "@/constants/routes";
-import { useCurrentUser } from "@/hooks/use-current-user";
 import { usePostFeed } from "@/hooks/use-post";
+import { useRequireLogin } from "@/hooks/use-require-login";
 import type { RescueCaseBrief } from "@/lib/rescue-case-display";
 import type { PostFeedFilters } from "@/types/post.type";
 
@@ -32,32 +30,29 @@ const FEED_TABS: Array<{ value: FeedTab; label: string; filters: PostFeedFilters
 ];
 
 export default function CommunityPage() {
-  const router = useRouter();
-  const currentUserQuery = useCurrentUser();
+  const { requireLogin } = useRequireLogin();
   const [tab, setTab] = React.useState<FeedTab>("all");
   const [composerOpen, setComposerOpen] = React.useState(false);
-  const [caseToShare, setCaseToShare] = React.useState<RescueCaseBrief | null>(
-    null,
-  );
+  const [caseToWriteAbout, setCaseToWriteAbout] =
+    React.useState<RescueCaseBrief | null>(null);
+  const [openCaseId, setOpenCaseId] = React.useState<string | null>(null);
 
   const filters = FEED_TABS.find((item) => item.value === tab)?.filters ?? {};
   const feedQuery = usePostFeed({ pageSize: PAGE_SIZE, ...filters });
   const posts = feedQuery.data?.pages.flatMap((page) => page.items) ?? [];
 
-  const openComposer = React.useCallback(
-    (rescueCase: RescueCaseBrief | null) => {
-      if (!currentUserQuery.data) {
-        toast.info("Hãy đăng nhập để đăng bài và chia sẻ ca cứu hộ.");
-        router.push(APP_ROUTES.LOGIN);
-        return;
-      }
-      setCaseToShare(rescueCase);
-      setComposerOpen(true);
-    },
-    [currentUserQuery.data, router],
-  );
+  const openComposer = (rescueCase: RescueCaseBrief | null) => {
+    if (!requireLogin("Hãy đăng nhập để đăng bài.")) return;
+    setCaseToWriteAbout(rescueCase);
+    setComposerOpen(true);
+  };
 
-  const strip = <NearbyCasesStrip onShareCase={openComposer} />;
+  const strip = (
+    <NearbyCasesStrip
+      onViewCase={(rescueCase) => setOpenCaseId(rescueCase.caseId)}
+      onWritePost={openComposer}
+    />
+  );
 
   return (
     <div className="bg-[linear-gradient(180deg,#fff7ed_0%,#ffffff_16%,#fffaf5_100%)]">
@@ -114,7 +109,7 @@ export default function CommunityPage() {
               ) : (
                 posts.map((post, index) => (
                   <React.Fragment key={post.postId}>
-                    <PostCard post={post} onShareCase={openComposer} />
+                    <PostCard post={post} onOpenCase={setOpenCaseId} />
                     {index === Math.min(STRIP_AFTER, posts.length) - 1
                       ? strip
                       : null}
@@ -142,8 +137,9 @@ export default function CommunityPage() {
       <PostComposerDialog
         open={composerOpen}
         onOpenChange={setComposerOpen}
-        initialCase={caseToShare}
+        initialCase={caseToWriteAbout}
       />
+      <RescueCaseDialog caseId={openCaseId} onClose={() => setOpenCaseId(null)} />
     </div>
   );
 }

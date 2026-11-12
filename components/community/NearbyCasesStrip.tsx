@@ -16,14 +16,18 @@ const SHOWN = 3;
 const NEARBY_RADIUS_METERS = 10000;
 
 export interface NearbyCasesStripProps {
-  onShareCase?: (rescueCase: RescueCaseBrief) => void;
+  onViewCase?: (rescueCase: RescueCaseBrief) => void;
+  onWritePost?: (rescueCase: RescueCaseBrief) => void;
 }
 
 /**
  * Open cases placed inside the feed, for people who never open the map. Shows the newest open
  * cases until the reader shares their position, then the nearest ones.
  */
-export function NearbyCasesStrip({ onShareCase }: NearbyCasesStripProps) {
+export function NearbyCasesStrip({
+  onViewCase,
+  onWritePost,
+}: NearbyCasesStripProps) {
   const geolocation = useGeolocation();
   const located = !!geolocation.coordinates;
 
@@ -99,7 +103,8 @@ export function NearbyCasesStrip({ onShareCase }: NearbyCasesStripProps) {
                 imageUrl: rescueCase.firstImageUrl,
                 distanceMeters: rescueCase.distanceMeters,
               }}
-              onShare={onShareCase}
+              onView={onViewCase}
+              onWritePost={onWritePost}
             />
           ))
         )}

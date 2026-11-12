@@ -35,8 +35,12 @@ refreshToken: string
 
 ## Community feed and rescue cases
 
-Most people meet a rescue case in the feed, not on the map. A post can be about one rescue case;
-the case stays the source of truth and the post only points to it.
+Most people meet a rescue case in the feed, not on the map.
+
+A post stands on its own: text, images, likes, comments and a link that can be shared. It **may**
+be about one rescue case; then the case stays the source of truth and the post only points to it.
+In the feed such a post shows a small bar ("Ca cứu hộ R-0090 · Đang chờ giúp · Xem ca") that opens
+the case separately with `GET /rescue-cases/{id}`; the case is not embedded in the post.
 
 ### GET /posts/feed (public)
 
@@ -97,6 +101,38 @@ Linking rules, all returned with an `errorCode`:
 | `POST_RESCUE_CASE_CLOSED` | 409 | Only cases that still need help can be linked |
 | `POST_RESCUE_CASE_ALREADY_SHARED` | 409 | One post per author per case |
 
+`mediaIds` are ids returned by `POST /media/upload/temp` (max 10). The post keeps the images;
+they come back as `imageUrls`.
+
+### GET /posts/{id} (public)
+
+So a shared link (`/cong-dong/{postId}`) opens for whoever receives it. Same fields as a feed item,
+plus `likedByMe` when the caller is signed in. `GET /posts` (the paged list) still needs sign-in.
+
+### Likes (signed in)
+
+- `POST /posts/{postId}/like` and `DELETE /posts/{postId}/like` → `{ targetId, liked }`.
+- Counters are updated asynchronously on the server. The UI flips the heart and the count at once
+  (`useTogglePostLike`) and puts them back if the call fails.
+
+### Comments
+
+- `GET /posts/{postId}/comments` (public): top-level comments, newest first.
+  Query `pageSize`, `cursor` (= `nextCursor` of the previous page).
+  Response `data`: `{ items: PostComment[], nextCursor?, hasMore }`.
+- `POST /posts/{postId}/comments` (signed in): `{ content: string, parentCommentId?: string }`.
+
+PostComment:
+{
+commentId, postId, authorId, authorUsername: string
+parentCommentId?: string
+content: string
+likeCount, replyCount: number
+createdAt: string
+}
+
+Replies (`GET /comments/{id}/replies`) and comment likes exist on the backend but have no screen yet.
+
 ### PUT /posts/{id} (author or admin)
 
 Same body as create, plus:
@@ -146,5 +182,8 @@ Cases the caller is working on:
 | Screen | Files |
 | --- | --- |
 | Community feed `/cong-dong` | `app/(public)/cong-dong/page.tsx`, `components/community/*` |
+| One post, the target of a shared link `/cong-dong/{postId}` | `app/(public)/cong-dong/[postId]/page.tsx` |
+| Like, comment, share on a post | `components/community/PostCard.tsx`, `CommentSection.tsx`, `hooks/use-post-interactions.ts` |
+| Opening a post's rescue case | `components/community/RescueCaseDialog.tsx` |
 | Case picker in the composer | `components/community/RescueCasePicker.tsx` |
 | "Đăng lên cộng đồng" on the report form | `components/rescue-case/RescueCaseCreate.tsx` |
