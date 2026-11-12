@@ -105,6 +105,12 @@ export const apiEndpoints = {
     uploadTemp: "/media/upload/temp",
     confirm: (id: string) => `/media/${id}/confirm`,
   },
+  notifications: {
+    root: "/notifications",
+    unreadCount: "/notifications/unread-count",
+    read: (id: string) => `/notifications/${id}/read`,
+    readAll: "/notifications/read-all",
+  },
   locations: {
     provinces: "/locations/p",
     provinceByCode: (code: string | number) => `/locations/p/${code}`,
