@@ -1,5 +1,6 @@
 "use client";
 
+import { toast } from "sonner";
 import { useCallback, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { Plus } from "lucide-react";
@@ -31,7 +32,6 @@ import type { OrganizationSummary } from "@/types/organization.type";
 import type {
   RescueCaseBoundingBoxParams,
   RescueCaseMarkers,
-  RescueCasePayload,
   RescueCaseSummary,
 } from "@/types/rescue-case.type";
 
@@ -50,7 +50,7 @@ const VIETNAM_BOUNDS: RescueCaseBoundingBoxParams = {
   minLng: 102.1,
   maxLng: 109.5,
   page: 0,
-  size: 100,
+  pageSize: 100,
 };
 
 const VIETNAM_MARKER_BOUNDS: RescueCaseMarkers = {
@@ -59,14 +59,6 @@ const VIETNAM_MARKER_BOUNDS: RescueCaseMarkers = {
   minLng: 102.1,
   maxLng: 109.5,
 };
-
-function toCreateRescuePayload(
-  values: RescueCaseCreateValues,
-): RescueCasePayload {
-  return {
-    ...values,
-  };
-}
 
 export default function MapRescuePage() {
   const [createOpen, setCreateOpen] = useState(false);
@@ -202,8 +194,14 @@ export default function MapRescuePage() {
 
   const handleCreateRescueCase = useCallback(
     async (values: RescueCaseCreateValues) => {
-      await createRescueCaseMutation.mutateAsync(toCreateRescuePayload(values));
+      const created = await createRescueCaseMutation.mutateAsync(values);
       setCreateOpen(false);
+      // the case is always saved first; the post is best effort
+      if (created.postShareFailed) {
+        toast.warning("Đã báo ca, nhưng chưa đăng được bài lên cộng đồng. Bạn có thể tự chia sẻ ca ở trang Cộng đồng.");
+      } else if (created.sharedPostId) {
+        toast.success("Đã báo ca và đăng bài lên cộng đồng.");
+      }
     },
     [createRescueCaseMutation],
   );

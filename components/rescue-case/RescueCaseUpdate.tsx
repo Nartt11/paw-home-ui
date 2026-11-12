@@ -32,7 +32,7 @@ const LocationPickerMap = dynamic(
     ssr: false,
     loading: () => (
       <div className="flex h-72 w-full items-center justify-center rounded-lg border bg-muted/30 text-sm text-muted-foreground">
-        Dang tai ban do...
+        Đang tải bản đồ...
       </div>
     ),
   },
@@ -44,10 +44,10 @@ const PRIORITIES: Array<{
   value: NonNullable<RescueCase["priority"]>;
   label: string;
 }> = [
-  { value: "LOW", label: "Thap" },
-  { value: "NORMAL", label: "Binh thuong" },
+  { value: "LOW", label: "Thấp" },
+  { value: "NORMAL", label: "Bình thường" },
   { value: "HIGH", label: "Cao" },
-  { value: "CRITICAL", label: "Khan cap" },
+  { value: "CRITICAL", label: "Khẩn cấp" },
 ];
 
 function mapRescueCaseToValues(rescueCase: RescueCase): RescueCaseUpdateValues {
@@ -96,9 +96,9 @@ export function RescueCaseUpdate({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-full p-0 sm:max-w-4xl">
         <DialogHeader className="px-6 pt-6">
-          <DialogTitle>Cap nhat rescue-case</DialogTitle>
+          <DialogTitle>Cập nhật ca cứu hộ</DialogTitle>
           <DialogDescription>
-            Chinh sua thong tin rescue-case va luu thay doi.
+            Chỉnh sửa thông tin ca cứu hộ và lưu thay đổi.
           </DialogDescription>
         </DialogHeader>
 
@@ -107,7 +107,7 @@ export function RescueCaseUpdate({
 
           <div className="grid gap-5 md:grid-cols-2">
             <div className="space-y-2">
-              <Label>Loai</Label>
+              <Label>Loại</Label>
               <Input
                 value={values.species ?? ""}
                 onChange={(event) =>
@@ -118,7 +118,7 @@ export function RescueCaseUpdate({
             </div>
 
             <div className="space-y-2">
-              <Label>Muc do uu tien</Label>
+              <Label>Mức độ ưu tiên</Label>
               <Select
                 value={values.priority ?? "NORMAL"}
                 onValueChange={(value) =>
@@ -130,7 +130,7 @@ export function RescueCaseUpdate({
                 disabled={isBusy}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Chon muc do" />
+                  <SelectValue placeholder="Chọn mức độ" />
                 </SelectTrigger>
                 <SelectContent>
                   {PRIORITIES.map((priority) => (
@@ -143,7 +143,7 @@ export function RescueCaseUpdate({
             </div>
 
             <div className="space-y-2">
-              <Label>Mau sac</Label>
+              <Label>Màu sắc</Label>
               <Input
                 value={values.color ?? ""}
                 onChange={(event) =>
@@ -154,7 +154,7 @@ export function RescueCaseUpdate({
             </div>
 
             <div className="space-y-2">
-              <Label>Kich thuoc</Label>
+              <Label>Kích thước</Label>
               <Input
                 value={values.size ?? ""}
                 onChange={(event) =>
@@ -169,7 +169,7 @@ export function RescueCaseUpdate({
 
           <div className="grid gap-5 md:grid-cols-2">
             <div className="space-y-2 md:col-span-2">
-              <Label>Dia diem</Label>
+              <Label>Địa điểm</Label>
               <Input
                 value={values.locationText ?? ""}
                 onChange={(event) =>
@@ -183,7 +183,7 @@ export function RescueCaseUpdate({
             </div>
 
             <div className="space-y-2 md:col-span-2">
-              <Label>Chon vi tri tren ban do</Label>
+              <Label>Chọn vị trí trên bản đồ</Label>
               <div className="overflow-hidden rounded-lg border">
                 <LocationPickerMap
                   latitude={values.latitude}
@@ -224,7 +224,7 @@ export function RescueCaseUpdate({
             </div>
 
             <div className="space-y-2 md:col-span-2">
-              <Label>Mo ta</Label>
+              <Label>Mô tả</Label>
               <textarea
                 value={values.description ?? ""}
                 onChange={(event) =>
@@ -247,10 +247,10 @@ export function RescueCaseUpdate({
             onClick={() => onOpenChange(false)}
             disabled={isBusy}
           >
-            Huy
+            Hủy
           </Button>
           <Button type="button" onClick={handleSubmit} disabled={isBusy}>
-            {isBusy ? "Dang luu..." : "Luu thay doi"}
+            {isBusy ? "Đang lưu..." : "Lưu thay đổi"}
           </Button>
         </DialogFooter>
       </DialogContent>

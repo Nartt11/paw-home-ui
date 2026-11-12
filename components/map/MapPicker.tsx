@@ -19,7 +19,7 @@ export default function MapPicker({ title, latitude, longitude }: Props) {
   if (!hasValidCoordinates(latitude, longitude)) {
     return (
       <div className="flex h-64 w-full items-center justify-center bg-muted/20 px-4 text-center text-sm text-muted-foreground">
-        Chua co toa do hop le de hien thi ban do.
+        Chưa có tọa độ hợp lệ để hiển thị bản đồ.
       </div>
     );
   }

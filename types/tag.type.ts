@@ -5,7 +5,8 @@ export interface Tag {
 }   
 export interface TagListParams {
     page?: number;
-    size?: number;
+    pageSize?: number;
+    search?: string;
 }
 export interface TagCreatePayload {
   code: string;

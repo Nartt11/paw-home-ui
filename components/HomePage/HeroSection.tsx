@@ -67,7 +67,7 @@ export default function HeroSection({
       badge={
         <div className="inline-flex items-center gap-2 rounded-full border border-orange-400/50 bg-orange-400/15 px-4 py-1.5 text-[12px] font-semibold text-orange-300">
           <span className="inline-flex h-2 w-2 animate-pulse rounded-full bg-orange-400" />
-          {hero.emergencyCases} ca cuu ho khan cap dang can ho tro hom nay
+          {hero.emergencyCases} ca cứu hộ khẩn cấp đang cần hỗ trợ hôm nay
         </div>
       }
       title={
@@ -77,7 +77,7 @@ export default function HeroSection({
           </h1>
         ) : (
           <h1 className="text-balance text-4xl font-black leading-tight text-white sm:text-5xl md:text-6xl lg:text-7xl">
-            Moi chu thu cung
+            Mỗi chú thú cưng
             <br />
             <span className="bg-linear-to-r from-[#FF9132] to-[#F7DB47] bg-clip-text text-transparent">
               {hero.titleHighlight}
@@ -93,11 +93,11 @@ export default function HeroSection({
       actions={
         <>
           <PrimaryCta href={primaryHref} variant="warm">
-            {currentBanner ? "Kham pha ngay" : "Nhan nuoi ngay"}
+            {currentBanner ? "Khám phá ngay" : "Nhận nuôi ngay"}
             <ArrowRight size={18} />
           </PrimaryCta>
           <PrimaryCta href={APP_ROUTES.MAP} variant="glass">
-            Ban do cuu ho
+            Bản đồ cứu hộ
           </PrimaryCta>
         </>
       }

@@ -52,10 +52,10 @@ function formatDateTimeVi(value?: string) {
 function activeToBadge(active?: boolean) {
   return active ? (
     <Badge className="bg-emerald-50 text-emerald-700 hover:bg-emerald-50">
-      Dang bat
+      Đang bật
     </Badge>
   ) : (
-    <Badge variant="secondary">Tat</Badge>
+    <Badge variant="secondary">Tắt</Badge>
   );
 }
 
@@ -96,7 +96,7 @@ export function BannerViewDetail({
         <div className="max-h-[calc(100vh-10rem)] space-y-6 overflow-y-auto px-6 pb-6">
           {!banner ? (
             <div className="py-10 text-center text-sm text-muted-foreground">
-              Dang tai chi tiet...
+              Đang tải chi tiết...
             </div>
           ) : (
             <>
@@ -116,7 +116,7 @@ export function BannerViewDetail({
                     </div>
                   ) : (
                     <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">
-                      Khong co anh
+                      Không có ảnh
                     </div>
                   )}
                 </div>
@@ -143,7 +143,7 @@ export function BannerViewDetail({
                     }
                   />
                   <FieldRow
-                    label="Thu tu hien thi"
+                    label="Thứ tự hiển thị"
                     value={
                       <span className="font-mono text-xs">
                         {banner.displayOrder}
@@ -157,11 +157,11 @@ export function BannerViewDetail({
 
               <div className="grid gap-5 md:grid-cols-2">
                 <FieldRow
-                  label="Bat dau"
+                  label="Bắt đầu"
                   value={formatDateTimeVi(banner.startDate)}
                 />
                 <FieldRow
-                  label="Ket thuc"
+                  label="Kết thúc"
                   value={formatDateTimeVi(banner.endDate)}
                 />
               </div>
@@ -170,11 +170,11 @@ export function BannerViewDetail({
 
               <div className="grid gap-5 md:grid-cols-2">
                 <FieldRow
-                  label="Tao luc"
+                  label="Tạo lúc"
                   value={formatDateTimeVi(banner.createdAt)}
                 />
                 <FieldRow
-                  label="Cap nhat luc"
+                  label="Cập nhật lúc"
                   value={formatDateTimeVi(banner.updatedAt)}
                 />
               </div>

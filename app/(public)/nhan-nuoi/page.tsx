@@ -97,8 +97,8 @@ export default function AdoptionPage() {
     queryFn: () =>
       petService.getAvailablePets({
         page: Math.max(page - 1, 0),
-        size,
-        searchName: searchName || undefined,
+        pageSize: size,
+        search: searchName || undefined,
         gender: normalizedGender === "ALL" ? undefined : normalizedGender,
       }),
     placeholderData: (previousData) => previousData,

@@ -39,8 +39,7 @@ export interface UserListTableProps {
   keyword?: string;
 
   onViewDetail?: (userId: string) => void;
-  onEdit?: (userId: string) => void;
-  onDisable?: (userId: string) => void;
+  onToggleLock?: (user: UserSummary) => void;
 }
 
 function getStatusLabel(status?: UserStatus | string) {
@@ -51,10 +50,20 @@ function getStatusLabel(status?: UserStatus | string) {
         label: "Hoạt động",
         className: "bg-emerald-50 text-emerald-700 hover:bg-emerald-50",
       };
-    case "DISABLED":
+    case "LOCKED":
       return {
-        label: "Vô hiệu",
+        label: "Đã khóa",
         className: "bg-rose-50 text-rose-700 hover:bg-rose-50",
+      };
+    case "BANNED":
+      return {
+        label: "Bị cấm",
+        className: "bg-rose-50 text-rose-700 hover:bg-rose-50",
+      };
+    case "INACTIVE":
+      return {
+        label: "Ngừng hoạt động",
+        className: "bg-slate-100 text-slate-700 hover:bg-slate-100",
       };
     case "PENDING_VERIFICATION":
       return {
@@ -70,9 +79,9 @@ function getStatusLabel(status?: UserStatus | string) {
 }
 
 function getColumns(
-  props: Pick<UserListTableProps, "onViewDetail" | "onEdit" | "onDisable">,
+  props: Pick<UserListTableProps, "onViewDetail" | "onToggleLock">,
 ): ColumnDef<UserSummary>[] {
-  const { onViewDetail, onEdit, onDisable } = props;
+  const { onViewDetail, onToggleLock } = props;
 
   return [
     {
@@ -133,21 +142,20 @@ function getColumns(
                   Xem chi tiết
                 </DropdownMenuItem>
 
-                <DropdownMenuItem
-                  onClick={() => onEdit?.(id)}
-                  disabled={!onEdit}
-                >
-                  Chỉnh sửa
-                </DropdownMenuItem>
-
                 <DropdownMenuSeparator />
 
                 <DropdownMenuItem
-                  className="text-rose-600 focus:text-rose-600"
-                  onClick={() => onDisable?.(id)}
-                  disabled={!onDisable}
+                  className={
+                    row.original.status === "LOCKED"
+                      ? undefined
+                      : "text-rose-600 focus:text-rose-600"
+                  }
+                  onClick={() => onToggleLock?.(row.original)}
+                  disabled={!onToggleLock}
                 >
-                  Vô hiệu hóa
+                  {row.original.status === "LOCKED"
+                    ? "Mở khóa tài khoản"
+                    : "Khóa tài khoản"}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -163,8 +171,7 @@ export function UserListTable({
   loading = false,
   keyword = "",
   onViewDetail,
-  onEdit,
-  onDisable,
+  onToggleLock,
 }: UserListTableProps) {
   const filteredData = React.useMemo(() => {
     const q = keyword.trim().toLowerCase();
@@ -181,8 +188,8 @@ export function UserListTable({
   }, [data, keyword]);
 
   const columns = React.useMemo(
-    () => getColumns({ onViewDetail, onEdit, onDisable }),
-    [onViewDetail, onEdit, onDisable],
+    () => getColumns({ onViewDetail, onToggleLock }),
+    [onViewDetail, onToggleLock],
   );
 
   const table = useReactTable({

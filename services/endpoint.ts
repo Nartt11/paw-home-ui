@@ -1,5 +1,3 @@
-import { create } from "domain";
-
 type Id = string | number;
 
 const byId = (basePath: string, id: Id) => `${basePath}/${id}`;
@@ -21,6 +19,8 @@ export const apiEndpoints = {
     me: "/users/me",
     profile: "/users/me/profile",
     reputation: (id: string) => `/users/${id}/reputation`,
+    myRescueCases: "/users/me/rescue-cases",
+    myRescueClaims: "/users/me/rescue-claims",
   },
   organizations: {
     root: "/organizations",
@@ -30,9 +30,6 @@ export const apiEndpoints = {
     members: (id: string) => `/organizations/${id}/members`,
     memberByUser: (id: string, userId: string) =>
       `/organizations/${id}/members/${userId}`,
-    pending: "/organizations/pending",
-    inactive: "/organizations/inactive",
-    active: "/organizations/active",
     map: {
       boundingBox: "/organizations/map/bounding-box",
       markers: "/organizations/map/markers",
@@ -40,16 +37,12 @@ export const apiEndpoints = {
   },
   pets: {
     root: "/pets",
-    createByShelter: "/pets/shelter",
     byId: (id: string) => byId("/pets", id),
-    available: "/pets/available",
-    byOrganization: (organizationId: string) =>
-      `/pets/by-organization/${organizationId}`,
-    byUser: (userId: string) => `/pets/by-user/${userId}`,
-    shelter: "/pets/shelter",
+    taxonomy: "/pets/taxonomy",
     status: (id: string) => `/pets/${id}/status`,
     transferOwnership: (id: string) => `/pets/${id}/transfer-ownership`,
     medicalRecords: (petId: string) => `/pets/${petId}/medical-records`,
+    traits: (petId: string) => `/pets/${petId}/traits`,
     ownerships: (petId: string) => `/pets/${petId}/ownerships`,
     media: (petId: string) => `/pets/${petId}/media`,
     deleteMedia: (petId: string, mediaId: string) =>
@@ -63,15 +56,16 @@ export const apiEndpoints = {
   rescueCases: {
     root: "/rescue-cases",
     byId: (id: string) => byId("/rescue-cases", id),
-    nearby: "/rescue-cases/nearby",
     status: (id: string) => `/rescue-cases/${id}/status`,
     complete: (id: string) => `/rescue-cases/${id}/complete`,
     completions: "/rescue-cases/completions",
     completionById: (id: string) => byId("/rescue-cases/completions", id),
     approveCompletion: (id: string) => `/rescue-cases/completions/${id}/approve`,
+    rejectCompletion: (id: string) => `/rescue-cases/completions/${id}/reject`,
+    completionReviewQueue: "/rescue-cases/completions/review-queue",
+    claims: (id: string) => `/rescue-cases/${id}/claims`,
     map: {
       markers: "/rescue-cases/map/markers",
-      boundingBox: "/rescue-cases/map/bounding-box",
     },
   },
   banners: {
@@ -89,6 +83,7 @@ export const apiEndpoints = {
     reject: (id: string) => `/adoptions/${id}/reject`,
     cancel: (id: string) => `/adoptions/${id}/cancel`,
     complete: (id: string) => `/adoptions/${id}/complete`,
+    reclaims: "/adoptions/reclaims",
   },
   posts: {
     root: "/posts",
@@ -96,6 +91,7 @@ export const apiEndpoints = {
     feed: "/posts/feed",
     comments: (postId: string) => `/posts/${postId}/comments`,
     like: (postId: string) => `/posts/${postId}/like`,
+    analysis: (postId: string) => `/posts/${postId}/analysis`,
   },
   comments: {
     byId: (id: string) => `/comments/${id}`,
@@ -109,18 +105,21 @@ export const apiEndpoints = {
   roles: {
     root: "/roles",
     byId: (id: string | number) => byId("/roles", id),
-    permissions: (id: string | number) => `/roles/${id}/permissions`,
   },
   media: {
     byId: (id: string) => `/media/${id}`,
     uploadTemp: "/media/upload/temp",
     confirm: (id: string) => `/media/${id}/confirm`,
   },
-  geo: {
-    nearby: "/geo/nearby",
-    me: {
-      location: "/geo/me/location",
-    },
+  notifications: {
+    root: "/notifications",
+    unreadCount: "/notifications/unread-count",
+    read: (id: string) => `/notifications/${id}/read`,
+    readAll: "/notifications/read-all",
+  },
+  locations: {
+    provinces: "/locations/p",
+    provinceByCode: (code: string | number) => `/locations/p/${code}`,
   },
   admin: {
     users: {
@@ -133,8 +132,19 @@ export const apiEndpoints = {
         `/admin/organizations/${organizationId}/accounts`,
       members: (organizationId: string) =>
         `/admin/organizations/${organizationId}/members`,
-      userPets: (organizationId: string, userId: string) =>
-        `/admin/organizations/${organizationId}/users/${userId}/pets`,
+      pets: (organizationId: string) =>
+        `/admin/organizations/${organizationId}/pets`,
+    },
+    ai: {
+      metrics: "/admin/ai/post-analysis/metrics",
+      model: "/admin/ai/post-analysis/model",
+    },
+    dashboard: {
+      overview: "/admin/dashboard/overview",
+      adoptionTrend: "/admin/dashboard/adoption-trend",
+      rescueSummary: "/admin/dashboard/rescue-summary",
+      topOrganizations: "/admin/dashboard/top-organizations",
+      pendingTasks: "/admin/dashboard/pending-tasks",
     },
   },
 } as const;

@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { Building2, MapPinned, Siren, TriangleAlert, CheckCircle2, User } from "lucide-react";
 
 import TitlePerPage from "@/components/common/admin/TitlePerPage";
+import { Button } from "@/components/ui/button";
 import type {
   OrganizationMapMarker,
   RescueMapMarker,
@@ -15,19 +16,18 @@ import { RescueCaseCreate, type RescueCaseCreateValues } from "@/components/resc
 import { RescueCaseViewDetail } from "@/components/rescue-case/RescueCaseViewDetail";
 import { RescueCompletionCompareDialog } from "@/components/rescue-case/RescueCompletionCompareDialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useCreateRescueCase, useRescueCaseDetail, useRescueCasesInBoundingBox, useRescueMapMarkers, useRescueCompletions, useRescueCases } from "@/hooks/use-rescue-case";
+import { useCreateRescueCase, useRescueCaseDetail, useRescueCasesInBoundingBox, useRescueMapMarkers, useRescueCompletions, useRescueCases, useCompletionReviewQueue } from "@/hooks/use-rescue-case";
 import {
   useOrganizationDetail,
   useOrganizationMapMarkers,
   useOrganizationsInBoundingBox,
 } from "@/hooks/use-organization";
 import type { OrganizationSummary } from "@/types/organization.type";
-import type { RescueCaseBoundingBoxParams, RescueCaseMarkers, RescueCasePayload, RescueCaseSummary, RescueCompletion } from "@/types/rescue-case.type";
+import type { RescueCaseBoundingBoxParams, RescueCaseMarkers, RescueCaseSummary, RescueCompletion } from "@/types/rescue-case.type";
 
 import { useCurrentUser } from "@/hooks/use-current-user";
 import RequireAuth from "@/components/auth/RequireAuth";
 import { SYSTEM_ROLES, ORGANIZATION_ROLES } from "@/constants/roles";
-import { set } from "zod";
 
 const Map = dynamic(() => import("@/components/map-rescue/MapRescue"), {
   ssr: false,
@@ -44,7 +44,7 @@ const VIETNAM_BOUNDS: RescueCaseBoundingBoxParams = {
   minLng: 102.1,
   maxLng: 109.5,
   page: 0,
-  size: 100,
+  pageSize: 100,
 };
 
 const VIETNAM_MARKER_BOUNDS: RescueCaseMarkers = {
@@ -53,17 +53,6 @@ const VIETNAM_MARKER_BOUNDS: RescueCaseMarkers = {
   minLng: 102.1,
   maxLng: 109.5,
 };
-
-function toCreateRescuePayload(
-  values: RescueCaseCreateValues,
-): RescueCasePayload {
-  return {
-    ...values,
-    imageUrls: [],
-    mediaIds: [],
-    contactPhone: "",
-  };
-}
 
 export default function RescueCaseManagementPage() {
   const [createOpen, setCreateOpen] = React.useState(false);
@@ -82,7 +71,7 @@ export default function RescueCaseManagementPage() {
   const [selectedCaseId, setSelectedCaseId] = React.useState<string | null>(null);
 
   const { data: currentUser } = useCurrentUser();
-  const isOrganizationUser = currentUser?.roles.includes("MEMBERSHIP") && !!currentUser?.organizationRole;
+  const isOrganizationUser = currentUser?.roles.includes(SYSTEM_ROLES.MEMBER) && !!currentUser?.organizationRole;
   const currentOrgId = isOrganizationUser ? currentUser?.organizationId : undefined;
 
   const canCreate = React.useMemo(() => {
@@ -124,8 +113,13 @@ export default function RescueCaseManagementPage() {
     organizationViewOpen ? selectedOrganizationId ?? undefined : undefined,
   );
   const createRescueCaseMutation = useCreateRescueCase();
-  const completionsQuery = useRescueCompletions({ isResolved: false, page: 0, size: 100 });
-  const rescueCasesListQuery = useRescueCases({ page: 0, size: 100 });
+  const isAdmin = currentUser?.roles.includes(SYSTEM_ROLES.ADMIN) ?? false;
+  const [escalatedOnly, setEscalatedOnly] = React.useState(false);
+  const pendingCompletionsQuery = useRescueCompletions({ isResolved: false, page: 0, pageSize: 100 });
+  // Disputed reports and those nobody reviewed in time: only an admin can settle them.
+  const reviewQueueQuery = useCompletionReviewQueue({ page: 0, pageSize: 100 }, isAdmin);
+  const completionsQuery = escalatedOnly ? reviewQueueQuery : pendingCompletionsQuery;
+  const rescueCasesListQuery = useRescueCases({ page: 0, pageSize: 100 });
 
   const rescueCases = React.useMemo(
     () => rescueBoundingBoxQuery.data?.content ?? [],
@@ -236,7 +230,7 @@ export default function RescueCaseManagementPage() {
 
   const handleCreateRescueCase = React.useCallback(
     async (values: RescueCaseCreateValues) => {
-      await createRescueCaseMutation.mutateAsync(toCreateRescuePayload(values));
+      await createRescueCaseMutation.mutateAsync(values);
       setCreateOpen(false);
     },
     [createRescueCaseMutation],
@@ -393,6 +387,27 @@ export default function RescueCaseManagementPage() {
                 {completionsQuery.data.totalElements} ca
               </span>
             ) : null}
+            {isAdmin && (
+              <div className="ml-auto flex gap-1 rounded-lg border p-0.5 text-xs">
+                <Button
+                  size="sm"
+                  variant={escalatedOnly ? "ghost" : "secondary"}
+                  onClick={() => setEscalatedOnly(false)}
+                >
+                  Tất cả chờ duyệt
+                </Button>
+                <Button
+                  size="sm"
+                  variant={escalatedOnly ? "secondary" : "ghost"}
+                  onClick={() => setEscalatedOnly(true)}
+                >
+                  Cần admin xử lý
+                  {reviewQueueQuery.data?.totalElements
+                    ? ` (${reviewQueueQuery.data.totalElements})`
+                    : ""}
+                </Button>
+              </div>
+            )}
           </div>
 
           {completionsQuery.isPending ? (
@@ -433,19 +448,25 @@ export default function RescueCaseManagementPage() {
                   <div className="flex items-start justify-between gap-3 w-full">
                     <div className="min-w-0">
                       <p className="font-mono text-[10px] text-muted-foreground">
-                        Mã ca: {item.caseId.substring(0, 8)}...
+                        Mã ca: {item.caseCode ?? `${item.caseId.substring(0, 8)}...`}
                       </p>
                       <p className="mt-1 font-semibold text-foreground text-sm line-clamp-1">
                         {item.rescueNote || "Không có ghi chú"}
                       </p>
                     </div>
-                    <span className="shrink-0 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700 border border-amber-100">
-                      Chờ duyệt
-                    </span>
+                    {item.status === "DISPUTED" ? (
+                      <span className="shrink-0 rounded-full bg-rose-50 px-2 py-0.5 text-[10px] font-semibold text-rose-700 border border-rose-100">
+                        Bị khiếu nại
+                      </span>
+                    ) : (
+                      <span className="shrink-0 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700 border border-amber-100">
+                        Chờ duyệt
+                      </span>
+                    )}
                   </div>
                   <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground w-full border-t pt-2">
                     <span className="truncate max-w-[150px] flex items-center gap-1">
-                      <User className="h-3 w-3" /> {item.verifiedByName}
+                      <User className="h-3 w-3" /> {item.submittedByName ?? item.verifiedByName}
                     </span>
                     <span className="shrink-0">
                       {new Date(item.rescuedAt).toLocaleDateString("vi-VN")}

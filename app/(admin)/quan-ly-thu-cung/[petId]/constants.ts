@@ -8,12 +8,12 @@ export const PET_DETAIL_IMAGE_FALLBACK =
 
 export const PET_DETAIL_SECTION_QUERY = {
   page: 0,
-  size: 10,
+  pageSize: 10,
 } as const;
 
 export const PET_DETAIL_MEDIA_QUERY = {
   page: 0,
-  size: 8,
+  pageSize: 8,
 } as const;
 
 export const PET_GENDER_LABELS: Record<string, string> = {
@@ -23,19 +23,19 @@ export const PET_GENDER_LABELS: Record<string, string> = {
 };
 
 export const PET_STATUS_LABELS: Record<PetStatus, string> = {
-  UNOWNED: "Chưa có chủ",
-  PENDING: "Đang chờ",
+  AVAILABLE: "Sẵn sàng nhận nuôi",
+  LOST: "Thất lạc",
   ADOPTED: "Đã nhận nuôi",
-  FOSTERED: "Đang foster",
-  UNAVAILABLE: "Không khả dụng",
+  FOSTERING: "Đang foster",
+  DECEASED: "Đã mất",
 };
 
 export const PET_STATUS_BADGE_CLASSNAMES: Record<PetStatus, string> = {
-  UNOWNED: "bg-emerald-50 text-emerald-700 hover:bg-emerald-50",
-  PENDING: "bg-amber-50 text-amber-700 hover:bg-amber-50",
+  AVAILABLE: "bg-emerald-50 text-emerald-700 hover:bg-emerald-50",
+  LOST: "bg-amber-50 text-amber-700 hover:bg-amber-50",
   ADOPTED: "bg-sky-50 text-sky-700 hover:bg-sky-50",
-  FOSTERED: "bg-violet-50 text-violet-700 hover:bg-violet-50",
-  UNAVAILABLE: "bg-muted text-muted-foreground hover:bg-muted",
+  FOSTERING: "bg-violet-50 text-violet-700 hover:bg-violet-50",
+  DECEASED: "bg-muted text-muted-foreground hover:bg-muted",
 };
 
 export const PET_HEALTH_LABELS: Record<PetHealthStatus, string> = {

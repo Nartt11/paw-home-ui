@@ -20,19 +20,25 @@ export interface Adoption extends AdoptionSummary {
   decidedByUsername: string;
   rejectReason: string;
   readyAt: string;
+  decisionReasonCode?: string | null;
+  match?: MatchResult | null;
 }
 
-export type AdoptionStatus = "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED";
+export type AdoptionStatus = "PENDING" | "APPROVED" | "COMPLETED" | "REJECTED" | "CANCELED";
 export interface AdoptionRejectPayload {
   note: string;
   rejectReason: string;
   readyAt: string;
+  decisionReasonCode?: string | null;
+  match?: MatchResult | null;
 }
 
 export interface AdoptionApprovePayload {
   note: string;
   rejectReason: string;
   readyAt: string;
+  decisionReasonCode?: string | null;
+  match?: MatchResult | null;
 }
 
 export interface AdoptionCreatePayload {
@@ -44,7 +50,50 @@ export interface AdoptionCreatePayload {
 
 export interface AdoptionListParams {
   page?: number;
-  size?: number;
+  pageSize?: number;
   status?: AdoptionStatus[];
   organizationId?: string;
+}
+// MatchResultDto (MatchResult.Reason / Warning) on an application, staff view.
+export type MatchLevel = "HIGH" | "MEDIUM" | "LOW" | "NOT_SUITABLE";
+export type MatchCertainty = "HIGH" | "MEDIUM" | "LOW" | "NONE";
+
+export interface MatchReason {
+  code: "LIFESTYLE" | "HOUSING" | "FAMILY" | "EXISTING_PETS" | "READINESS";
+  weight: number;
+  status: "OK" | "WARN" | "UNKNOWN";
+  certainty: MatchCertainty;
+  text: string;
+}
+
+export interface MatchWarning {
+  code: string;
+  text: string;
+}
+
+export interface MatchResult {
+  level: MatchLevel;
+  /** 0-100, staff only; null when a warning fired. */
+  score?: number | null;
+  certainty: MatchCertainty;
+  weightsVersion?: number;
+  reasons?: MatchReason[];
+  warnings?: MatchWarning[];
+  preparation?: string[];
+  /** The applicant confirmed they read the warnings. */
+  warningsAcknowledged?: boolean | null;
+}
+
+// ReclaimLogResponseDto: an organization took a pet back from its adopter.
+export interface ReclaimLog {
+  reclaimId: string;
+  applicationId: string;
+  petId: string;
+  organizationId?: string | null;
+  userId: string;
+  reclaimedBy: string;
+  reason: string;
+  proofId?: string | null;
+  reputationDelta?: number | null;
+  reclaimedAt: string;
 }

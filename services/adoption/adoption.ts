@@ -7,6 +7,7 @@ import {
   AdoptionCreatePayload,
   AdoptionApprovePayload,
   AdoptionRejectPayload,
+  ReclaimLog,
 } from "@/types/adoption.type";
 import { PaginatedResponse } from "@/types/api.type";
 
@@ -83,6 +84,18 @@ const adoptionService = {
   ): Promise<PaginatedResponse<AdoptionSummary>> {
     return await http.get<PaginatedResponse<AdoptionSummary>>(
       apiEndpoints.adoptions.byUser(userId),
+      { params },
+    );
+  },
+
+  // GET /api/v1/adoptions/reclaims - all for an admin, one organization for its members
+  async getReclaimLogs(params: {
+    organizationId?: string;
+    page?: number;
+    pageSize?: number;
+  }): Promise<PaginatedResponse<ReclaimLog>> {
+    return await http.get<PaginatedResponse<ReclaimLog>>(
+      apiEndpoints.adoptions.reclaims,
       { params },
     );
   },

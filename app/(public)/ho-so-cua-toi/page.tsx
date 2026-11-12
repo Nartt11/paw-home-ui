@@ -37,10 +37,7 @@ import { useCurrentUser } from "@/hooks/use-current-user";
 import { useUpdateMyProfile } from "@/hooks/use-user";
 import { useAdoptionsByUser, useCancelAdoption } from "@/hooks/use-adoption";
 import { useCreateOrganization, useOrganizations, useMyOrganization } from "@/hooks/use-organization";
-import {
-  OrganizationCreateNew,
-  type OrganizationCreateNewValues,
-} from "@/components/organization/OrganizationCreateNew";
+import { OrganizationFormDialog } from "@/components/organization/OrganizationFormDialog";
 import type { OrganizationCreatePayload } from "@/types/organization.type";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -492,7 +489,8 @@ function AdoptionApplicationsTab() {
       PENDING: 0,
       APPROVED: 0,
       REJECTED: 0,
-      CANCELLED: 0,
+      COMPLETED: 0,
+      CANCELED: 0,
     };
     adoptionsList.forEach((item) => {
       if (item.status in counts) {
@@ -538,7 +536,8 @@ function AdoptionApplicationsTab() {
     { value: "PENDING", label: "Chờ duyệt" },
     { value: "APPROVED", label: "Đã duyệt" },
     { value: "REJECTED", label: "Đã từ chối" },
-    { value: "CANCELLED", label: "Đã hủy" },
+    { value: "COMPLETED", label: "Hoàn thành" },
+    { value: "CANCELED", label: "Đã hủy" },
   ];
 
   return (
@@ -714,7 +713,14 @@ function StatusBadge({ status }: { status: string }) {
           Đã từ chối
         </span>
       );
-    case "CANCELLED":
+    case "COMPLETED":
+      return (
+        <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700 border border-blue-200">
+          <CheckCircle2 className="h-3.5 w-3.5 text-blue-500" />
+          Hoàn thành
+        </span>
+      );
+    case "CANCELED":
     default:
       return (
         <span className="inline-flex items-center gap-1 rounded-full bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-600 border border-slate-200">
@@ -723,42 +729,6 @@ function StatusBadge({ status }: { status: string }) {
         </span>
       );
   }
-}
-
-function parseCoordinate(value: string) {
-  const trimmed = value.trim();
-  if (!trimmed) return undefined;
-  const parsed = Number(trimmed);
-  return Number.isFinite(parsed) ? parsed : undefined;
-}
-
-function toOptionalTrimmed(value: string) {
-  const v = value.trim();
-  return v ? v : undefined;
-}
-
-function toCreateOrganizationPayload(
-  values: OrganizationCreateNewValues,
-): OrganizationCreatePayload {
-  const latitude = parseCoordinate(values.latitude);
-  const longitude = parseCoordinate(values.longitude);
-
-  return {
-    name: values.name.trim(),
-    type: values.type,
-    description: values.description.trim() || "",
-    email: toOptionalTrimmed(values.email) ?? "",
-    phone: toOptionalTrimmed(values.phone) ?? "",
-    officialLink: toOptionalTrimmed(values.officialLink) ?? "",
-    streetAddress: toOptionalTrimmed(values.streetAddress) ?? "",
-    wardCode: "",
-    wardName: toOptionalTrimmed(values.wardName) ?? "",
-    provinceCode: "",
-    provinceName: toOptionalTrimmed(values.provinceName) ?? "",
-    imageUrl: "",
-    latitude: latitude ?? 0,
-    longitude: longitude ?? 0,
-  };
 }
 
 interface MockCenterItem {
@@ -813,14 +783,13 @@ function CenterProfilesTab() {
   const createMutation = useCreateOrganization();
   const myOrgQuery = useMyOrganization();
   const [openCreate, setOpenCreate] = useState(false);
-  const [localCreatedCenters, setLocalCreatedCenters] = useState<MockCenterItem[]>([]);
   const [selectedStatus, setSelectedStatus] = useState<string>("ALL");
 
   const centers = React.useMemo(() => {
-    if (!currentUser) return [...localCreatedCenters, ...MOCK_CENTERS];
+    if (!currentUser) return MOCK_CENTERS;
     
     if (myOrgQuery.isError) {
-      return [...localCreatedCenters, ...MOCK_CENTERS];
+      return MOCK_CENTERS;
     }
     
     if (myOrgQuery.data && myOrgQuery.data.organization) {
@@ -844,48 +813,21 @@ function CenterProfilesTab() {
     }
     
     if (myOrgQuery.isSuccess && !myOrgQuery.data?.organization) {
-      return localCreatedCenters;
-    }
-    
-    return [...localCreatedCenters, ...MOCK_CENTERS];
-  }, [currentUser, myOrgQuery.data, myOrgQuery.isError, myOrgQuery.isSuccess, localCreatedCenters]);
-
-  const handleCreateCenter = (values: OrganizationCreateNewValues) => {
-    if (!values.name.trim()) {
-      toast.error("Tên trung tâm là bắt buộc");
-      return;
-    }
-    if (!values.type) {
-      toast.error("Loại trung tâm là bắt buộc");
-      return;
+      return [];
     }
 
-    const payload = toCreateOrganizationPayload(values);
+    return MOCK_CENTERS;
+  }, [currentUser, myOrgQuery.data, myOrgQuery.isError, myOrgQuery.isSuccess]);
 
+  const handleCreateCenter = (payload: OrganizationCreatePayload) => {
     createMutation.mutate(payload, {
       onSuccess: () => {
         toast.success("Gửi yêu cầu đăng ký trung tâm thành công!");
         setOpenCreate(false);
       },
-      onError: () => {
-        toast.success("Gửi yêu cầu đăng ký trung tâm thành công! (Chế độ mô phỏng)");
-        setOpenCreate(false);
-        const newMockCenter = {
-          organizationId: `org-mock-${Date.now()}`,
-          name: values.name.trim(),
-          type: values.type as "SHELTER" | "VET_CENTER",
-          status: "PENDING" as const,
-          streetAddress: values.streetAddress.trim(),
-          wardName: values.wardName.trim(),
-          provinceName: values.provinceName.trim(),
-          phone: values.phone.trim(),
-          email: values.email.trim(),
-          officialLink: values.officialLink.trim(),
-          description: values.description.trim(),
-          imageUrl: "https://images.unsplash.com/photo-1548199973-03cce0bbc87b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=400",
-        };
-        setLocalCreatedCenters((prev) => [newMockCenter, ...prev]);
-      }
+      onError: (error) => {
+        toast.error(error.message);
+      },
     });
   };
 
@@ -1046,7 +988,8 @@ function CenterProfilesTab() {
         </div>
       )}
 
-      <OrganizationCreateNew
+      <OrganizationFormDialog
+        mode="create"
         open={openCreate}
         onOpenChange={setOpenCreate}
         submitting={createMutation.isPending}

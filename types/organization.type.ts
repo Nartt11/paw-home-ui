@@ -1,7 +1,7 @@
 import { ListParams } from "./api.type";
 
 export type OrganizationType = "SHELTER" | "VET_CENTER";
-export type OrganizationStatus = "ACTIVE" | "INACTIVE" | "PENDING";
+export type OrganizationStatus = "ACTIVE" | "INACTIVE" | "PENDING" | "REJECTED";
 export interface OrganizationSummary {
   organizationId: string;
   name: string;
@@ -19,12 +19,14 @@ export interface OrganizationSummary {
 export interface OrganizationListParams {
   status?: string[];
   page?: number;
-  size?: number;
+  pageSize?: number;
 }
 export interface Organization extends OrganizationSummary {
   description: string;
   streetAddress: string;
+  wardCode: string;
   wardName: string;
+  provinceCode: string;
   provinceName: string;
   phone: string;
   email: string;
@@ -50,7 +52,7 @@ export interface OrganizationMember {
 export interface OrganizationCreatePayload {
   name: string;
   description: string;
-  type: string;
+  type: OrganizationType;
   streetAddress: string;
   wardCode: string;
   wardName: string;
@@ -58,7 +60,7 @@ export interface OrganizationCreatePayload {
   provinceName: string;
   phone: string;
   email: string;
-  imageUrl: string;
+  imageUrl?: string;
   officialLink: string;
   latitude: number;
   longitude: number;
@@ -74,7 +76,7 @@ export interface OrganizationUpdatePayload {
   provinceName: string;
   phone: string;
   email: string;
-  imageUrl: string;
+  imageUrl?: string;
   officialLink: string;
   latitude: number;
   longitude: number;

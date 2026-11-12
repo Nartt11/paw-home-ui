@@ -18,6 +18,8 @@ export interface RescueCaseSummary {
   locationText: string;
   reportedAt: string;
   firstImageUrl: string;
+  /** Only in nearby results. */
+  distanceMeters?: number;
 }
 
 export interface RescueCase extends RescueCaseSummary {
@@ -40,7 +42,44 @@ export interface RescueCase extends RescueCaseSummary {
   createdAt: string;
   imageUrls: string[];
   contactPhone: string;
+  /** Only in the response to a report sent with shareAsPost: the post that was published. */
+  sharedPostId?: string;
+  /** Only in that response: true when the case was saved but the post could not be published. */
+  postShareFailed?: boolean;
 }
+
+/** One of my active claims on a rescue case. */
+// RescueClaimResponseDto
+export interface RescueClaim {
+  claimId: string;
+  caseId: string;
+  caseCode?: string;
+  userId?: string;
+  username?: string;
+  /** Set when the claim was made for an organization (locks the case). */
+  organizationId?: string | null;
+  status: "ACTIVE" | "RELEASED" | "EXPIRED" | "COMPLETED" | string;
+  releaseReason?: "GAVE_UP" | "NEED_HELP" | "NOT_FOUND" | "CASE_ENDED" | null;
+  claimedAt?: string;
+  expiresAt?: string;
+}
+
+/** Filters of GET /rescue-cases. lat and lng together switch it to "nearest first". */
+export interface RescueCaseSearchParams extends ListParams {
+  search?: string;
+  status?: RescueCaseStatus[];
+  priority?: RescueCasePriority[];
+  species?: string;
+  province?: string;
+  lat?: number;
+  lng?: number;
+  distance?: number;
+}
+
+export interface MyRescueCasesParams extends ListParams {
+  status?: RescueCaseStatus[];
+}
+
 export interface RescueMedia {
   case_id: string;
   media_id: string;
@@ -71,8 +110,8 @@ export interface RescueCaseBoundingBoxParams extends ListParams {
 }
 
 export interface RescueCasePayload {
-  petId: string;
-  organizationId: string;
+  petId?: string;
+  organizationId?: string;
   species: string;
   color: string;
   size: string;
@@ -88,6 +127,10 @@ export interface RescueCasePayload {
   imageUrls: string[];
   mediaIds: string[];
   contactPhone: string;
+  /** True also publishes a community post about the case. */
+  shareAsPost?: boolean;
+  /** Text of that post. Empty lets the backend write one from the report. */
+  postContent?: string;
 }
 
 export interface CompleteRescuePayload {
@@ -109,7 +152,22 @@ export interface RescueCompletion {
   verifiedByName: string;
   verifiedAt: string;
   verificationImagesUrl: string[];
+  caseCode?: string;
+  submittedBy?: string;
+  submittedByName?: string;
+  outcome?: RescueOutcome;
+  status?: RescueCompletionStatus;
+  rejectReason?: string | null;
 }
+
+// RescueOutcome / RescueCompletionStatus enums in the backend.
+export type RescueOutcome =
+  | "HANDED_TO_ORG"
+  | "TEMP_HOLDING"
+  | "KEPT_BY_RESCUER"
+  | "RELEASED"
+  | "DECEASED";
+export type RescueCompletionStatus = "PENDING" | "APPROVED" | "REJECTED" | "DISPUTED";
 
 export interface RescueCompletionQueryParams extends ListParams {
   isResolved?: boolean;

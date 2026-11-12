@@ -9,7 +9,7 @@ import { PetCreateNew } from "@/components/pet/PetCreateNew";
 import { PetListTable } from "@/components/pet/PetListTable";
 import { useListUrlState } from "@/hooks/use-list-url-state";
 import { useOrganizations } from "@/hooks/use-organization";
-import { useCreatePetByShelter, usePets, usePetsByOrganization } from "@/hooks/use-pet";
+import { useCreatePet, usePets, usePetsByOrganization } from "@/hooks/use-pet";
 import type { PetCreatePayload, PetSummary } from "@/types/pet.type";
 import {
   AlertTriangle,
@@ -30,9 +30,9 @@ function getErrorMessage(error: unknown) {
 function getKpis(pets: PetSummary[], totalItems: number) {
   return pets.reduce(
     (acc, pet) => {
-      if (pet.status === "PENDING") acc.pending += 1;
+      if (pet.status === "AVAILABLE") acc.pending += 1;
       if (pet.status === "ADOPTED") acc.adopted += 1;
-      if (pet.status === "FOSTERED") acc.fostered += 1;
+      if (pet.status === "FOSTERING") acc.fostered += 1;
       if (pet.healthStatus !== "HEALTHY") acc.healthAlert += 1;
       return acc;
     },
@@ -51,37 +51,29 @@ export default function PetManagementPage() {
   const [createOpen, setCreateOpen] = React.useState(false);
   
   const { data: currentUser } = useCurrentUser();
-  const isOrganizationUser = currentUser?.roles.includes("MEMBERSHIP") && !!currentUser?.organizationRole;
+  const isOrganizationUser = currentUser?.roles.includes(SYSTEM_ROLES.MEMBER) && !!currentUser?.organizationRole;
 
   const canCreate = React.useMemo(() => {
     if (!isOrganizationUser) return true;
     return currentUser?.organizationRole === ORGANIZATION_ROLES.OWNER || currentUser?.organizationRole === ORGANIZATION_ROLES.STAFF;
   }, [isOrganizationUser, currentUser?.organizationRole]);
 
-  const queryParams = React.useMemo(() => {
-    const params: any = { page, size };
-    if (isOrganizationUser && currentUser?.organizationId) {
-      params.organizationId = currentUser.organizationId;
-    }
-    return params;
-  }, [page, size, isOrganizationUser, currentUser?.organizationId]);
-
   const petsQuery = usePets(
-    { page, size },
+    { page, pageSize: size },
     { enabled: !isOrganizationUser }
   );
 
   const orgPetsQuery = usePetsByOrganization(
     currentUser?.organizationId,
-    { page, size },
+    { page, pageSize: size },
     { enabled: isOrganizationUser && !!currentUser?.organizationId }
   );
 
   const listQuery = isOrganizationUser ? orgPetsQuery : petsQuery;
-  const createPetMutation = useCreatePetByShelter();
+  const createPetMutation = useCreatePet();
   const organizationsQuery = useOrganizations({
     page: 0,
-    size: 100,
+    pageSize: 100,
     status: ["ACTIVE"],
   });
 

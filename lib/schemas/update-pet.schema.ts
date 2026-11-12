@@ -9,12 +9,13 @@ export const PET_UPDATE_HEALTH_STATUS_VALUES = [
   "RECOVERING",
   "SPECIAL_NEEDS",
 ] as const;
+// PetStatus enum in the backend.
 export const PET_UPDATE_STATUS_VALUES = [
-  "UNOWNED",
+  "FOSTERING",
+  "AVAILABLE",
   "ADOPTED",
-  "PENDING",
-  "FOSTERED",
-  "UNAVAILABLE",
+  "LOST",
+  "DECEASED",
 ] as const;
 
 const optionalText = z.string().trim();

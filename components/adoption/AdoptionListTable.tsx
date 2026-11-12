@@ -56,20 +56,24 @@ function formatDateVi(value?: string) {
 function adoptionStatusBadge(status: AdoptionSummary["status"]) {
   const map: Record<string, { label: string; className?: string }> = {
     PENDING: {
-      label: "Cho xet duyet",
+      label: "Chờ xét duyệt",
       className: "bg-amber-50 text-amber-700 hover:bg-amber-50",
     },
     APPROVED: {
-      label: "Da duyet",
+      label: "Đã duyệt",
       className: "bg-emerald-50 text-emerald-700 hover:bg-emerald-50",
     },
     REJECTED: {
-      label: "Tu choi",
+      label: "Từ chối",
       className: "bg-rose-50 text-rose-700 hover:bg-rose-50",
     },
-    CANCELLED: {
-      label: "Da huy",
+    CANCELED: {
+      label: "Đã hủy",
       className: "bg-slate-100 text-slate-700 hover:bg-slate-100",
+    },
+    COMPLETED: {
+      label: "Hoàn thành",
+      className: "bg-blue-50 text-blue-700 hover:bg-blue-50",
     },
   };
 
@@ -207,20 +211,20 @@ export function AdoptionListTable({
                     onClick={() => onViewDetail?.(applicationId)}
                     disabled={!onViewDetail}
                   >
-                    Xem chi tiet
+                    Xem chi tiết
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={() => onApprove?.(applicationId)}
                     disabled={!onApprove || !canDecide}
                   >
-                    Duyet don
+                    Duyệt đơn
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => onReject?.(applicationId)}
                     disabled={!onReject || !canDecide}
                   >
-                    Tu choi
+                    Từ chối
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -271,8 +275,8 @@ export function AdoptionListTable({
             ) : table.getRowModel().rows.length === 0 ? (
               <AdminTableEmptyRow
                 colSpan={columnsWithActions.length}
-                title="Chua co don nhan nuoi"
-                description="Danh sach don nhan nuoi se xuat hien tai day khi co du lieu."
+                title="Chưa có đơn nhận nuôi"
+                description="Danh sách đơn nhận nuôi sẽ xuất hiện tại đây khi có dữ liệu."
                 cellClassName="px-3 py-12"
               />
             ) : (

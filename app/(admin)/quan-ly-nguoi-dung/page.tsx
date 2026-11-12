@@ -2,17 +2,22 @@
 
 import { useState } from "react";
 
+import { DeleteModal } from "@/components/common/admin/DeleteModal";
 import TitlePerPage from "@/components/common/admin/TitlePerPage";
+import { UserCreateDialog } from "@/components/user/UserCreateDialog";
 import { UserListTable } from "@/components/user/UserListTable";
 import { UserViewDetail } from "@/components/user/UserViewDetail";
 import {
   getOptionalSearchParam,
   useListUrlState,
 } from "@/hooks/use-list-url-state";
+import { useCreateAccount, useSetUserLocked } from "@/hooks/use-admin";
 import { useUserDetail, useUsers } from "@/hooks/use-user";
+import type { CreateAccountPayload, UserSummary } from "@/types/user.type";
 import { PageControls } from "@/components/common/PageControl";
 import { SearchIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 
 export default function UsersManagementPage() {
   const { searchParams, page, size, setParams, setPage, setSize } =
@@ -20,13 +25,45 @@ export default function UsersManagementPage() {
 
   const [openDetail, setOpenDetail] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [lockTarget, setLockTarget] = useState<UserSummary | null>(null);
 
   const keyword = getOptionalSearchParam(searchParams.get("keyword")) ?? "";
-  const usersQuery = useUsers({ page, size });
+  const usersQuery = useUsers({ page, pageSize: size });
   const userDetailQuery = useUserDetail(selectedId ?? undefined);
 
   const data = usersQuery.data;
   const userDetail = openDetail ? userDetailQuery.data : undefined;
+  const createAccountMutation = useCreateAccount();
+  const setUserLockedMutation = useSetUserLocked();
+  const isLockTargetLocked = lockTarget?.status === "LOCKED";
+
+  const handleCreateAccount = (payload: CreateAccountPayload) => {
+    createAccountMutation.mutate(payload, {
+      onSuccess: () => {
+        setCreateOpen(false);
+        toast.success("Tạo tài khoản thành công");
+      },
+      onError: (error) => toast.error(error.message),
+    });
+  };
+
+  const handleConfirmLock = () => {
+    if (!lockTarget) return;
+
+    setUserLockedMutation.mutate(
+      { userId: lockTarget.userId, locked: !isLockTargetLocked },
+      {
+        onSuccess: () => {
+          setLockTarget(null);
+          toast.success(
+            isLockTargetLocked ? "Đã mở khóa tài khoản" : "Đã khóa tài khoản",
+          );
+        },
+        onError: (error) => toast.error(error.message),
+      },
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -34,9 +71,7 @@ export default function UsersManagementPage() {
         title="Quản lý người dùng"
         description="Danh sách người dùng trong hệ thống"
         buttonText="Thêm người dùng"
-        handleOpenModal={() => {
-          // TODO: implement create user dialog
-        }}
+        handleOpenModal={() => setCreateOpen(true)}
       />
 
       {usersQuery.isError ? (
@@ -52,7 +87,7 @@ export default function UsersManagementPage() {
           <Input
             placeholder="Tìm người dùng..."
             value={keyword}
-            onChange={(e) => setParams({ keyword: e.target.value, page: 1 })}
+            onChange={(e) => setParams({ keyword: e.target.value, page: 0 })}
             className="pl-9"
           />
         </div>
@@ -66,14 +101,7 @@ export default function UsersManagementPage() {
           setSelectedId(userId);
           setOpenDetail(true);
         }}
-        onEdit={(userId) => {
-          // TODO: open edit dialog
-          console.log("edit", userId);
-        }}
-        onDisable={(userId) => {
-          // TODO: call disable user API
-          console.log("disable", userId);
-        }}
+        onToggleLock={setLockTarget}
       />
 
       <PageControls
@@ -83,6 +111,30 @@ export default function UsersManagementPage() {
         totalItems={data?.totalElements}
         onPageChange={setPage}
         onPageSizeChange={setSize}
+      />
+
+      <UserCreateDialog
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        submitting={createAccountMutation.isPending}
+        onSubmit={handleCreateAccount}
+      />
+
+      <DeleteModal
+        open={Boolean(lockTarget)}
+        onOpenChange={(open) => {
+          if (!open) setLockTarget(null);
+        }}
+        title={isLockTargetLocked ? "Mở khóa tài khoản" : "Khóa tài khoản"}
+        description={
+          isLockTargetLocked
+            ? `Mở khóa tài khoản ${lockTarget?.username ?? ""}?`
+            : `Khóa tài khoản ${lockTarget?.username ?? ""}? Người dùng này sẽ không đăng nhập được.`
+        }
+        confirmText={isLockTargetLocked ? "Mở khóa" : "Khóa"}
+        confirming={setUserLockedMutation.isPending}
+        confirmDisabled={!lockTarget}
+        onConfirm={handleConfirmLock}
       />
 
       {userDetail ? (

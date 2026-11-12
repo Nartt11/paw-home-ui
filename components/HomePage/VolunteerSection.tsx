@@ -19,7 +19,7 @@ export default function VolunteerSection({ banner }: VolunteerSectionProps) {
   return (
     <PageHero
       imageSrc={banner?.mediaUrl || VOL_IMG}
-      imageAlt={banner?.title || "Tinh nguyen vien"}
+      imageAlt={banner?.title || "Tình nguyện viên"}
       className="px-6 py-16 md:py-20"
       minHeightClassName="min-h-0"
       overlayClassName="bg-gradient-to-br from-slate-950/90 to-sky-900/80"

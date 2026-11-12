@@ -1,6 +1,8 @@
 export const APP_ROUTES = {
   HOME: "/",
   MAP: "/ban-do",
+  COMMUNITY: "/cong-dong",
+  communityPost: (postId: string) => `/cong-dong/${postId}`,
   ADOPTION: "/nhan-nuoi",
   adoptionDetail: (petId: string) => `/nhan-nuoi/${petId}`,
   NEWS: "/tin-tuc",
@@ -21,5 +23,7 @@ export const APP_ROUTES = {
   BANNER_MANAGEMENT: "/quan-ly-banner",
   POST_MANAGEMENT: "/quan-ly-bai-dang",
   USER_MANAGEMENT: "/quan-ly-nguoi-dung",
-  NEWS_MANAGEMENT: "/quan-ly-tin-tuc",
+  ROLE_MANAGEMENT: "/quan-ly-vai-tro",
+  TAG_MANAGEMENT: "/quan-ly-the",
+  AI_SETTINGS: "/cau-hinh-ai",
 };

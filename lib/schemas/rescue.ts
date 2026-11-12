@@ -28,3 +28,14 @@ export const completeRescueSchema = z.object({
 });
 
 export type CompleteRescueFormValues = z.infer<typeof completeRescueSchema>;
+
+// RescueCompletionDecisionRequestDto: reject / dispute need a reason.
+export const completionDecisionSchema = z.object({
+  reason: z
+    .string()
+    .trim()
+    .min(1, "Vui lòng nhập lý do.")
+    .max(1000, "Lý do tối đa 1000 ký tự."),
+});
+
+export type CompletionDecisionValues = z.infer<typeof completionDecisionSchema>;

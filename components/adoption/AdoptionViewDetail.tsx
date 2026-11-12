@@ -5,6 +5,7 @@ import Image from "next/image";
 import { CalendarDays, Home, PawPrint, ShieldCheck, UserRound, Loader2 } from "lucide-react";
 
 import type { Adoption, AdoptionStatus } from "@/types/adoption.type";
+import { AdoptionMatchSection } from "@/components/adoption/AdoptionMatchSection";
 import { toast } from "sonner";
 import {
   useApproveAdoption,
@@ -72,7 +73,7 @@ function statusToBadge(status?: string) {
       label: "Từ chối",
       className: "bg-rose-50 text-rose-700 hover:bg-rose-50",
     },
-    CANCELLED: {
+    CANCELED: {
       label: "Đã hủy",
       className: "bg-slate-100 text-slate-700 hover:bg-slate-100",
     },
@@ -237,6 +238,8 @@ export function AdoptionViewDetail({
                 </section>
               </div>
 
+              <AdoptionMatchSection match={adoption.match} />
+
               {adoption.rejectReason ? (
                 <section className="space-y-3 rounded-3xl border border-rose-100 bg-rose-50/60 p-5">
                   <div className="text-sm font-semibold text-rose-800">
@@ -376,7 +379,8 @@ const STATUS_ACTIONS: Record<AdoptionStatus, ActionConfig[]> = {
     },
   ],
   REJECTED: [],
-  CANCELLED: [],
+  CANCELED: [],
+  COMPLETED: [],
 };
 
 const CONFIRM_DETAILS = {

@@ -64,10 +64,11 @@ export default function Footer() {
                 label: "Đăng ký TNV",
                 href: `#`,
               },
-              {
-                label: "Tin tức & Sự kiện",
-                href: `${APP_ROUTES.NEWS}`,
-              },
+              // ponytail: hidden until BE has a news source
+              // {
+              //   label: "Tin tức & Sự kiện",
+              //   href: `${APP_ROUTES.NEWS}`,
+              // },
               // {
               //   label: "Cộng đồng PawHome",
               //   href: "/community",

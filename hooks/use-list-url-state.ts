@@ -65,9 +65,9 @@ export function useListUrlState(options: UseListUrlStateOptions = {}) {
 
   const setSize = useCallback(
     (nextSize: number) => {
-      setParams({ page: 1, size: nextSize });
+      setParams({ page: defaultPage, size: nextSize });
     },
-    [setParams],
+    [defaultPage, setParams],
   );
 
   return {

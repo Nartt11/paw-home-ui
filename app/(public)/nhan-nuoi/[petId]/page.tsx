@@ -96,16 +96,16 @@ function getHealthLabel(status?: string) {
 
 function getPetStatusLabel(status?: string) {
   switch (status) {
-    case "UNOWNED":
+    case "AVAILABLE":
       return "Sẵn sàng nhận nuôi";
-    case "PENDING":
-      return "Đang chờ xử lý";
+    case "LOST":
+      return "Đang thất lạc";
     case "ADOPTED":
       return "Đã được nhận nuôi";
-    case "FOSTERED":
+    case "FOSTERING":
       return "Đang được nuôi tạm";
-    case "UNAVAILABLE":
-      return "Tạm ngưng nhận nuôi";
+    case "DECEASED":
+      return "Đã mất";
     default:
       return "Đang cập nhật";
   }
@@ -113,15 +113,15 @@ function getPetStatusLabel(status?: string) {
 
 function getPetStatusBadgeClass(status?: string) {
   switch (status) {
-    case "UNOWNED":
+    case "AVAILABLE":
       return "bg-emerald-500 text-white hover:bg-emerald-600 border-emerald-600";
-    case "PENDING":
+    case "LOST":
       return "bg-amber-500 text-white hover:bg-amber-600 border-amber-600";
     case "ADOPTED":
       return "bg-sky-500 text-white hover:bg-sky-600 border-sky-600";
-    case "FOSTERED":
+    case "FOSTERING":
       return "bg-indigo-500 text-white hover:bg-indigo-600 border-indigo-600";
-    case "UNAVAILABLE":
+    case "DECEASED":
       return "bg-slate-500 text-white hover:bg-slate-600 border-slate-600";
     default:
       return "bg-slate-500 text-white hover:bg-slate-600 border-slate-600";
@@ -146,7 +146,7 @@ export default function AdoptionPetDetailPage() {
       petDetailsService.getMedicalRecords(petId as string, {
         petId: petId as string,
         page: 0,
-        size: 3,
+        pageSize: 3,
       }),
     enabled: Boolean(petId),
   });
@@ -254,7 +254,7 @@ export default function AdoptionPetDetailPage() {
   }
 
   const imageUrls = pet.imageUrls && pet.imageUrls.length > 0 ? pet.imageUrls : [IMAGE_FALLBACK];
-  const isAdoptable = pet.status === "UNOWNED";
+  const isAdoptable = pet.status === "AVAILABLE";
 
   return (
     <div className="bg-[linear-gradient(180deg,#fffaf5_0%,#ffffff_22%,#f8fafc_100%)]">

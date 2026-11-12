@@ -1,12 +1,13 @@
 import { ListParams } from "./api.type";
 import { Organization } from "./organization.type";
 
+// PetStatus enum in the backend.
 export type PetStatus =
-  | "UNOWNED"
+  | "FOSTERING"
+  | "AVAILABLE"
   | "ADOPTED"
-  | "PENDING"
-  | "FOSTERED"
-  | "UNAVAILABLE";
+  | "LOST"
+  | "DECEASED";
 export type PetGender = "MALE" | "FEMALE" | "UNKNOWN";
 export type PetHealthStatus =
   | "HEALTHY"
@@ -90,16 +91,30 @@ export interface PetListParams extends ListParams {
   species?: string;
   breed?: string;
   gender?: PetGender;
-  searchName?: string;
+  search?: string;
   status?: PetStatus[];
   userId?: string;
   organizationId?: string;
 }
 
+export interface PetBreed {
+  breedId: string;
+  speciesId: string;
+  name: string;
+  nameVi: string;
+}
+
+export interface PetTaxonomySpecies {
+  speciesId: string;
+  name: string;
+  nameVi: string;
+  breeds: PetBreed[];
+}
+
 export interface PetCreatePayload {
   name: string;
-  species: string;
-  breed: string;
+  speciesId: string;
+  breedId?: string;
   age: number;
   gender: PetGender;
   color: string;
@@ -108,9 +123,6 @@ export interface PetCreatePayload {
   vaccinated: boolean;
   neutered: boolean;
   healthStatus: PetHealthStatus;
-  rescueDate: string;
-  rescueLocation: string;
-  imageUrls: string[];
   mediaIds: string[];
   shelterId: string;
   rescueCaseId?: string;
@@ -157,4 +169,27 @@ export interface PetMediaCreatePayload {
 
 export interface PetDetailParams extends ListParams {
   petId?: string;
+}
+
+// PetTraitsDto (GET/PUT /pets/{petId}/traits). Scales are 1-5; absent = nobody recorded it.
+export interface PetTraits {
+  petId?: string;
+  friendlyPeople?: number | null;
+  friendlyChildren?: number | null;
+  fearStrangers?: number | null;
+  fearNoise?: number | null;
+  energy?: number | null;
+  goodWithDogs?: number | null;
+  goodWithCats?: number | null;
+  aloneMinutes?: number | null;
+  houseTrained?: number | null;
+  biteHistory?: "NONE" | "MINOR" | "INJURY" | null;
+  biteVerified?: boolean;
+  size?: "SMALL" | "MEDIUM" | "LARGE" | null;
+  noiseLevel?: number | null;
+  monthlyCost?: number | null;
+  careLevel?: "LOW" | "MEDIUM" | "HIGH" | null;
+  sourceRole?: "FOSTER" | "STAFF" | "PREVIOUS_OWNER" | "OWNER" | null;
+  note?: string | null;
+  updatedAt?: string | null;
 }

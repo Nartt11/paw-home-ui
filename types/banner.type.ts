@@ -18,7 +18,7 @@ export interface Banner {
 export interface BannerListParams {
   targetPage?: string;
   page?: number;
-  size?: number;
+  pageSize?: number;
   status?: boolean;
 }
 

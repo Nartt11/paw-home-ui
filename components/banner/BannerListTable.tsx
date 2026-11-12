@@ -71,7 +71,7 @@ export function BannerListTable({
     () => [
       columnHelper.display({
         id: "title",
-        header: "Tieu de",
+        header: "Tiêu đề",
         cell: ({ row }) => (
           <div className="min-w-55">
             <div className="truncate font-medium text-slate-900">
@@ -92,7 +92,7 @@ export function BannerListTable({
         ),
       }),
       columnHelper.accessor("displayOrder", {
-        header: "Thu tu",
+        header: "Thứ tự",
         cell: ({ getValue }) => (
           <span className="font-mono text-xs text-slate-600">
             {getValue()}
@@ -101,7 +101,7 @@ export function BannerListTable({
       }),
       columnHelper.display({
         id: "active",
-        header: "Hien thi",
+        header: "Hiển thị",
         cell: ({ row }) => {
           const { active, bannerId } = row.original;
 
@@ -111,14 +111,14 @@ export function BannerListTable({
               disabled={!onToggleActive}
               onCheckedChange={() => onToggleActive?.(bannerId)}
               aria-label={
-                active ? "Tat hien thi banner" : "Bat hien thi banner"
+                active ? "Tắt hiển thị banner" : "Bật hiển thị banner"
               }
             />
           );
         },
       }),
       columnHelper.accessor("startDate", {
-        header: "Bat dau",
+        header: "Bắt đầu",
         cell: ({ getValue }) => (
           <span className="text-sm text-slate-700">
             {formatDateVi(getValue())}
@@ -126,7 +126,7 @@ export function BannerListTable({
         ),
       }),
       columnHelper.accessor("endDate", {
-        header: "Ket thuc",
+        header: "Kết thúc",
         cell: ({ getValue }) => (
           <span className="text-sm text-slate-700">
             {formatDateVi(getValue())}
@@ -152,19 +152,19 @@ export function BannerListTable({
                     onClick={() => onViewDetail?.(bannerId)}
                     disabled={!onViewDetail}
                   >
-                    Xem chi tiet
+                    Xem chi tiết
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => onEdit?.(bannerId)}
                     disabled={!onEdit}
                   >
-                    Chinh sua
+                    Chỉnh sửa
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => onToggleActive?.(bannerId)}
                     disabled={!onToggleActive}
                   >
-                    {active ? "Tat hien thi" : "Bat hien thi"}
+                    {active ? "Tắt hiển thị" : "Bật hiển thị"}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
@@ -172,7 +172,7 @@ export function BannerListTable({
                     onClick={() => onDelete?.(bannerId)}
                     disabled={!onDelete}
                   >
-                    Xoa
+                    Xóa
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -222,8 +222,8 @@ export function BannerListTable({
             ) : table.getRowModel().rows.length === 0 ? (
               <AdminTableEmptyRow
                 colSpan={columns.length}
-                title="Chua co banner"
-                description="Banner moi se xuat hien tai day sau khi duoc tao."
+                title="Chưa có banner"
+                description="Banner mới sẽ xuất hiện tại đây sau khi được tạo."
                 cellClassName="px-3 py-12"
               />
             ) : (

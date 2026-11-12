@@ -6,8 +6,10 @@ import {
   RescueCaseNearByParams,
   RescueCasePayload,
   CompleteRescuePayload,
-  RescueCompletion,
+
   RescueCompletionQueryParams,
+  RescueCaseSearchParams,
+  MyRescueCasesParams,
 } from "@/types/rescue-case.type";
 
 import { ListParams } from "@/types/api.type";
@@ -19,6 +21,18 @@ export const rescueCaseKeys = {
   lists: () => [...rescueCaseKeys.all, "list"] as const,
 
   list: (params: ListParams) => [...rescueCaseKeys.lists(), params] as const,
+
+  searches: () => [...rescueCaseKeys.all, "search"] as const,
+
+  search: (params: RescueCaseSearchParams) =>
+    [...rescueCaseKeys.searches(), params] as const,
+
+  mine: () => [...rescueCaseKeys.all, "mine"] as const,
+
+  myReported: (params: MyRescueCasesParams) =>
+    [...rescueCaseKeys.mine(), "reported", params] as const,
+
+  myClaims: () => [...rescueCaseKeys.mine(), "claims"] as const,
 
   details: () => [...rescueCaseKeys.all, "detail"] as const,
 
@@ -53,6 +67,36 @@ export function useRescueCases(params: ListParams) {
   return useQuery({
     queryKey: rescueCaseKeys.list(params),
     queryFn: () => rescueService.getAllRescueCases(params),
+  });
+}
+
+/** Filtered case list. Pass lat and lng to get the nearest cases first. */
+export function useRescueCaseSearch(
+  params: RescueCaseSearchParams,
+  enabled = true,
+) {
+  return useQuery({
+    queryKey: rescueCaseKeys.search(params),
+    queryFn: () => rescueService.searchRescueCases(params),
+    enabled,
+  });
+}
+
+/** Cases the signed-in user reported. */
+export function useMyRescueCases(params: MyRescueCasesParams, enabled = true) {
+  return useQuery({
+    queryKey: rescueCaseKeys.myReported(params),
+    queryFn: () => rescueService.getMyRescueCases(params),
+    enabled,
+  });
+}
+
+/** Cases the signed-in user is working on. */
+export function useMyRescueClaims(enabled = true) {
+  return useQuery({
+    queryKey: rescueCaseKeys.myClaims(),
+    queryFn: () => rescueService.getMyRescueClaims(),
+    enabled,
   });
 }
 
@@ -105,6 +149,19 @@ export function useCreateRescueCase() {
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: rescueCaseKeys.lists(),
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: rescueCaseKeys.searches(),
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: rescueCaseKeys.mine(),
+      });
+
+      // a report sent with shareAsPost also publishes a post
+      queryClient.invalidateQueries({
+        queryKey: ["posts"],
       });
 
       queryClient.invalidateQueries({
@@ -267,5 +324,37 @@ export function useApproveRescueCompletion() {
         queryKey: rescueCaseKeys.boundingBoxes(),
       });
     },
+  });
+}
+
+function invalidateCompletions(queryClient: ReturnType<typeof useQueryClient>) {
+  queryClient.invalidateQueries({ queryKey: rescueCaseKeys.all });
+}
+
+export function useRejectRescueCompletion() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, reason }: { id: string; reason: string }) =>
+      rescueService.rejectRescueCompletion(id, reason),
+    onSuccess: () => invalidateCompletions(queryClient),
+  });
+}
+
+export function useCompletionReviewQueue(
+  params: RescueCompletionQueryParams,
+  enabled: boolean,
+) {
+  return useQuery({
+    queryKey: [...rescueCaseKeys.completionsLists(), "review-queue", params],
+    queryFn: () => rescueService.getCompletionReviewQueue(params),
+    enabled,
+  });
+}
+
+export function useRescueCaseClaims(caseId?: string) {
+  return useQuery({
+    queryKey: [...rescueCaseKeys.all, "claims", caseId],
+    queryFn: () => rescueService.getRescueCaseClaims(caseId as string),
+    enabled: !!caseId,
   });
 }
