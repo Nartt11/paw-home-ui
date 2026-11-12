@@ -83,3 +83,17 @@ export interface MatchResult {
   /** The applicant confirmed they read the warnings. */
   warningsAcknowledged?: boolean | null;
 }
+
+// ReclaimLogResponseDto: an organization took a pet back from its adopter.
+export interface ReclaimLog {
+  reclaimId: string;
+  applicationId: string;
+  petId: string;
+  organizationId?: string | null;
+  userId: string;
+  reclaimedBy: string;
+  reason: string;
+  proofId?: string | null;
+  reputationDelta?: number | null;
+  reclaimedAt: string;
+}

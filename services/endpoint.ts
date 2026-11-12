@@ -83,6 +83,7 @@ export const apiEndpoints = {
     reject: (id: string) => `/adoptions/${id}/reject`,
     cancel: (id: string) => `/adoptions/${id}/cancel`,
     complete: (id: string) => `/adoptions/${id}/complete`,
+    reclaims: "/adoptions/reclaims",
   },
   posts: {
     root: "/posts",

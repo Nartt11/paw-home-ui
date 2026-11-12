@@ -6,6 +6,7 @@ import { AdoptionDecisionDialog } from "@/components/adoption/AdoptionDecisionDi
 import { AdoptionListTable } from "@/components/adoption/AdoptionListTable";
 import AdoptionRequestList from "@/components/adoption/AdoptionRequestList";
 import { AdoptionViewDetail } from "@/components/adoption/AdoptionViewDetail";
+import { ReclaimLogTable } from "@/components/adoption/ReclaimLogTable";
 import TitlePerPage from "@/components/common/admin/TitlePerPage";
 import { PageControls } from "@/components/common/PageControl";
 import {
@@ -347,6 +348,8 @@ export default function AdoptionManagementPage() {
             }}
           />
         </section>
+
+        <ReclaimLogTable organizationId={currentOrgId} />
 
         <AdoptionViewDetail
           open={openDetail}
