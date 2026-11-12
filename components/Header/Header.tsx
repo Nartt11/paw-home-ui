@@ -43,6 +43,10 @@ const NAV_LINKS: NavItem[] = [
     label: "Nhận nuôi",
   },
   {
+    href: APP_ROUTES.COMMUNITY,
+    label: "Cộng đồng",
+  },
+  {
     href: APP_ROUTES.MAP,
     label: "Bản đồ",
   },

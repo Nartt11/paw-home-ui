@@ -11,10 +11,41 @@ import {
   CompleteRescuePayload,
   RescueCompletion,
   RescueCompletionQueryParams,
+  RescueCaseSearchParams,
+  MyRescueCasesParams,
+  RescueClaim,
 } from "@/types/rescue-case.type";
 import { ListParams, PaginatedResponse } from "@/types/api.type";
 
+// The backend reads repeated keys (status=A&status=B), not the bracket form axios writes by default.
+const repeatArrayKeys = { indexes: null };
+
 const rescueService = {
+  // GET /api/v1/rescue-cases?status=&priority=&species=&province=&search=&lat=&lng=&distance=
+  async searchRescueCases(
+    params: RescueCaseSearchParams,
+  ): Promise<PaginatedResponse<RescueCaseSummary>> {
+    return await http.get<PaginatedResponse<RescueCaseSummary>>(
+      apiEndpoints.rescueCases.root,
+      { params, paramsSerializer: repeatArrayKeys },
+    );
+  },
+
+  // GET /api/v1/users/me/rescue-cases - Cases I reported
+  async getMyRescueCases(
+    params: MyRescueCasesParams,
+  ): Promise<PaginatedResponse<RescueCaseSummary>> {
+    return await http.get<PaginatedResponse<RescueCaseSummary>>(
+      apiEndpoints.users.myRescueCases,
+      { params, paramsSerializer: repeatArrayKeys },
+    );
+  },
+
+  // GET /api/v1/users/me/rescue-claims - Cases I am working on
+  async getMyRescueClaims(): Promise<RescueClaim[]> {
+    return await http.get<RescueClaim[]>(apiEndpoints.users.myRescueClaims);
+  },
+
   // GET /api/v1/rescue-cases - List all rescue cases
   async getAllRescueCases(
     params: ListParams,

@@ -12,6 +12,8 @@ import type {
 export interface CursorPage<T> {
   items: T[];
   nextCursor?: string;
+  /** Send back as cursorId together with nextCursor. */
+  nextCursorId?: string;
   hasMore: boolean;
 }
 

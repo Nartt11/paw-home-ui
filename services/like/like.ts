@@ -1,25 +1,24 @@
 import http from "@/lib/http";
 import apiEndpoints from "@/services/endpoint";
+import type { LikeStatus } from "@/types/comment.type";
 
-import type { ApiEntity } from "../api-dto";
-
-export type LikeStatusDto = ApiEntity;
+export type LikeStatusDto = LikeStatus;
 
 const likeService = {
-  async likePost(postId: string): Promise<LikeStatusDto> {
-    return http.post<LikeStatusDto>(apiEndpoints.posts.like(postId), {});
+  async likePost(postId: string): Promise<LikeStatus> {
+    return http.post<LikeStatus>(apiEndpoints.posts.like(postId), {});
   },
 
-  async unlikePost(postId: string): Promise<LikeStatusDto> {
-    return http.delete<LikeStatusDto>(apiEndpoints.posts.like(postId));
+  async unlikePost(postId: string): Promise<LikeStatus> {
+    return http.delete<LikeStatus>(apiEndpoints.posts.like(postId));
   },
 
-  async likeComment(commentId: string): Promise<LikeStatusDto> {
-    return http.post<LikeStatusDto>(apiEndpoints.comments.like(commentId), {});
+  async likeComment(commentId: string): Promise<LikeStatus> {
+    return http.post<LikeStatus>(apiEndpoints.comments.like(commentId), {});
   },
 
-  async unlikeComment(commentId: string): Promise<LikeStatusDto> {
-    return http.delete<LikeStatusDto>(apiEndpoints.comments.like(commentId));
+  async unlikeComment(commentId: string): Promise<LikeStatus> {
+    return http.delete<LikeStatus>(apiEndpoints.comments.like(commentId));
   },
 };
 

@@ -18,6 +18,8 @@ export interface RescueCaseSummary {
   locationText: string;
   reportedAt: string;
   firstImageUrl: string;
+  /** Only in nearby results. */
+  distanceMeters?: number;
 }
 
 export interface RescueCase extends RescueCaseSummary {
@@ -40,7 +42,38 @@ export interface RescueCase extends RescueCaseSummary {
   createdAt: string;
   imageUrls: string[];
   contactPhone: string;
+  /** Only in the response to a report sent with shareAsPost: the post that was published. */
+  sharedPostId?: string;
+  /** Only in that response: true when the case was saved but the post could not be published. */
+  postShareFailed?: boolean;
 }
+
+/** One of my active claims on a rescue case. */
+export interface RescueClaim {
+  claimId: string;
+  caseId: string;
+  caseCode?: string;
+  status: string;
+  claimedAt?: string;
+  expiresAt?: string;
+}
+
+/** Filters of GET /rescue-cases. lat and lng together switch it to "nearest first". */
+export interface RescueCaseSearchParams extends ListParams {
+  search?: string;
+  status?: RescueCaseStatus[];
+  priority?: RescueCasePriority[];
+  species?: string;
+  province?: string;
+  lat?: number;
+  lng?: number;
+  distance?: number;
+}
+
+export interface MyRescueCasesParams extends ListParams {
+  status?: RescueCaseStatus[];
+}
+
 export interface RescueMedia {
   case_id: string;
   media_id: string;
@@ -88,6 +121,10 @@ export interface RescueCasePayload {
   imageUrls: string[];
   mediaIds: string[];
   contactPhone: string;
+  /** True also publishes a community post about the case. */
+  shareAsPost?: boolean;
+  /** Text of that post. Empty lets the backend write one from the report. */
+  postContent?: string;
 }
 
 export interface CompleteRescuePayload {

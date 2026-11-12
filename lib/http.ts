@@ -20,17 +20,21 @@ export interface ApiErrorResponse {
   success?: boolean;
   status?: number;
   message?: string;
+  /** Machine-readable code of a business error, e.g. POST_RESCUE_CASE_CLOSED. */
+  errorCode?: string;
   errors?: Record<string, string[]>;
 }
 
 export class HttpError extends Error {
   status?: number;
+  errorCode?: string;
   errors?: Record<string, string[]>;
 
   constructor(payload: ApiErrorResponse) {
     super(payload.message || "Something went wrong");
     this.name = "HttpError";
     this.status = payload.status;
+    this.errorCode = payload.errorCode;
     this.errors = payload.errors;
   }
 }
@@ -121,6 +125,7 @@ class Http {
         const customError = new HttpError({
           status: error.response?.status,
           message: data?.message || error.message,
+          errorCode: data?.errorCode,
           errors: data?.errors,
         });
 
