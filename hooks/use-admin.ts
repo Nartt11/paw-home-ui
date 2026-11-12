@@ -1,7 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { userKeys } from "@/hooks/use-user";
-import adminService, { adminDashboardService } from "@/services/admin/admin";
+import { organizationKeys } from "@/hooks/use-organization";
+import adminService, {
+  adminDashboardService,
+  type AdminOrganizationAccountPayload,
+} from "@/services/admin/admin";
 import type { DashboardPeriodParams } from "@/types/dashboard.type";
 import type { CreateAccountPayload } from "@/types/user.type";
 
@@ -91,6 +95,20 @@ export function useCreateAccount() {
 
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: userKeys.lists() });
+    },
+  });
+}
+
+export function useCreateOrganizationAccount(organizationId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: AdminOrganizationAccountPayload) =>
+      adminService.createOrganizationAccount(organizationId, payload),
+
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: userKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: organizationKeys.members() });
     },
   });
 }

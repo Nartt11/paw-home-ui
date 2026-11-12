@@ -39,6 +39,7 @@ export interface OrganizationListTableProps {
   onViewDetail: (organizationId: string) => void;
   onEdit?: (organizationId: string) => void;
   onDelete?: (organizationId: string) => void;
+  onCreateAccount?: (organizationId: string) => void;
 }
 
 function getStatusLabel(status?: string) {
@@ -81,6 +82,7 @@ function getColumns(
   onViewDetail: (organizationId: string) => void,
   onEdit?: (organizationId: string) => void,
   onDelete?: (organizationId: string) => void,
+  onCreateAccount?: (organizationId: string) => void,
 ): ColumnDef<OrganizationSummary>[] {
   return [
     {
@@ -150,6 +152,12 @@ function getColumns(
                   Chỉnh sửa
                 </DropdownMenuItem>
 
+                {onCreateAccount && (
+                  <DropdownMenuItem onClick={() => onCreateAccount(id)}>
+                    Tạo tài khoản cho trạm
+                  </DropdownMenuItem>
+                )}
+
                 <DropdownMenuSeparator />
 
                 <DropdownMenuItem
@@ -174,6 +182,7 @@ export function OrganizationListTable({
   onViewDetail,
   onEdit,
   onDelete,
+  onCreateAccount,
 }: OrganizationListTableProps) {
   const filteredData = React.useMemo(() => {
     const q = keyword.trim().toLowerCase();
@@ -190,8 +199,8 @@ export function OrganizationListTable({
   }, [data, keyword]);
 
   const columns = React.useMemo(
-    () => getColumns(onViewDetail, onEdit, onDelete),
-    [onViewDetail, onEdit, onDelete],
+    () => getColumns(onViewDetail, onEdit, onDelete, onCreateAccount),
+    [onViewDetail, onEdit, onDelete, onCreateAccount],
   );
 
   const table = useReactTable({
