@@ -3,7 +3,6 @@
 import * as React from "react";
 
 import { NavMain } from "@/components/nav-main";
-import { NavSecondary } from "@/components/nav-secondary";
 import { NavUser } from "@/components/nav-user";
 import {
   Sidebar,
@@ -16,13 +15,12 @@ import {
 } from "@/components/ui/sidebar";
 import {
   ChartBarIcon,
-  CircleHelpIcon,
   CommandIcon,
   FolderIcon,
   LayoutDashboardIcon,
   ListIcon,
-  SearchIcon,
-  Settings2Icon,
+  ShieldCheckIcon,
+  TagIcon,
 } from "lucide-react";
 
 import { APP_ROUTES } from "@/constants/routes";
@@ -77,13 +75,25 @@ const data = {
       allowedSystemRoles: [SYSTEM_ROLES.ADMIN],
     },
     {
+      title: "Vai trò & quyền",
+      url: `${APP_ROUTES.ROLE_MANAGEMENT}`,
+      icon: <ShieldCheckIcon />,
+      allowedSystemRoles: [SYSTEM_ROLES.ADMIN],
+    },
+  ],
+  navContent: [
+    {
       title: "Quản lý bài đăng",
       url: `${APP_ROUTES.POST_MANAGEMENT}`,
       icon: <LayoutDashboardIcon />,
       allowedSystemRoles: [SYSTEM_ROLES.ADMIN],
     },
-  ],
-  navContent: [
+    {
+      title: "Quản lý thẻ",
+      url: `${APP_ROUTES.TAG_MANAGEMENT}`,
+      icon: <TagIcon />,
+      allowedSystemRoles: [SYSTEM_ROLES.ADMIN],
+    },
     {
       title: "Quản lý banner",
       url: `${APP_ROUTES.BANNER_MANAGEMENT}`,
@@ -113,23 +123,6 @@ const data = {
         ORGANIZATION_ROLES.STAFF,
         ORGANIZATION_ROLES.MEMBER,
       ],
-    },
-  ],
-  navSecondary: [
-    {
-      title: "Settings",
-      url: "#",
-      icon: <Settings2Icon />,
-    },
-    {
-      title: "Get Help",
-      url: "#",
-      icon: <CircleHelpIcon />,
-    },
-    {
-      title: "Search",
-      url: "#",
-      icon: <SearchIcon />,
     },
   ],
 };
@@ -188,7 +181,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         {filteredNavContent.length > 0 && (
           <NavMain label="Quản lý nội dung" items={filteredNavContent} />
         )}
-        <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={sidebarUser} />
