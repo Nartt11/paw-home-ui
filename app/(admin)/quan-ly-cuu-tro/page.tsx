@@ -28,6 +28,7 @@ import { useCurrentUser } from "@/hooks/use-current-user";
 import RequireAuth from "@/components/auth/RequireAuth";
 import { SYSTEM_ROLES, ORGANIZATION_ROLES } from "@/constants/roles";
 import { set } from "zod";
+import { formatDate } from "@/lib/datetime";
 
 const Map = dynamic(() => import("@/components/map-rescue/MapRescue"), {
   ssr: false,
@@ -282,7 +283,7 @@ export default function RescueCaseManagementPage() {
           <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
             <span>{caseItem.status}</span>
             <span>
-              {new Date(caseItem.reportedAt).toLocaleDateString("vi-VN")}
+              {formatDate(caseItem.reportedAt)}
             </span>
           </div>
         </button>
@@ -437,7 +438,7 @@ export default function RescueCaseManagementPage() {
                       <User className="h-3 w-3" /> {item.verifiedByName}
                     </span>
                     <span className="shrink-0">
-                      {new Date(item.rescuedAt).toLocaleDateString("vi-VN")}
+                      {formatDate(item.rescuedAt)}
                     </span>
                   </div>
                 </button>

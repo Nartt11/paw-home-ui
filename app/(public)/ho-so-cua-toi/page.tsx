@@ -60,6 +60,7 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
+import { formatDate } from "@/lib/datetime";
 
 const profileFormSchema = z.object({
   username: z
@@ -619,7 +620,7 @@ function AdoptionApplicationsTab() {
                       </p>
                       <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1.5">
                         <Calendar className="h-3 w-3" /> Ngày gửi:{" "}
-                        {new Date(item.createdAt).toLocaleDateString("vi-VN")}
+                        {formatDate(item.createdAt)}
                       </p>
                     </div>
                   </div>

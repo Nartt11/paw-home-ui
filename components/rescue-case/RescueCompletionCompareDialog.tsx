@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dialog";
 
 import { useRescueCaseDetail, useRescueCompletionDetail, useApproveRescueCompletion } from "@/hooks/use-rescue-case";
+import { formatDateTime } from "@/lib/datetime";
 
 interface RescueCompletionCompareDialogProps {
   open: boolean;
@@ -190,7 +191,7 @@ export function RescueCompletionCompareDialog({
                         công
                       </span>
                       <span className="font-medium text-foreground block mt-0.5">
-                        {new Date(completion.rescuedAt).toLocaleString("vi-VN")}
+                        {formatDateTime(completion.rescuedAt)}
                       </span>
                     </div>
                     <div>

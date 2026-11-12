@@ -34,6 +34,7 @@ import type {
   RescueCaseMarkers,
   RescueCaseSummary,
 } from "@/types/rescue-case.type";
+import { formatDate } from "@/lib/datetime";
 
 const Map = dynamic(() => import("@/components/map-rescue/MapRescue"), {
   ssr: false,
@@ -251,7 +252,7 @@ export default function MapRescuePage() {
           <div className="mt-3 flex items-center justify-between text-xs text-gray-500">
             <span>{caseItem.status}</span>
             <span>
-              {new Date(caseItem.reportedAt).toLocaleDateString("vi-VN")}
+              {formatDate(caseItem.reportedAt)}
             </span>
           </div>
         </button>

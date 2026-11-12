@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import type { Banner, BannerPayload } from "@/types/banner.type";
+import { toApiDateTime, toDateInputValue } from "@/lib/datetime";
 
 export const BANNER_LINK_TYPES = ["EXTERNAL", "INTERNAL"] as const;
 export const BANNER_TARGET_PAGES = [
@@ -128,8 +129,9 @@ export function getUpdateBannerDefaultValues(
       banner.linkType === "INTERNAL" ? banner.linkType : "EXTERNAL",
     displayOrder:
       typeof banner.displayOrder === "number" ? banner.displayOrder : 1,
-    startDate: banner.startDate ?? "",
-    endDate: banner.endDate ?? "",
+    // the edit form uses date inputs; show the day as it is in Vietnam
+    startDate: toDateInputValue(banner.startDate),
+    endDate: toDateInputValue(banner.endDate),
     active: Boolean(banner.active),
     targetPage: BANNER_TARGET_PAGES.includes(banner.targetPage as never)
       ? (banner.targetPage as (typeof BANNER_TARGET_PAGES)[number])
@@ -156,8 +158,8 @@ export function toBannerPayload(values: {
     linkUrl: values.linkUrl.trim(),
     linkType: values.linkType,
     displayOrder: values.displayOrder,
-    startDate: values.startDate,
-    endDate: values.endDate,
+    startDate: toApiDateTime(values.startDate),
+    endDate: toApiDateTime(values.endDate),
     active: values.active,
     targetPage: values.targetPage,
   };

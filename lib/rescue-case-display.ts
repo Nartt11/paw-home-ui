@@ -49,16 +49,5 @@ export function draftPostAboutCase(rescueCase: RescueCaseBrief) {
   return `Cần giúp đỡ: ${subject}${place ? ` tại ${place}` : ""}. Ai ở gần xin giúp một tay!`;
 }
 
-export function formatRelativeTime(iso?: string) {
-  if (!iso) return "";
-  const then = new Date(iso).getTime();
-  if (Number.isNaN(then)) return "";
-  const minutes = Math.round((Date.now() - then) / 60000);
-  if (minutes < 1) return "Vừa xong";
-  if (minutes < 60) return `${minutes} phút trước`;
-  const hours = Math.round(minutes / 60);
-  if (hours < 24) return `${hours} giờ trước`;
-  const days = Math.round(hours / 24);
-  if (days < 7) return `${days} ngày trước`;
-  return new Date(iso).toLocaleDateString("vi-VN");
-}
+/** Kept here so existing imports keep working. */
+export { formatRelativeTime } from "@/lib/datetime";

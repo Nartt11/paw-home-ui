@@ -9,6 +9,18 @@ Base URL: `NEXT_PUBLIC_API_URL` (ends with `/api/v1`). Every response is wrapped
 `lib/http.ts` returns `data` and throws `HttpError` (`status`, `message`, `errorCode`) on failure.
 `errorCode` is only present on business errors; use it, not the message, to decide what to tell the user.
 
+## Dates and times
+
+- Every date-time the API sends is UTC with a trailing `Z`, e.g. `2026-11-12T10:00:00Z`; the
+  fraction may have up to 9 digits (`...:01.123456Z`).
+- Send date-times with an offset: `Z` or `+07:00`. A value without one is read as UTC; a date alone
+  (`2026-11-12`) as the start of that day in Vietnam.
+- Cursors (`nextCursor`) go back exactly as received.
+- Never call `new Date()` or `toLocale*()` on API values directly. Use `lib/datetime.ts`:
+  `formatDate`, `formatDateTime`, `formatRelativeTime` show times in Vietnam whatever the
+  browser's zone; `toApiDateTime` turns a date or datetime-local input into a value with
+  `+07:00`; `toDateTimeLocalValue` and `toDateInputValue` fill those inputs.
+
 The sections below are checked against the backend code. Anything not listed here: read the
 controller, do not guess.
 
