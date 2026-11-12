@@ -67,9 +67,13 @@ function adoptionStatusBadge(status: AdoptionSummary["status"]) {
       label: "Từ chối",
       className: "bg-rose-50 text-rose-700 hover:bg-rose-50",
     },
-    CANCELLED: {
+    CANCELED: {
       label: "Đã hủy",
       className: "bg-slate-100 text-slate-700 hover:bg-slate-100",
+    },
+    COMPLETED: {
+      label: "Hoàn thành",
+      className: "bg-blue-50 text-blue-700 hover:bg-blue-50",
     },
   };
 

@@ -22,7 +22,7 @@ export interface Adoption extends AdoptionSummary {
   readyAt: string;
 }
 
-export type AdoptionStatus = "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED";
+export type AdoptionStatus = "PENDING" | "APPROVED" | "COMPLETED" | "REJECTED" | "CANCELED";
 export interface AdoptionRejectPayload {
   note: string;
   rejectReason: string;

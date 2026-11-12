@@ -72,7 +72,7 @@ function statusToBadge(status?: string) {
       label: "Từ chối",
       className: "bg-rose-50 text-rose-700 hover:bg-rose-50",
     },
-    CANCELLED: {
+    CANCELED: {
       label: "Đã hủy",
       className: "bg-slate-100 text-slate-700 hover:bg-slate-100",
     },
@@ -376,7 +376,8 @@ const STATUS_ACTIONS: Record<AdoptionStatus, ActionConfig[]> = {
     },
   ],
   REJECTED: [],
-  CANCELLED: [],
+  CANCELED: [],
+  COMPLETED: [],
 };
 
 const CONFIRM_DETAILS = {

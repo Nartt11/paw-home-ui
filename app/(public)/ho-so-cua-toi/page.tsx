@@ -489,7 +489,8 @@ function AdoptionApplicationsTab() {
       PENDING: 0,
       APPROVED: 0,
       REJECTED: 0,
-      CANCELLED: 0,
+      COMPLETED: 0,
+      CANCELED: 0,
     };
     adoptionsList.forEach((item) => {
       if (item.status in counts) {
@@ -535,7 +536,8 @@ function AdoptionApplicationsTab() {
     { value: "PENDING", label: "Chờ duyệt" },
     { value: "APPROVED", label: "Đã duyệt" },
     { value: "REJECTED", label: "Đã từ chối" },
-    { value: "CANCELLED", label: "Đã hủy" },
+    { value: "COMPLETED", label: "Hoàn thành" },
+    { value: "CANCELED", label: "Đã hủy" },
   ];
 
   return (
@@ -711,7 +713,14 @@ function StatusBadge({ status }: { status: string }) {
           Đã từ chối
         </span>
       );
-    case "CANCELLED":
+    case "COMPLETED":
+      return (
+        <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700 border border-blue-200">
+          <CheckCircle2 className="h-3.5 w-3.5 text-blue-500" />
+          Hoàn thành
+        </span>
+      );
+    case "CANCELED":
     default:
       return (
         <span className="inline-flex items-center gap-1 rounded-full bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-600 border border-slate-200">
