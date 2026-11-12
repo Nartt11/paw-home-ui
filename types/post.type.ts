@@ -94,3 +94,62 @@ export interface PostUpdatePayload {
   /** True removes the link to a rescue case. */
   removeRescueCase?: boolean;
 }
+
+// PostAnalysisStatus enum in the backend.
+export type PostAnalysisStatus =
+  | "PENDING"
+  | "ANALYZING"
+  | "ANALYZED"
+  | "CONFIRMED"
+  | "REJECTED"
+  | "FAILED";
+
+// PostAnalysisSuggestion
+export interface PostAnalysisSuggestion {
+  category?: PostCategory | null;
+  species?: string | null;
+  locationText?: string | null;
+  district?: string | null;
+  province?: string | null;
+  needsRescue: boolean;
+  rescueSummary?: string | null;
+  urgency?: RescueCasePriority | null;
+  tags: string[];
+  categoryConfidence?: number | null;
+  speciesConfidence?: number | null;
+  locationConfidence?: number | null;
+}
+
+// PostAnalysisResponseDto
+export interface PostAnalysis {
+  postId: string;
+  status: PostAnalysisStatus;
+  model?: string | null;
+  analyzedAt?: string | null;
+  suggestion?: PostAnalysisSuggestion | null;
+  facets?: PostFacets | null;
+  rescueCaseId?: string | null;
+}
+
+// PostAnalysisMetricsDto: one row per prompt version and model.
+export interface PostAnalysisMetrics {
+  promptVersion: number;
+  model: string;
+  runs: number;
+  failed: number;
+  withValidationErrors: number;
+  labelled: number;
+  categoryAccuracy?: number | null;
+  speciesAccuracy?: number | null;
+  districtAccuracy?: number | null;
+  needsRescueAccuracy?: number | null;
+}
+
+// PostAnalysisModelDto
+export interface PostAnalysisModel {
+  activeModel: string;
+  defaultModel: string;
+  overridden: boolean;
+  aiEnabled: boolean;
+  allowedModels: string[];
+}

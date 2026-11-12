@@ -20,6 +20,7 @@ import {
   LayoutDashboardIcon,
   ListIcon,
   ShieldCheckIcon,
+  SparklesIcon,
   TagIcon,
 } from "lucide-react";
 
@@ -92,6 +93,12 @@ const data = {
       title: "Quản lý thẻ",
       url: `${APP_ROUTES.TAG_MANAGEMENT}`,
       icon: <TagIcon />,
+      allowedSystemRoles: [SYSTEM_ROLES.ADMIN],
+    },
+    {
+      title: "Cấu hình AI",
+      url: `${APP_ROUTES.AI_SETTINGS}`,
+      icon: <SparklesIcon />,
       allowedSystemRoles: [SYSTEM_ROLES.ADMIN],
     },
     {

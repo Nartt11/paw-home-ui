@@ -25,4 +25,5 @@ export const APP_ROUTES = {
   USER_MANAGEMENT: "/quan-ly-nguoi-dung",
   ROLE_MANAGEMENT: "/quan-ly-vai-tro",
   TAG_MANAGEMENT: "/quan-ly-the",
+  AI_SETTINGS: "/cau-hinh-ai",
 };

@@ -89,6 +89,7 @@ export const apiEndpoints = {
     feed: "/posts/feed",
     comments: (postId: string) => `/posts/${postId}/comments`,
     like: (postId: string) => `/posts/${postId}/like`,
+    analysis: (postId: string) => `/posts/${postId}/analysis`,
   },
   comments: {
     byId: (id: string) => `/comments/${id}`,
@@ -131,6 +132,10 @@ export const apiEndpoints = {
         `/admin/organizations/${organizationId}/members`,
       pets: (organizationId: string) =>
         `/admin/organizations/${organizationId}/pets`,
+    },
+    ai: {
+      metrics: "/admin/ai/post-analysis/metrics",
+      model: "/admin/ai/post-analysis/model",
     },
     dashboard: {
       overview: "/admin/dashboard/overview",
