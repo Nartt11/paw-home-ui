@@ -17,7 +17,8 @@ const NAV_LINKS: NavItem[] = [
   { href: APP_ROUTES.ADOPTION, vi: "Nhận nuôi", en: "Adopt" },
   { href: APP_ROUTES.COMMUNITY, vi: "Cộng đồng", en: "Community" },
   { href: APP_ROUTES.MAP, vi: "Bản đồ cứu hộ", en: "Rescue Map" },
-  { href: APP_ROUTES.NEWS, vi: "Tin tức", en: "News" },
+  // ponytail: hidden until BE has a news source (PostCategory has no NEWS)
+  // { href: APP_ROUTES.NEWS, vi: "Tin tức", en: "News" },
   { href: APP_ROUTES.DONATION, vi: "Ủng hộ", en: "Donate" },
   { href: APP_ROUTES.ABOUT_US, vi: "Về chúng tôi", en: "About" },
 ];

@@ -104,17 +104,6 @@ export function useLogout() {
   });
 }
 
-export function useRefreshToken() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: () => authService.refresh(),
-    onSuccess: async (auth) => {
-      await establishSession(queryClient, auth);
-    },
-  });
-}
-
 export function useRegister() {
   return useMutation({
     mutationFn: (payload: RegisterPayload) => authService.register(payload),
