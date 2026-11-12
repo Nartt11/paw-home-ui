@@ -91,6 +91,8 @@ class Http {
     this.instance = axios.create({
       baseURL: BASE_URL,
       timeout: 10000,
+      // Spring binds repeated keys (status=A&status=B), not axios' default status[]=A.
+      paramsSerializer: { indexes: null },
       headers: {
         "Content-Type": "application/json",
       },

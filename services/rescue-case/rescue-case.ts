@@ -17,9 +17,6 @@ import {
 } from "@/types/rescue-case.type";
 import { ListParams, PaginatedResponse } from "@/types/api.type";
 
-// The backend reads repeated keys (status=A&status=B), not the bracket form axios writes by default.
-const repeatArrayKeys = { indexes: null };
-
 const rescueService = {
   // GET /api/v1/rescue-cases?status=&priority=&species=&province=&search=&lat=&lng=&distance=
   async searchRescueCases(
@@ -27,7 +24,7 @@ const rescueService = {
   ): Promise<PaginatedResponse<RescueCaseSummary>> {
     return await http.get<PaginatedResponse<RescueCaseSummary>>(
       apiEndpoints.rescueCases.root,
-      { params, paramsSerializer: repeatArrayKeys },
+      { params },
     );
   },
 
@@ -37,7 +34,7 @@ const rescueService = {
   ): Promise<PaginatedResponse<RescueCaseSummary>> {
     return await http.get<PaginatedResponse<RescueCaseSummary>>(
       apiEndpoints.users.myRescueCases,
-      { params, paramsSerializer: repeatArrayKeys },
+      { params },
     );
   },
 
