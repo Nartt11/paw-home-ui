@@ -60,6 +60,9 @@ export const apiEndpoints = {
     completions: "/rescue-cases/completions",
     completionById: (id: string) => byId("/rescue-cases/completions", id),
     approveCompletion: (id: string) => `/rescue-cases/completions/${id}/approve`,
+    rejectCompletion: (id: string) => `/rescue-cases/completions/${id}/reject`,
+    completionReviewQueue: "/rescue-cases/completions/review-queue",
+    claims: (id: string) => `/rescue-cases/${id}/claims`,
     map: {
       markers: "/rescue-cases/map/markers",
     },

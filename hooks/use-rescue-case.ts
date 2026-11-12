@@ -6,7 +6,7 @@ import {
   RescueCaseNearByParams,
   RescueCasePayload,
   CompleteRescuePayload,
-  RescueCompletion,
+
   RescueCompletionQueryParams,
   RescueCaseSearchParams,
   MyRescueCasesParams,
@@ -324,5 +324,37 @@ export function useApproveRescueCompletion() {
         queryKey: rescueCaseKeys.boundingBoxes(),
       });
     },
+  });
+}
+
+function invalidateCompletions(queryClient: ReturnType<typeof useQueryClient>) {
+  queryClient.invalidateQueries({ queryKey: rescueCaseKeys.all });
+}
+
+export function useRejectRescueCompletion() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, reason }: { id: string; reason: string }) =>
+      rescueService.rejectRescueCompletion(id, reason),
+    onSuccess: () => invalidateCompletions(queryClient),
+  });
+}
+
+export function useCompletionReviewQueue(
+  params: RescueCompletionQueryParams,
+  enabled: boolean,
+) {
+  return useQuery({
+    queryKey: [...rescueCaseKeys.completionsLists(), "review-queue", params],
+    queryFn: () => rescueService.getCompletionReviewQueue(params),
+    enabled,
+  });
+}
+
+export function useRescueCaseClaims(caseId?: string) {
+  return useQuery({
+    queryKey: [...rescueCaseKeys.all, "claims", caseId],
+    queryFn: () => rescueService.getRescueCaseClaims(caseId as string),
+    enabled: !!caseId,
   });
 }

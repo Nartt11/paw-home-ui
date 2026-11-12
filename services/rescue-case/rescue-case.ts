@@ -149,11 +149,31 @@ const rescueService = {
     );
   },
 
-  // POST /api/v1/rescue-cases/completions/{id}/approved - Approve rescue case completion
+  // POST /api/v1/rescue-cases/completions/{id}/approve - Approve rescue case completion
   async approveRescueCompletion(id: string): Promise<any> {
     return await http.post<any, void>(
       apiEndpoints.rescueCases.approveCompletion(id),
     );
+  },
+
+  // POST /api/v1/rescue-cases/completions/{id}/reject - only an admin settles a DISPUTED one
+  async rejectRescueCompletion(id: string, reason: string): Promise<void> {
+    await http.post(apiEndpoints.rescueCases.rejectCompletion(id), { reason });
+  },
+
+  // GET /api/v1/rescue-cases/completions/review-queue (ADMIN) - disputed or escalated reports
+  async getCompletionReviewQueue(
+    params: RescueCompletionQueryParams,
+  ): Promise<PaginatedResponse<RescueCompletion>> {
+    return await http.get<PaginatedResponse<RescueCompletion>>(
+      apiEndpoints.rescueCases.completionReviewQueue,
+      { params },
+    );
+  },
+
+  // GET /api/v1/rescue-cases/{id}/claims - who took the case, newest first
+  async getRescueCaseClaims(id: string): Promise<RescueClaim[]> {
+    return await http.get<RescueClaim[]>(apiEndpoints.rescueCases.claims(id));
   },
 };
 

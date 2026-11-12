@@ -49,11 +49,17 @@ export interface RescueCase extends RescueCaseSummary {
 }
 
 /** One of my active claims on a rescue case. */
+// RescueClaimResponseDto
 export interface RescueClaim {
   claimId: string;
   caseId: string;
   caseCode?: string;
-  status: string;
+  userId?: string;
+  username?: string;
+  /** Set when the claim was made for an organization (locks the case). */
+  organizationId?: string | null;
+  status: "ACTIVE" | "RELEASED" | "EXPIRED" | "COMPLETED" | string;
+  releaseReason?: "GAVE_UP" | "NEED_HELP" | "NOT_FOUND" | "CASE_ENDED" | null;
   claimedAt?: string;
   expiresAt?: string;
 }
@@ -146,7 +152,22 @@ export interface RescueCompletion {
   verifiedByName: string;
   verifiedAt: string;
   verificationImagesUrl: string[];
+  caseCode?: string;
+  submittedBy?: string;
+  submittedByName?: string;
+  outcome?: RescueOutcome;
+  status?: RescueCompletionStatus;
+  rejectReason?: string | null;
 }
+
+// RescueOutcome / RescueCompletionStatus enums in the backend.
+export type RescueOutcome =
+  | "HANDED_TO_ORG"
+  | "TEMP_HOLDING"
+  | "KEPT_BY_RESCUER"
+  | "RELEASED"
+  | "DECEASED";
+export type RescueCompletionStatus = "PENDING" | "APPROVED" | "REJECTED" | "DISPUTED";
 
 export interface RescueCompletionQueryParams extends ListParams {
   isResolved?: boolean;
