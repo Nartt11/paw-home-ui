@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 import type { AdoptionSummary } from "@/types/adoption.type";
+import { parseApiDate, VN_TIME_ZONE } from "@/lib/datetime";
 
 export interface AdoptionRequestCardProps {
   adoption: AdoptionSummary;
@@ -40,9 +41,10 @@ function initials(text: string) {
 
 function formatDateVi(value?: string) {
   if (!value) return "—";
-  const d = new Date(value);
+  const d = parseApiDate(value);
   if (Number.isNaN(d.getTime())) return "—";
   return d.toLocaleDateString("vi-VN", {
+    timeZone: VN_TIME_ZONE,
     day: "2-digit",
     month: "2-digit",
     year: "numeric",

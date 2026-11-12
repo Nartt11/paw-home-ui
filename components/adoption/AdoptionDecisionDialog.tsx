@@ -26,6 +26,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { toApiDateTime } from "@/lib/datetime";
 
 type DecisionMode = "approve" | "reject";
 
@@ -79,7 +80,8 @@ export function AdoptionDecisionDialog({
     await onSubmit({
       note: values.note ?? "",
       rejectReason: values.rejectReason ?? "",
-      readyAt: values.readyAt ?? "",
+      // datetime-local has no zone: what was typed is a time in Vietnam
+      readyAt: toApiDateTime(values.readyAt),
     });
   });
 

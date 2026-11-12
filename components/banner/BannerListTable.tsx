@@ -33,6 +33,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { parseApiDate, VN_TIME_ZONE } from "@/lib/datetime";
 
 export interface BannerListTableProps {
   data: Banner[];
@@ -46,11 +47,12 @@ export interface BannerListTableProps {
 function formatDateVi(value?: string) {
   if (!value) return "-";
 
-  const date = new Date(value);
+  const date = parseApiDate(value);
 
   if (Number.isNaN(date.getTime())) return "-";
 
   return date.toLocaleDateString("vi-VN", {
+    timeZone: VN_TIME_ZONE,
     day: "2-digit",
     month: "2-digit",
     year: "numeric",

@@ -31,6 +31,7 @@ import { Separator } from "@/components/ui/separator";
 import { useUploadTempMedia } from "@/hooks/use-media";
 import { useCompleteRescue } from "@/hooks/use-rescue-case";
 import { completeRescueSchema, type CompleteRescueFormValues } from "@/lib/schemas/rescue";
+import { toApiDateTime, toDateTimeLocalValue } from "@/lib/datetime";
 
 interface CompleteRescueDialogProps {
   rescueId: string;
@@ -53,7 +54,8 @@ export function CompleteRescueDialog({
   const defaultValues: CompleteRescueFormValues = React.useMemo(() => ({
     verificationImages: [],
     rescueNote: "",
-    rescuedAt: new Date().toISOString().substring(0, 16), // Format required for datetime-local
+    // now, in Vietnam: toISOString() would show the UTC time, 7 hours behind
+    rescuedAt: toDateTimeLocalValue(),
     locationNote: "",
     confirmRescued: false,
   }), []);
@@ -139,7 +141,7 @@ export function CompleteRescueDialog({
           caseId: rescueId,
           verificationImageIds,
           rescueNote: values.rescueNote,
-          rescuedAt: new Date(values.rescuedAt).toISOString(),
+          rescuedAt: toApiDateTime(values.rescuedAt),
           locationNote: values.locationNote,
           confirmRescued: values.confirmRescued,
         },

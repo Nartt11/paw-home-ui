@@ -18,6 +18,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
+import { parseApiDate, VN_TIME_ZONE } from "@/lib/datetime";
 
 export interface PostViewDetailProps {
   open: boolean;
@@ -29,10 +30,10 @@ export interface PostViewDetailProps {
 function formatDateTime(value?: string) {
   if (!value) return "Chưa có";
 
-  const parsed = new Date(value);
+  const parsed = parseApiDate(value);
   if (Number.isNaN(parsed.getTime())) return value;
 
-  return parsed.toLocaleString("vi-VN");
+  return parsed.toLocaleString("vi-VN", { timeZone: VN_TIME_ZONE });
 }
 
 function renderValue(value?: string) {
