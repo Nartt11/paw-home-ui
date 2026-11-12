@@ -59,6 +59,11 @@ function getStatusLabel(status?: string) {
         label: "Chờ duyệt",
         className: "bg-amber-50 text-amber-700 hover:bg-amber-50",
       };
+    case "REJECTED":
+      return {
+        label: "Bị từ chối",
+        className: "bg-rose-50 text-rose-700 hover:bg-rose-50",
+      };
     default:
       return {
         label: status || "—",

@@ -70,6 +70,10 @@ function statusToBadge(status?: string) {
     return <Badge variant="secondary">Ngừng hoạt động</Badge>;
   }
 
+  if (s === "REJECTED") {
+    return <Badge className="bg-rose-50 text-rose-700 hover:bg-rose-50">Bị từ chối</Badge>;
+  }
+
   return <Badge variant="secondary">{status || "-"}</Badge>;
 }
 
