@@ -34,24 +34,24 @@ function petStatusBadge(status: PetSummary["status"]) {
     string,
     { label: string; className?: string; variant?: "secondary" }
   > = {
-    UNOWNED: {
-      label: "Chưa có chủ",
+    AVAILABLE: {
+      label: "Sẵn sàng nhận nuôi",
       className: "bg-emerald-50 text-emerald-700 hover:bg-emerald-50",
     },
-    PENDING: {
-      label: "Đang chờ",
+    LOST: {
+      label: "Thất lạc",
       className: "bg-amber-50 text-amber-700 hover:bg-amber-50",
     },
     ADOPTED: {
       label: "Đã nhận nuôi",
       className: "bg-sky-50 text-sky-700 hover:bg-sky-50",
     },
-    FOSTERED: {
+    FOSTERING: {
       label: "Đang foster",
       className: "bg-violet-50 text-violet-700 hover:bg-violet-50",
     },
-    UNAVAILABLE: {
-      label: "Không khả dụng",
+    DECEASED: {
+      label: "Đã mất",
     },
   };
 

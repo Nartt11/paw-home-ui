@@ -60,11 +60,11 @@ const HEALTH_OPTIONS: Array<{ value: PetHealthStatus; label: string }> = [
 ];
 
 const STATUS_OPTIONS: Array<{ value: PetStatus; label: string }> = [
-  { value: "UNOWNED", label: "Chưa có chủ" },
-  { value: "PENDING", label: "Đang chờ" },
+  { value: "AVAILABLE", label: "Sẵn sàng nhận nuôi" },
+  { value: "LOST", label: "Thất lạc" },
   { value: "ADOPTED", label: "Đã nhận nuôi" },
-  { value: "FOSTERED", label: "Đang foster" },
-  { value: "UNAVAILABLE", label: "Không khả dụng" },
+  { value: "FOSTERING", label: "Đang foster" },
+  { value: "DECEASED", label: "Đã mất" },
 ];
 
 export interface PetUpdateDialogProps {
@@ -85,7 +85,7 @@ const EMPTY_VALUES: UpdatePetFormInput = {
   color: "",
   weight: 0,
   description: "",
-  status: "UNOWNED",
+  status: "AVAILABLE",
   healthStatus: "HEALTHY",
   vaccinated: false,
   neutered: false,

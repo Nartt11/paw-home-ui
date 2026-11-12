@@ -1,12 +1,13 @@
 import { ListParams } from "./api.type";
 import { Organization } from "./organization.type";
 
+// PetStatus enum in the backend.
 export type PetStatus =
-  | "UNOWNED"
+  | "FOSTERING"
+  | "AVAILABLE"
   | "ADOPTED"
-  | "PENDING"
-  | "FOSTERED"
-  | "UNAVAILABLE";
+  | "LOST"
+  | "DECEASED";
 export type PetGender = "MALE" | "FEMALE" | "UNKNOWN";
 export type PetHealthStatus =
   | "HEALTHY"

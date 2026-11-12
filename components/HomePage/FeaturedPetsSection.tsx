@@ -13,7 +13,7 @@ export default function FeaturedPetsSection({
   pets,
   loading,
 }: FeaturedPetsSectionProps) {
-  const availableCount = pets.filter((p) => p.status === "UNOWNED").length;
+  const availableCount = pets.filter((p) => p.status === "AVAILABLE").length;
 
   console.log("Available pets:", pets);
 

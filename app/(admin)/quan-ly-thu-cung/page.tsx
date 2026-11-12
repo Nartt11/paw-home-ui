@@ -30,9 +30,9 @@ function getErrorMessage(error: unknown) {
 function getKpis(pets: PetSummary[], totalItems: number) {
   return pets.reduce(
     (acc, pet) => {
-      if (pet.status === "PENDING") acc.pending += 1;
+      if (pet.status === "AVAILABLE") acc.pending += 1;
       if (pet.status === "ADOPTED") acc.adopted += 1;
-      if (pet.status === "FOSTERED") acc.fostered += 1;
+      if (pet.status === "FOSTERING") acc.fostered += 1;
       if (pet.healthStatus !== "HEALTHY") acc.healthAlert += 1;
       return acc;
     },

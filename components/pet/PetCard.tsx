@@ -28,14 +28,14 @@ function getGenderLabel(gender: Pet["gender"] | PetSummary["gender"]) {
 
 function getStatusLabel(status: Pet["status"] | PetSummary["status"]) {
   switch (status) {
-    case "UNOWNED":
+    case "AVAILABLE":
       return {
         text: "Sẵn sàng nhận nuôi",
         className: "bg-emerald-50 text-emerald-600",
       };
-    case "PENDING":
+    case "LOST":
       return {
-        text: "Đang chờ duyệt",
+        text: "Đang thất lạc",
         className: "bg-amber-50 text-amber-600",
       };
     default:
