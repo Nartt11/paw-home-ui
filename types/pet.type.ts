@@ -170,3 +170,26 @@ export interface PetMediaCreatePayload {
 export interface PetDetailParams extends ListParams {
   petId?: string;
 }
+
+// PetTraitsDto (GET/PUT /pets/{petId}/traits). Scales are 1-5; absent = nobody recorded it.
+export interface PetTraits {
+  petId?: string;
+  friendlyPeople?: number | null;
+  friendlyChildren?: number | null;
+  fearStrangers?: number | null;
+  fearNoise?: number | null;
+  energy?: number | null;
+  goodWithDogs?: number | null;
+  goodWithCats?: number | null;
+  aloneMinutes?: number | null;
+  houseTrained?: number | null;
+  biteHistory?: "NONE" | "MINOR" | "INJURY" | null;
+  biteVerified?: boolean;
+  size?: "SMALL" | "MEDIUM" | "LARGE" | null;
+  noiseLevel?: number | null;
+  monthlyCost?: number | null;
+  careLevel?: "LOW" | "MEDIUM" | "HIGH" | null;
+  sourceRole?: "FOSTER" | "STAFF" | "PREVIOUS_OWNER" | "OWNER" | null;
+  note?: string | null;
+  updatedAt?: string | null;
+}

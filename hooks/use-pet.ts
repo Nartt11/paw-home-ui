@@ -7,6 +7,7 @@ import type {
   PetMediaCreatePayload,
   PetMedicalRecordCreatePayload,
   PetStatus,
+  PetTraits,
   PetTransferOwnershipPayload,
   PetUpdatePayload,
 } from "@/types/pet.type";
@@ -331,5 +332,22 @@ export function useDeletePetMedia() {
         queryKey: petKeys.detail(variables.petId),
       });
     },
+  });
+}
+
+export function usePetTraits(petId?: string) {
+  return useQuery({
+    queryKey: [...petKeys.detail(petId ?? ""), "traits"],
+    queryFn: () => petService.getPetTraits(petId as string),
+    enabled: !!petId,
+  });
+}
+
+export function useSavePetTraits(petId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (traits: PetTraits) => petService.savePetTraits(petId, traits),
+    onSuccess: (data) =>
+      queryClient.setQueryData([...petKeys.detail(petId), "traits"], data),
   });
 }

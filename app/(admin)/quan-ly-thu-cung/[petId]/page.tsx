@@ -46,6 +46,7 @@ import type {
   PetUpdatePayload,
 } from "@/types/pet.type";
 import { PetUpdateDialog } from "@/components/pet/PetUpdateDialog";
+import { PetTraitsCard } from "@/components/pet/PetTraitsCard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -621,6 +622,14 @@ export default function PetDetailPage() {
               </p>
             </CardContent>
           </Card>
+          <PetTraitsCard
+            petId={pet.petId}
+            canEdit={
+              isMyOrganizationPet &&
+              (!isOrganizationUser ||
+                currentUser?.organizationRole !== ORGANIZATION_ROLES.MEMBER)
+            }
+          />
           <div className="space-y-6">
             <div className="flex w-fit items-center gap-1 rounded-2xl border border-border bg-muted/30 p-1">
               {PET_DETAIL_TABS.map((tab) => (

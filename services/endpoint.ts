@@ -42,6 +42,7 @@ export const apiEndpoints = {
     status: (id: string) => `/pets/${id}/status`,
     transferOwnership: (id: string) => `/pets/${id}/transfer-ownership`,
     medicalRecords: (petId: string) => `/pets/${petId}/medical-records`,
+    traits: (petId: string) => `/pets/${petId}/traits`,
     ownerships: (petId: string) => `/pets/${petId}/ownerships`,
     media: (petId: string) => `/pets/${petId}/media`,
     deleteMedia: (petId: string, mediaId: string) =>
