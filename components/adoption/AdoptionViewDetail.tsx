@@ -5,6 +5,7 @@ import Image from "next/image";
 import { CalendarDays, Home, PawPrint, ShieldCheck, UserRound, Loader2 } from "lucide-react";
 
 import type { Adoption, AdoptionStatus } from "@/types/adoption.type";
+import { AdoptionMatchSection } from "@/components/adoption/AdoptionMatchSection";
 import { toast } from "sonner";
 import {
   useApproveAdoption,
@@ -236,6 +237,8 @@ export function AdoptionViewDetail({
                   </p>
                 </section>
               </div>
+
+              <AdoptionMatchSection match={adoption.match} />
 
               {adoption.rejectReason ? (
                 <section className="space-y-3 rounded-3xl border border-rose-100 bg-rose-50/60 p-5">
