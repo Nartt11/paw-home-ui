@@ -1,4 +1,8 @@
+import type { RescueCasePriority, RescueCaseStatus } from "./rescue-case.type";
+
 export type PostMediaType = "IMAGE" | "VIDEO" | "UNKNOWN";
+
+export type PostCategory = "RESCUE" | "ADOPTION" | "LOST" | "FOUND" | "GENERAL";
 
 export interface PostMedia {
   mediaId: string;
@@ -8,15 +12,44 @@ export interface PostMedia {
   createdAt?: string;
 }
 
+/** The rescue case a post is about, with everything a feed card shows. */
+export interface PostRescueCase {
+  caseId: string;
+  caseCode: string;
+  status: RescueCaseStatus;
+  /** True while the case still needs help (REPORTED or IN_PROGRESS). */
+  open: boolean;
+  priority?: RescueCasePriority;
+  species?: string;
+  locationText?: string;
+  provinceName?: string;
+  imageUrl?: string;
+}
+
+/** Labels the author confirmed. Null until confirmed. */
+export interface PostFacets {
+  category: PostCategory;
+  species?: string;
+  district?: string;
+  province?: string;
+  needsRescue: boolean;
+}
+
 export interface PostSummary {
   postId: string;
   authorId: string;
   authorUsername: string;
+  authorAvatarUrl?: string;
   content: string;
   tags: string[];
+  facets?: PostFacets | null;
+  rescueCase?: PostRescueCase | null;
   likeCount: number;
   commentCount: number;
+  /** Absent for guests. */
+  likedByMe?: boolean;
   createdAt: string;
+  imageUrls?: string[];
 }
 
 export interface Post extends PostSummary {
@@ -25,9 +58,24 @@ export interface Post extends PostSummary {
   updatedAt: string;
 }
 
-export interface PostFeedParams{
+export interface PostFeedFilters {
+  category?: PostCategory;
+  species?: string;
+  province?: string;
+  needsRescue?: boolean;
+  tag?: string;
+  /** Posts about one rescue case. */
+  rescueCaseId?: string;
+  /** True: only posts whose case still needs help. */
+  hasOpenCase?: boolean;
+}
+
+export interface PostFeedParams extends PostFeedFilters {
   pageSize: number;
+  /** `nextCursor` of the previous page. */
   cursor?: string;
+  /** `nextCursorId` of the previous page; keeps posts with the same timestamp from being skipped. */
+  cursorId?: string;
 }
 
 export interface PostCreatePayload {
@@ -41,4 +89,8 @@ export interface PostUpdatePayload {
   content: string;
   mediaIds: string[];
   tagCodes: string[];
+  /** Link the post to this rescue case, replacing any current link. */
+  rescueCaseId?: string;
+  /** True removes the link to a rescue case. */
+  removeRescueCase?: boolean;
 }

@@ -15,6 +15,7 @@ type NavLinksProps = {
 const NAV_LINKS: NavItem[] = [
   { href: APP_ROUTES.HOME, vi: "Trang chủ", en: "Home" },
   { href: APP_ROUTES.ADOPTION, vi: "Nhận nuôi", en: "Adopt" },
+  { href: APP_ROUTES.COMMUNITY, vi: "Cộng đồng", en: "Community" },
   { href: APP_ROUTES.MAP, vi: "Bản đồ cứu hộ", en: "Rescue Map" },
   { href: APP_ROUTES.NEWS, vi: "Tin tức", en: "News" },
   { href: APP_ROUTES.DONATION, vi: "Ủng hộ", en: "Donate" },

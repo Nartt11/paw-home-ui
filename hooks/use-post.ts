@@ -32,17 +32,23 @@ export function usePosts(params: ListParams) {
   });
 }
 
-export function usePostFeed(params: Omit<PostFeedParams, "cursor">) {
+type FeedCursor = { cursor: string; cursorId?: string } | undefined;
+
+export function usePostFeed(params: Omit<PostFeedParams, "cursor" | "cursorId">) {
   return useInfiniteQuery({
     queryKey: postKeys.feed(params as PostFeedParams),
     queryFn: ({ pageParam }) =>
       postService.getPostFeed({
         ...params,
-        cursor: pageParam as string | undefined,
+        cursor: pageParam?.cursor,
+        cursorId: pageParam?.cursorId,
       }),
-    initialPageParam: undefined as string | undefined,
-    getNextPageParam: (lastPage) =>
-      lastPage.hasMore ? lastPage.nextCursor : undefined,
+    initialPageParam: undefined as FeedCursor,
+    // the feed pages by (createdAt, postId): both values must go back, or posts sharing a timestamp are skipped
+    getNextPageParam: (lastPage): FeedCursor =>
+      lastPage.hasMore && lastPage.nextCursor
+        ? { cursor: lastPage.nextCursor, cursorId: lastPage.nextCursorId }
+        : undefined,
   });
 }
 

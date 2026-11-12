@@ -1,5 +1,6 @@
 "use client";
 
+import { toast } from "sonner";
 import { useCallback, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { Plus } from "lucide-react";
@@ -193,8 +194,14 @@ export default function MapRescuePage() {
 
   const handleCreateRescueCase = useCallback(
     async (values: RescueCaseCreateValues) => {
-      await createRescueCaseMutation.mutateAsync(values);
+      const created = await createRescueCaseMutation.mutateAsync(values);
       setCreateOpen(false);
+      // the case is always saved first; the post is best effort
+      if (created.postShareFailed) {
+        toast.warning("Đã báo ca, nhưng chưa đăng được bài lên cộng đồng. Bạn có thể tự chia sẻ ca ở trang Cộng đồng.");
+      } else if (created.sharedPostId) {
+        toast.success("Đã báo ca và đăng bài lên cộng đồng.");
+      }
     },
     [createRescueCaseMutation],
   );

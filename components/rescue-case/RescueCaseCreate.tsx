@@ -7,6 +7,7 @@ import { Upload, X, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -74,6 +75,9 @@ const DEFAULT_VALUES: RescueCaseCreateValues = {
   imageUrls: [],
   mediaIds: [],
   contactPhone: "",
+  // on by default: most people meet a case in the feed, not on the map
+  shareAsPost: true,
+  postContent: "",
 };
 
 export function RescueCaseCreate({
@@ -376,6 +380,40 @@ export function RescueCaseCreate({
                 />
               </div>
             </div>
+          </div>
+
+          <Separator className="my-6" />
+
+          {/* SHARE TO THE COMMUNITY FEED */}
+          <div className="space-y-3 rounded-lg border border-orange-200 bg-orange-50/60 p-4">
+            <div className="flex items-start gap-3">
+              <Checkbox
+                id="create-rescue-share"
+                checked={Boolean(values.shareAsPost)}
+                onCheckedChange={(checked) => update("shareAsPost", checked === true)}
+                disabled={Boolean(submitting) || uploading}
+                className="mt-0.5"
+              />
+              <div className="space-y-1">
+                <Label htmlFor="create-rescue-share" className="font-semibold text-gray-700">
+                  Đăng lên cộng đồng để kêu gọi giúp
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  Một bài đăng kèm ca này sẽ hiện trên bảng tin, nơi phần lớn mọi người nhìn thấy.
+                </p>
+              </div>
+            </div>
+
+            {values.shareAsPost ? (
+              <textarea
+                placeholder="Lời kêu gọi (để trống thì hệ thống tự viết từ loài, địa điểm và mô tả)"
+                value={values.postContent ?? ""}
+                maxLength={2000}
+                onChange={(e) => update("postContent", e.target.value)}
+                className="min-h-20 w-full resize-none rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                disabled={Boolean(submitting) || uploading}
+              />
+            ) : null}
           </div>
         </div>
 

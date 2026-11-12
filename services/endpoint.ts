@@ -19,6 +19,8 @@ export const apiEndpoints = {
     me: "/users/me",
     profile: "/users/me/profile",
     reputation: (id: string) => `/users/${id}/reputation`,
+    myRescueCases: "/users/me/rescue-cases",
+    myRescueClaims: "/users/me/rescue-claims",
   },
   organizations: {
     root: "/organizations",
