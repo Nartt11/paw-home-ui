@@ -49,7 +49,7 @@ export default function AdoptionManagementPage() {
   const [pendingTab, setPendingTab] = React.useState<"ALL" | "PENDING" | "APPROVED">("ALL");
 
   const { data: currentUser } = useCurrentUser();
-  const isOrganizationUser = currentUser?.roles.includes("MEMBERSHIP") && !!currentUser?.organizationRole;
+  const isOrganizationUser = currentUser?.roles.includes(SYSTEM_ROLES.MEMBER) && !!currentUser?.organizationRole;
   const currentOrgId = isOrganizationUser ? currentUser?.organizationId : undefined;
 
   const canManage = React.useMemo(() => {

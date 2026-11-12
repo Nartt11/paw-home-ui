@@ -51,7 +51,7 @@ export default function PetManagementPage() {
   const [createOpen, setCreateOpen] = React.useState(false);
   
   const { data: currentUser } = useCurrentUser();
-  const isOrganizationUser = currentUser?.roles.includes("MEMBERSHIP") && !!currentUser?.organizationRole;
+  const isOrganizationUser = currentUser?.roles.includes(SYSTEM_ROLES.MEMBER) && !!currentUser?.organizationRole;
 
   const canCreate = React.useMemo(() => {
     if (!isOrganizationUser) return true;

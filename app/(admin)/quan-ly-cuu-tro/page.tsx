@@ -71,7 +71,7 @@ export default function RescueCaseManagementPage() {
   const [selectedCaseId, setSelectedCaseId] = React.useState<string | null>(null);
 
   const { data: currentUser } = useCurrentUser();
-  const isOrganizationUser = currentUser?.roles.includes("MEMBERSHIP") && !!currentUser?.organizationRole;
+  const isOrganizationUser = currentUser?.roles.includes(SYSTEM_ROLES.MEMBER) && !!currentUser?.organizationRole;
   const currentOrgId = isOrganizationUser ? currentUser?.organizationId : undefined;
 
   const canCreate = React.useMemo(() => {

@@ -131,7 +131,7 @@ export default function PetDetailPage() {
   const router = useRouter();
 
   const { data: currentUser } = useCurrentUser();
-  const isOrganizationUser = currentUser?.roles.includes("MEMBERSHIP") && !!currentUser?.organizationRole;
+  const isOrganizationUser = currentUser?.roles.includes(SYSTEM_ROLES.MEMBER) && !!currentUser?.organizationRole;
 
   const petQuery = usePetDetail(petId);
   const medicalRecordsQuery = usePetMedicalRecords(petId, {
