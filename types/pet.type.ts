@@ -1,12 +1,13 @@
 import { ListParams } from "./api.type";
 import { Organization } from "./organization.type";
 
+/** Mirrors the backend's `PetStatus` enum. */
 export type PetStatus =
-  | "UNOWNED"
+  | "AVAILABLE"
+  | "FOSTERING"
   | "ADOPTED"
-  | "PENDING"
-  | "FOSTERED"
-  | "UNAVAILABLE";
+  | "LOST"
+  | "DECEASED";
 export type PetGender = "MALE" | "FEMALE" | "UNKNOWN";
 export type PetHealthStatus =
   | "HEALTHY"
@@ -18,7 +19,9 @@ export interface PetSummary {
   petCode: string;
   name: string;
   species: string;
+  speciesVi?: string;
   breed: string;
+  breedVi?: string;
   age: number;
   ageDisplay: string;
   vaccinated: boolean;

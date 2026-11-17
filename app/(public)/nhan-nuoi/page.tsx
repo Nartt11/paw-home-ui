@@ -10,7 +10,6 @@ import { useForm, useWatch } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import {
   Field,
-  FieldDescription,
   FieldError,
   FieldGroup,
   FieldLabel,
@@ -198,7 +197,7 @@ export default function AdoptionPage() {
             >
               <Image
                 src={currentBanner.mediaUrl || defaultBanner.mediaUrl}
-                alt={currentBanner.title || "Adoption Campaign"}
+                alt={currentBanner.title || "Chiến dịch nhận nuôi"}
                 fill
                 priority
                 unoptimized
@@ -227,7 +226,7 @@ export default function AdoptionPage() {
                 <div>
                   <span className="inline-flex items-center gap-2 rounded-full border border-orange-500/30 bg-orange-500/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-orange-400 backdrop-blur-md">
                     <Sparkles size={14} className="animate-pulse" />
-                    Adoption Campaign
+                    Chiến dịch nhận nuôi
                   </span>
                 </div>
 
@@ -347,16 +346,15 @@ export default function AdoptionPage() {
         <div className="rounded-[28px] border border-orange-100 bg-white/90 p-6 shadow-[0_20px_80px_rgba(15,23,42,0.06)] backdrop-blur md:p-8">
           <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.22em] text-orange-500">
+              <p className="text-sm font-semibold text-orange-700">
                 Tìm thú cưng phù hợp
               </p>
               <h2 className="mt-2 text-3xl font-black tracking-tight text-slate-900">
                 Danh sách thú cưng đang mở nhận nuôi
               </h2>
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
-                Một bộ lọc đơn giản, một thanh tìm kiếm rõ ràng, và một danh
-                sách card gọn gẽ để người dùng tập trung vào điều quan trọng
-                nhất: chọn được bé phù hợp.
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+                Tìm theo tên hoặc lọc theo giới tính, rồi mở hồ sơ để gửi đơn
+                nhận nuôi.
               </p>
             </div>
             <div className="rounded-2xl bg-orange-50 px-4 py-3 text-sm text-orange-700">
@@ -371,7 +369,7 @@ export default function AdoptionPage() {
           <form onSubmit={onSubmit} className="mt-8">
             <FieldGroup className="gap-4 md:grid md:grid-cols-[1.8fr_0.9fr_auto_auto] md:items-end">
               <Field>
-                <FieldLabel htmlFor="adoption-search">Search bar</FieldLabel>
+                <FieldLabel htmlFor="adoption-search">Tên thú cưng</FieldLabel>
                 <div className="relative">
                   <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
                   <Input
@@ -385,7 +383,7 @@ export default function AdoptionPage() {
               </Field>
 
               <Field>
-                <FieldLabel>Filter</FieldLabel>
+                <FieldLabel>Giới tính</FieldLabel>
                 <Select
                   value={selectedGender}
                   onValueChange={(value) =>
@@ -405,9 +403,6 @@ export default function AdoptionPage() {
                     <SelectItem value="UNKNOWN">Chưa rõ</SelectItem>
                   </SelectContent>
                 </Select>
-                <FieldDescription>
-                  Một filter duy nhất để giữ thao tác gọn.
-                </FieldDescription>
               </Field>
 
               <Button type="submit" className="h-11 rounded-xl px-6">

@@ -4,6 +4,15 @@ import { toast } from "sonner";
 import { useCallback, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { Plus } from "lucide-react";
+import {
+  organizationStatusLabel,
+  organizationTypeLabel,
+} from "@/lib/organization-display";
+import { speciesLabel } from "@/lib/pet-display";
+import {
+  RESCUE_PRIORITY_LABEL,
+  RESCUE_STATUS_LABEL,
+} from "@/lib/rescue-case-display";
 
 import type {
   OrganizationMapMarker,
@@ -235,22 +244,28 @@ export default function MapRescuePage() {
         >
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <p className="font-mono text-xs text-gray-500">
-                {caseItem.caseCode || caseItem.caseId}
+              <p className="font-medium text-gray-900">
+                {speciesLabel({ species: caseItem.species })}
               </p>
-              <p className="mt-1 font-medium text-gray-900">
-                {caseItem.species}
-              </p>
-              <p className="mt-1 line-clamp-2 text-sm text-gray-500">
+              <p className="mt-1 line-clamp-2 text-sm text-gray-600">
                 {caseItem.locationText}
               </p>
+              <p className="mt-1 text-xs text-gray-600">
+                Mã ca {caseItem.caseCode || caseItem.caseId.slice(0, 8)}
+              </p>
             </div>
-            <span className="rounded-full bg-gray-100 px-2 py-1 text-xs font-semibold text-gray-700">
-              {caseItem.priority}
+            <span className="shrink-0 rounded-full bg-gray-100 px-2 py-1 text-xs font-semibold text-gray-800">
+              {caseItem.priority
+                ? RESCUE_PRIORITY_LABEL[caseItem.priority] ?? caseItem.priority
+                : "—"}
             </span>
           </div>
-          <div className="mt-3 flex items-center justify-between text-xs text-gray-500">
-            <span>{caseItem.status}</span>
+          <div className="mt-3 flex items-center justify-between text-xs text-gray-600">
+            <span>
+              {caseItem.status
+                ? RESCUE_STATUS_LABEL[caseItem.status] ?? caseItem.status
+                : "—"}
+            </span>
             <span>
               {formatDate(caseItem.reportedAt)}
             </span>
@@ -294,8 +309,8 @@ export default function MapRescuePage() {
               <p className="line-clamp-1 font-medium text-gray-900">
                 {organization.name}
               </p>
-              <p className="mt-1 text-xs text-gray-500">
-                {organization.type}
+              <p className="mt-1 text-xs text-gray-600">
+                {organizationTypeLabel(organization.type)}
               </p>
               <p className="mt-1 line-clamp-2 text-sm text-gray-500">
                 {[
@@ -308,7 +323,7 @@ export default function MapRescuePage() {
               </p>
             </div>
             <span className="rounded-full bg-gray-100 px-2 py-1 text-xs font-semibold text-gray-700">
-              {organization.status}
+              {organizationStatusLabel(organization.status)}
             </span>
           </div>
           <div className="mt-3 flex items-center justify-between gap-3 text-xs text-gray-500">

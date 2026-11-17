@@ -2,6 +2,7 @@ import { ArrowRight, Heart } from "lucide-react";
 import PetCard from "../pet/PetCard";
 import GridSkeleton from "../pet/GridSkeleton";
 import { Pet } from "@/types/pet.type";
+import { isAdoptable } from "@/lib/pet-display";
 import Link from "next/link";
 
 interface FeaturedPetsSectionProps {
@@ -13,9 +14,7 @@ export default function FeaturedPetsSection({
   pets,
   loading,
 }: FeaturedPetsSectionProps) {
-  const availableCount = pets.filter((p) => p.status === "UNOWNED").length;
-
-  console.log("Available pets:", pets);
+  const availableCount = pets.filter((p) => isAdoptable(p.status)).length;
 
   return (
     <section className="bg-slate-50 px-6 py-12 md:py-16">

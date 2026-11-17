@@ -5,6 +5,15 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { APP_ROUTES } from "@/constants/routes";
+import {
+  PET_STATUS_BADGE_SOLID,
+  breedLabel,
+  formatPetAge,
+  petGenderLabel,
+  petHealthLabel,
+  petStatusLabel,
+  speciesLabel,
+} from "@/lib/pet-display";
 import type { Pet, PetSummary } from "@/types/pet.type";
 
 interface PetCardProps {
@@ -14,37 +23,6 @@ interface PetCardProps {
 
 const IMAGE_FALLBACK =
   "https://images.unsplash.com/photo-1517849845537-4d257902454a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=1200";
-
-function getGenderLabel(gender: Pet["gender"] | PetSummary["gender"]) {
-  switch (gender) {
-    case "MALE":
-      return "Đực";
-    case "FEMALE":
-      return "Cái";
-    default:
-      return "Chưa rõ";
-  }
-}
-
-function getStatusLabel(status: Pet["status"] | PetSummary["status"]) {
-  switch (status) {
-    case "UNOWNED":
-      return {
-        text: "Sẵn sàng nhận nuôi",
-        className: "bg-emerald-50 text-emerald-600",
-      };
-    case "PENDING":
-      return {
-        text: "Đang chờ duyệt",
-        className: "bg-amber-50 text-amber-600",
-      };
-    default:
-      return {
-        text: status,
-        className: "bg-slate-100 text-slate-600",
-      };
-  }
-}
 
 function isPetDetail(pet: Pet | PetSummary): pet is Pet {
   return "imageUrls" in pet;
@@ -58,9 +36,8 @@ export default function PetCard({
   const location = isPetDetail(pet)
     ? pet.rescueLocation || pet.province || "Không xác định"
     : pet.province || "Không xác định";
-  const speciesLabel = pet.species || "Thú cưng";
-  const ageLabel = pet.ageDisplay || `${pet.age} tháng`;
-  const status = getStatusLabel(pet.status);
+  const statusClass =
+    PET_STATUS_BADGE_SOLID[pet.status] ?? "bg-slate-700 text-white";
 
   return (
     <Link href={href} className="block">
@@ -78,78 +55,69 @@ export default function PetCard({
 
           <div className="absolute left-4 top-4 flex flex-wrap gap-2">
             {pet.vaccinated ? (
-              <span className="rounded-full bg-emerald-500/95 px-3 py-1 text-[10px] font-bold text-white">
+              <span className="rounded-full bg-emerald-700 px-3 py-1 text-xs font-semibold text-white">
                 Đã tiêm vaccine
               </span>
             ) : null}
             {isPetDetail(pet) && pet.neutered ? (
-              <span className="rounded-full bg-sky-500/95 px-3 py-1 text-[10px] font-bold text-white">
+              <span className="rounded-full bg-sky-700 px-3 py-1 text-xs font-semibold text-white">
                 Đã triệt sản
               </span>
             ) : null}
           </div>
 
           <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between gap-3">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/70">
-                {speciesLabel}
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-white/85">
+                {speciesLabel(pet)}
               </p>
-              <h3 className="mt-1 text-2xl font-black text-white">
+              <h3 className="mt-1 truncate text-2xl font-black text-white">
                 {pet.name}
               </h3>
             </div>
             <span
-              className={`rounded-full px-3 py-1 text-[10px] font-bold ${status.className}`}
+              className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${statusClass}`}
             >
-              {status.text}
+              {petStatusLabel(pet.status)}
             </span>
           </div>
         </div>
 
         <div className="flex flex-1 flex-col space-y-4 px-5 pb-5 pt-4">
-          <div className="flex items-center gap-2 text-sm text-slate-500">
-            <span>{getGenderLabel(pet.gender)}</span>
-            <span className="text-slate-300">•</span>
-            <span>{ageLabel}</span>
-            <span className="text-slate-300">•</span>
-            <span>{pet.breed || "Đang cập nhật"}</span>
-          </div>
+          {/* One sentence that wraps as a whole, so short values never split into columns. */}
+          <p className="text-sm leading-6 text-slate-600">
+            {petGenderLabel(pet.gender)} · {formatPetAge(pet.age)} ·{" "}
+            {breedLabel(pet)}
+          </p>
 
-          <div className="flex items-center gap-2 text-sm text-slate-500">
-            <MapPin size={14} className="shrink-0 text-orange-500" />
+          <div className="flex items-center gap-2 text-sm text-slate-600">
+            <MapPin size={14} className="shrink-0 text-orange-600" aria-hidden />
             <span className="line-clamp-1">{location}</span>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-2xl bg-slate-50 px-3 py-3">
-              <div className="text-[11px] uppercase tracking-[0.18em] text-slate-400">
-                Sức khỏe
-              </div>
-              <div className="mt-1 text-sm font-semibold text-slate-900">
-                {pet.healthStatus}
-              </div>
+          <dl className="space-y-2 rounded-2xl bg-slate-50 px-4 py-3 text-sm">
+            <div className="flex items-baseline justify-between gap-3">
+              <dt className="shrink-0 text-slate-600">Sức khỏe</dt>
+              <dd className="min-w-0 truncate text-right font-semibold text-slate-900">
+                {petHealthLabel(pet.healthStatus)}
+              </dd>
             </div>
-            <div className="rounded-2xl bg-slate-50 px-3 py-3">
-              <div className="text-[11px] uppercase tracking-[0.18em] text-slate-400">
-                To chuc
-              </div>
-              <div className="mt-1 line-clamp-1 text-sm font-semibold text-slate-900">
+            <div className="flex items-baseline justify-between gap-3">
+              <dt className="shrink-0 text-slate-600">Tổ chức</dt>
+              <dd
+                className="min-w-0 truncate text-right font-semibold text-slate-900"
+                title={pet.organization?.name || "Cộng đồng"}
+              >
                 {pet.organization?.name || "Cộng đồng"}
-              </div>
+              </dd>
             </div>
-          </div>
+          </dl>
 
-          {isPetDetail(pet) ? (
+          {isPetDetail(pet) && pet.description ? (
             <p className="line-clamp-3 text-sm leading-6 text-slate-600">
-              {pet.description ||
-                "Bé đang tìm một mái ấm an toàn và yêu thương."}
+              {pet.description}
             </p>
-          ) : (
-            <p className="line-clamp-3 text-sm leading-6 text-slate-600">
-              Bé đang sẵn sàng cho một gia đình mới. Hãy mở card chi tiết khi
-              lựa nhận nuôi được hoàn thiện.
-            </p>
-          )}
+          ) : null}
         </div>
       </article>
     </Link>
