@@ -1,6 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 import { History, Image as ImageIcon, Stethoscope } from "lucide-react";
 
+import { PET_STATUS_BADGE, PET_STATUS_LABEL } from "@/lib/pet-display";
 import type { PetHealthStatus, PetStatus } from "@/types/pet.type";
 
 export const PET_DETAIL_IMAGE_FALLBACK =
@@ -22,21 +23,10 @@ export const PET_GENDER_LABELS: Record<string, string> = {
   UNKNOWN: "Chưa rõ",
 };
 
-export const PET_STATUS_LABELS: Record<PetStatus, string> = {
-  UNOWNED: "Chưa có chủ",
-  PENDING: "Đang chờ",
-  ADOPTED: "Đã nhận nuôi",
-  FOSTERED: "Đang foster",
-  UNAVAILABLE: "Không khả dụng",
-};
+export const PET_STATUS_LABELS: Record<PetStatus, string> = PET_STATUS_LABEL;
 
-export const PET_STATUS_BADGE_CLASSNAMES: Record<PetStatus, string> = {
-  UNOWNED: "bg-emerald-50 text-emerald-700 hover:bg-emerald-50",
-  PENDING: "bg-amber-50 text-amber-700 hover:bg-amber-50",
-  ADOPTED: "bg-sky-50 text-sky-700 hover:bg-sky-50",
-  FOSTERED: "bg-violet-50 text-violet-700 hover:bg-violet-50",
-  UNAVAILABLE: "bg-muted text-muted-foreground hover:bg-muted",
-};
+export const PET_STATUS_BADGE_CLASSNAMES: Record<PetStatus, string> =
+  PET_STATUS_BADGE;
 
 export const PET_HEALTH_LABELS: Record<PetHealthStatus, string> = {
   HEALTHY: "Khỏe mạnh",

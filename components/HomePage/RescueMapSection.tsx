@@ -65,26 +65,26 @@ export default function RescueMapSection({ stats }: RescueMapSectionProps) {
                   ))}
                 </div>
 
-                <Link href={APP_ROUTES.MAP}>
-                  <Button>
+                <Button asChild>
+                  <Link href={APP_ROUTES.MAP}>
                     <MapPin size={18} />
                     Xem bản đồ cứu hộ
                     <ArrowRight size={16} />
-                  </Button>
-                </Link>
+                  </Link>
+                </Button>
               </div>
 
               <div className="rounded-2xl border border-foreground/20 bg-foreground/10 p-4">
                 <div className="relative flex h-72 items-center justify-center overflow-hidden rounded-xl bg-slate-900">
+                  {/* google.com/maps refuses to load in a frame; the OSM embed allows it. */}
                   <iframe
-                    src="https://www.google.com/maps"
+                    src="https://www.openstreetmap.org/export/embed.html?bbox=102.1%2C8.5%2C109.5%2C23.5&layer=mapnik"
                     width="600"
                     height="400"
-                    title="Mô tả trang web"
-                    className="h-full w-full rounded-xl opacity-90"
+                    loading="lazy"
+                    title="Bản đồ Việt Nam, mở trang Bản đồ để xem các ca cứu hộ"
+                    className="h-full w-full rounded-xl"
                   ></iframe>
-
-                
                 </div>
               </div>
             </div>

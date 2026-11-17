@@ -52,7 +52,7 @@ export default function VolunteerSection({ banner }: VolunteerSectionProps) {
     >
       <div className="mb-10 mt-8 flex flex-wrap justify-center gap-3 text-[13px] text-white">
         {[
-          "Hỗ trợ khan cap",
+          "Hỗ trợ khẩn cấp",
           "Vận chuyển thú cưng",
           "Chăm sóc thú cưng",
           "Tư vấn nhận nuôi",

@@ -4,10 +4,11 @@ export const loginSchema = z.object({
   emailOrUsername: z
     .string()
     .trim()
-    .min(1, "Username hoặc email không được để trống"),
+    .min(1, "Nhập email hoặc tên đăng nhập"),
+  // Length rules belong to sign-up; here we only need something to send.
   password: z
     .string()
-    .min(8, "Mật khẩu phải có ít nhất 8 ký tự")
+    .min(1, "Nhập mật khẩu")
     .max(100, "Mật khẩu không được quá 100 ký tự"),
 });
 

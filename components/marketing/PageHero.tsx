@@ -67,6 +67,9 @@ export function PageHero({
           {badge}
           <div className="mt-4">{title}</div>
           {description ? <div className="mt-4">{description}</div> : null}
+          {actions ? (
+            <div className="mt-8 flex flex-wrap items-center gap-3">{actions}</div>
+          ) : null}
           {children}
         </div>
       </div>

@@ -140,6 +140,8 @@ export default function AdoptionRequestCard({
                   variant="ghost"
                   size="icon"
                   className="h-9 w-9 rounded-full"
+                  aria-label="Thao tác khác"
+                  title="Thao tác khác"
                 >
                   <MoreVertical className="h-4 w-4" />
                 </Button>
@@ -209,6 +211,8 @@ export default function AdoptionRequestCard({
               variant="default"
               onClick={() => onApprove?.(applicationId)}
               disabled={!onApprove || !canDecide}
+              aria-label="Duyệt đơn"
+              title="Duyệt đơn"
             >
               <Check className="h-5 w-5" />
             </Button>
@@ -218,6 +222,8 @@ export default function AdoptionRequestCard({
               variant="destructive"
               onClick={() => onReject?.(applicationId)}
               disabled={!onReject || !canDecide}
+              aria-label="Từ chối đơn"
+              title="Từ chối đơn"
             >
               <X className="h-5 w-5" />
             </Button>

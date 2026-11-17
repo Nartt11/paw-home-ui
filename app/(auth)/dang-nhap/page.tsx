@@ -23,16 +23,21 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   useLogin,
   getAuthErrorMessage,
+  getPostAuthRedirectPath,
   getPostLoginRedirectPath,
 } from "@/hooks/use-auth";
+import { queryKeys } from "@/lib/query-keys";
+import type { User } from "@/types/user.type";
 import { loginSchema, type LoginSchema } from "@/lib/schemas/auth";
 import { APP_ROUTES } from "@/constants/routes";
 
 export default function LoginForm() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [showPassword, setShowPassword] = React.useState(false);
 
   const {
@@ -56,9 +61,12 @@ export default function LoginForm() {
 
     try {
       const auth = await loginMutation.mutateAsync(data);
-      console.log("Login successful:", getPostLoginRedirectPath(auth));
-
-      router.replace(getPostLoginRedirectPath(auth));
+      // Organization owners and staff have no system role; their access comes
+      // from `organizationRole` on the profile that login has just loaded.
+      const me = queryClient.getQueryData<User>(queryKeys.auth.currentUser);
+      router.replace(
+        me ? getPostAuthRedirectPath(me) : getPostLoginRedirectPath(auth),
+      );
     } catch (error) {
       setError("root", {
         type: "server",

@@ -22,6 +22,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  PET_STATUS_BADGE,
+  breedLabel,
+  formatPetAge,
+  petStatusLabel,
+  speciesLabel,
+} from "@/lib/pet-display";
 import type { PetSummary } from "@/types/pet.type";
 
 export interface PetListTableProps {
@@ -30,37 +37,11 @@ export interface PetListTableProps {
 }
 
 function petStatusBadge(status: PetSummary["status"]) {
-  const map: Record<
-    string,
-    { label: string; className?: string; variant?: "secondary" }
-  > = {
-    UNOWNED: {
-      label: "Chưa có chủ",
-      className: "bg-emerald-50 text-emerald-700 hover:bg-emerald-50",
-    },
-    PENDING: {
-      label: "Đang chờ",
-      className: "bg-amber-50 text-amber-700 hover:bg-amber-50",
-    },
-    ADOPTED: {
-      label: "Đã nhận nuôi",
-      className: "bg-sky-50 text-sky-700 hover:bg-sky-50",
-    },
-    FOSTERED: {
-      label: "Đang foster",
-      className: "bg-violet-50 text-violet-700 hover:bg-violet-50",
-    },
-    UNAVAILABLE: {
-      label: "Không khả dụng",
-    },
-  };
-
-  const item = map[status] ?? { label: status };
-
-  return item.className ? (
-    <Badge className={item.className}>{item.label}</Badge>
+  const className = PET_STATUS_BADGE[status];
+  return className ? (
+    <Badge className={className}>{petStatusLabel(status)}</Badge>
   ) : (
-    <Badge variant="secondary">{item.label}</Badge>
+    <Badge variant="secondary">{petStatusLabel(status)}</Badge>
   );
 }
 
@@ -95,19 +76,10 @@ function petHealthStatusBadge(status: string) {
 
 const columns: ColumnDef<PetSummary>[] = [
   {
-    accessorKey: "petCode",
-    header: "Mã",
-    cell: ({ row }) => (
-      <span className="font-mono text-xs text-slate-600">
-        {row.original.petCode || "-"}
-      </span>
-    ),
-  },
-  {
     accessorKey: "name",
     header: "Thú cưng",
     cell: ({ row }) => (
-      <div className="flex min-w-60 items-center gap-3">
+      <div className="flex min-w-40 items-center gap-3">
         {row.original.imageUrl && (
           <div className="size-9 overflow-hidden rounded-md border border-slate-200 bg-slate-50">
             <Image
@@ -129,25 +101,21 @@ const columns: ColumnDef<PetSummary>[] = [
   },
   {
     accessorKey: "species",
-    header: "Loại",
+    header: "Loài · giống",
     cell: ({ row }) => (
-      <span className="capitalize text-slate-700">
-        {row.original.species || "-"}
-      </span>
+      <div className="text-slate-700">
+        <div>{speciesLabel(row.original)}</div>
+        <div className="text-xs text-slate-600">{breedLabel(row.original)}</div>
+      </div>
     ),
   },
   {
-    accessorKey: "breed",
-    header: "Giống",
-    cell: ({ row }) => (
-      <span className="text-slate-700">{row.original.breed || "-"}</span>
-    ),
-  },
-  {
-    accessorKey: "ageDisplay",
+    accessorKey: "age",
     header: "Tuổi",
     cell: ({ row }) => (
-      <span className="text-slate-700">{row.original.ageDisplay || "-"}</span>
+      <span className="whitespace-nowrap tabular-nums text-slate-700">
+        {formatPetAge(row.original.age)}
+      </span>
     ),
   },
   {
