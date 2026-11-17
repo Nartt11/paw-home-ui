@@ -185,6 +185,8 @@ export function AdoptionListTable({
                 className="size-8"
                 onClick={() => onApprove?.(applicationId)}
                 disabled={!onApprove || !canDecide}
+                aria-label="Duyệt đơn"
+                title="Duyệt đơn"
               >
                 <Check className="size-4" />
               </Button>
@@ -195,12 +197,20 @@ export function AdoptionListTable({
                 className="size-8"
                 onClick={() => onReject?.(applicationId)}
                 disabled={!onReject || !canDecide}
+                aria-label="Từ chối đơn"
+                title="Từ chối đơn"
               >
                 <X className="size-4" />
               </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="size-8">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="size-8"
+                    aria-label="Thao tác khác"
+                    title="Thao tác khác"
+                  >
                     <EllipsisVerticalIcon className="size-4" />
                   </Button>
                 </DropdownMenuTrigger>
