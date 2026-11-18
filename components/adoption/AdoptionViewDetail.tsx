@@ -1,5 +1,7 @@
 "use client";
 
+
+import { adoptionStatusBadge, adoptionStatusLabel } from "@/lib/adoption-display";
 import * as React from "react";
 import Image from "next/image";
 import { CalendarDays, Home, PawPrint, ShieldCheck, UserRound, Loader2 } from "lucide-react";
@@ -57,40 +59,7 @@ function formatDateTimeVi(value?: string) {
 }
 
 function statusToBadge(status?: string) {
-  const s = status ?? "PENDING";
-  const map: Record<
-    string,
-    { label: string; className?: string; variant?: "secondary" }
-  > = {
-    PENDING: {
-      label: "Chờ xét duyệt",
-      className: "bg-amber-50 text-amber-700 hover:bg-amber-50",
-    },
-    APPROVED: {
-      label: "Đã duyệt",
-      className: "bg-emerald-50 text-emerald-700 hover:bg-emerald-50",
-    },
-    REJECTED: {
-      label: "Từ chối",
-      className: "bg-rose-50 text-rose-700 hover:bg-rose-50",
-    },
-    CANCELLED: {
-      label: "Đã hủy",
-      className: "bg-slate-100 text-slate-700 hover:bg-slate-100",
-    },
-    COMPLETED: {
-      label: "Hoàn thành",
-      className: "bg-blue-50 text-blue-700 hover:bg-blue-50",
-    },
-  };
-
-  const item = map[s] ?? { label: s };
-
-  return item.className ? (
-    <Badge className={item.className}>{item.label}</Badge>
-  ) : (
-    <Badge variant="secondary">{item.label}</Badge>
-  );
+  return <Badge className={adoptionStatusBadge(status)}>{adoptionStatusLabel(status)}</Badge>;
 }
 
 export interface AdoptionViewDetailProps {
@@ -352,13 +321,13 @@ const STATUS_ACTIONS: Record<AdoptionStatus, ActionConfig[]> = {
   PENDING: [
     {
       label: "Từ chối",
-      loadingLabel: "Rejecting...",
+      loadingLabel: "Đang từ chối...",
       variant: "destructive",
       actionType: "REJECT",
     },
     {
       label: "Duyệt đơn",
-      loadingLabel: "Approving...",
+      loadingLabel: "Đang duyệt...",
       variant: "default",
       actionType: "APPROVE",
     },
@@ -366,19 +335,20 @@ const STATUS_ACTIONS: Record<AdoptionStatus, ActionConfig[]> = {
   APPROVED: [
     {
       label: "Hủy đơn",
-      loadingLabel: "Cancelling...",
+      loadingLabel: "Đang huỷ...",
       variant: "destructive",
       actionType: "CANCEL",
     },
     {
       label: "Hoàn thành",
-      loadingLabel: "Completing...",
+      loadingLabel: "Đang hoàn tất...",
       variant: "default",
       actionType: "COMPLETE",
     },
   ],
   REJECTED: [],
-  CANCELLED: [],
+  CANCELED: [],
+  COMPLETED: [],
 };
 
 const CONFIRM_DETAILS = {

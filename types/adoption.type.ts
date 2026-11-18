@@ -22,7 +22,8 @@ export interface Adoption extends AdoptionSummary {
   readyAt: string;
 }
 
-export type AdoptionStatus = "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED";
+/** Mirrors the backend's AdoptionApplicationStatus. */
+export type AdoptionStatus = "PENDING" | "APPROVED" | "COMPLETED" | "REJECTED" | "CANCELED";
 export interface AdoptionRejectPayload {
   note: string;
   rejectReason: string;

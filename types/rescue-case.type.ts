@@ -8,9 +8,12 @@ export type RescueCaseStatus =
 
 export type RescueStatus = RescueCaseStatus;
 export type RescueCasePriority = "LOW" | "NORMAL" | "HIGH" | "CRITICAL";
+/** RESCUE: an animal needs help. LOST: an owner looks for a pet. FOUND: someone found one. */
+export type RescueCaseType = "RESCUE" | "LOST" | "FOUND";
 export interface RescueCaseSummary {
   caseId: string;
   caseCode: string;
+  caseType?: RescueCaseType;
   species: string;
   priority: RescueCasePriority;
   status: RescueCaseStatus;
@@ -139,6 +142,11 @@ export interface CompleteRescuePayload {
 export interface RescueCompletion {
   completionId: string;
   caseId: string;
+  caseCode?: string;
+  submittedBy?: string;
+  submittedByName?: string;
+  outcome?: string;
+  status?: string;
   rescuedAt: string;
   rescueNote: string;
   locationNote: string;

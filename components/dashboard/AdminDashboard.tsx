@@ -257,7 +257,7 @@ export function AdminDashboard() {
 
   if (isUserPending) {
     return (
-      <div className="grid gap-4 p-4 lg:p-6">
+      <div className="grid gap-4">
         <Skeleton className="h-32 w-full" />
         <Skeleton className="h-72 w-full" />
       </div>
@@ -291,9 +291,9 @@ export function AdminDashboard() {
     ];
 
     return (
-      <div className="grid gap-4 p-4 lg:p-6">
+      <div className="grid gap-6">
         <div>
-          <h1 className="text-2xl font-semibold">
+          <h1 className="text-3xl font-bold text-foreground">
             {currentUser?.organizationName ?? "Trung tâm của bạn"}
           </h1>
           <p className="text-sm text-muted-foreground">
@@ -325,9 +325,14 @@ export function AdminDashboard() {
   const topOrganizations = topOrganizationsQuery.data?.items ?? [];
 
   return (
-    <div className="flex flex-col gap-4 p-4 lg:gap-6 lg:p-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-xl font-semibold">Dashboard</h1>
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Tổng quan</h1>
+          <p className="font-medium text-muted-foreground">
+            Số liệu cứu hộ, nhận nuôi và việc cần xử lý trong tháng.
+          </p>
+        </div>
         <div className="flex items-center gap-2">
           <Select
             value={String(month)}

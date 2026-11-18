@@ -150,15 +150,10 @@ export function UserViewDetail({
 
           <Separator />
 
-          {/* Metadata (ID chỉ làm index, hiển thị phụ) */}
+          {/* People are identified by their code and name; internal ids stay out of the screen. */}
           <div className="grid gap-5 md:grid-cols-2">
-            <FieldRow label="User ID" value={user.userId} mono />
-            <FieldRow label="User code" value={user.userCode || "—"} mono />
-            <FieldRow
-              label="Organization ID"
-              value={user.organizationId || "—"}
-              mono
-            />
+            <FieldRow label="Mã người dùng" value={user.userCode || "—"} />
+            <FieldRow label="Tổ chức" value={user.organizationName || "Không thuộc tổ chức nào"} />
             <FieldRow
               label="Tạo lúc"
               value={formatDateTimeVi(user.createdAt)}

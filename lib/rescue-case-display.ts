@@ -1,6 +1,7 @@
 import type {
   RescueCasePriority,
   RescueCaseStatus,
+  RescueCaseType,
 } from "@/types/rescue-case.type";
 
 /** What the community screens need to show or attach a rescue case, whichever list it came from. */
@@ -28,6 +29,20 @@ export const RESCUE_PRIORITY_LABEL: Record<RescueCasePriority, string> = {
   NORMAL: "Bình thường",
   LOW: "Thấp",
 };
+
+export const RESCUE_CASE_TYPE_LABEL: Record<RescueCaseType, string> = {
+  RESCUE: "Cứu hộ",
+  LOST: "Thú đi lạc",
+  FOUND: "Nhặt được thú",
+};
+
+export function rescueStatusLabel(status?: string) {
+  return (status && RESCUE_STATUS_LABEL[status as RescueCaseStatus]) || "Chưa rõ";
+}
+
+export function rescuePriorityLabel(priority?: string) {
+  return (priority && RESCUE_PRIORITY_LABEL[priority as RescueCasePriority]) || "Chưa rõ";
+}
 
 export const OPEN_RESCUE_STATUSES: RescueCaseStatus[] = ["REPORTED", "IN_PROGRESS"];
 
