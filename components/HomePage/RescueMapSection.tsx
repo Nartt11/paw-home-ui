@@ -4,6 +4,7 @@ import { ArrowRight, MapPin } from "lucide-react";
 import Link from "next/link";
 import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
+import HomeMapPreview from "./HomeMapPreview";
 
 interface RescueMapSectionProps {
   stats: RescueMapStat[];
@@ -76,15 +77,7 @@ export default function RescueMapSection({ stats }: RescueMapSectionProps) {
 
               <div className="rounded-2xl border border-foreground/20 bg-foreground/10 p-4">
                 <div className="relative flex h-72 items-center justify-center overflow-hidden rounded-xl bg-slate-900">
-                  {/* google.com/maps refuses to load in a frame; the OSM embed allows it. */}
-                  <iframe
-                    src="https://www.openstreetmap.org/export/embed.html?bbox=102.1%2C8.5%2C109.5%2C23.5&layer=mapnik"
-                    width="600"
-                    height="400"
-                    loading="lazy"
-                    title="Bản đồ Việt Nam, mở trang Bản đồ để xem các ca cứu hộ"
-                    className="h-full w-full rounded-xl"
-                  ></iframe>
+                  <HomeMapPreview />
                 </div>
               </div>
             </div>
