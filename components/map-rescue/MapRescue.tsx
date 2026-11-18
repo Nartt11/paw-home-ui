@@ -1,16 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import {
-  MapContainer,
-  Marker,
-  Popup,
-  TileLayer,
-  useMap,
-} from "react-leaflet";
-import "leaflet/dist/leaflet.css";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Marker, Popup, type MapRef } from "react-map-gl/maplibre";
 
-import { createMarkerIcon } from "@/components/map/marker-factory";
+import BaseMap from "@/components/map/BaseMap";
+import { OrganizationPin, RescuePin, UserPin, type RescueLevel } from "@/components/map/MapPins";
 import type { Organization } from "@/types/organization.type";
 import type { RescueCasePriority } from "@/types/rescue-case.type";
 
@@ -51,10 +45,7 @@ interface MapProps {
 const DEFAULT_CENTER: [number, number] = [10.8702, 106.8029];
 const DEFAULT_ZOOM = 13;
 
-function hasValidCoordinates(
-  latitude: unknown,
-  longitude: unknown,
-): latitude is number {
+function hasValidCoordinates(latitude: unknown, longitude: unknown): boolean {
   return (
     typeof latitude === "number" &&
     Number.isFinite(latitude) &&
@@ -63,72 +54,10 @@ function hasValidCoordinates(
   );
 }
 
-function getPriorityLevel(
-  priority?: RescueCasePriority,
-): "high" | "medium" | "low" {
-  if (priority === "CRITICAL" || priority === "HIGH") {
-    return "high";
-  }
-  if (priority === "NORMAL") {
-    return "medium";
-  }
+function getPriorityLevel(priority?: RescueCasePriority): RescueLevel {
+  if (priority === "CRITICAL" || priority === "HIGH") return "high";
+  if (priority === "NORMAL") return "medium";
   return "low";
-}
-
-function FitMapBounds({
-  rescueMarkers,
-  organizationMarkers,
-}: Pick<MapProps, "rescueMarkers" | "organizationMarkers">) {
-  const map = useMap();
-
-  const points = useMemo(() => {
-    return [
-      ...(rescueMarkers ?? [])
-        .filter((marker) =>
-          hasValidCoordinates(marker.latitude, marker.longitude),
-        )
-        .map((marker) => [marker.latitude, marker.longitude] as [number, number]),
-      ...(organizationMarkers ?? [])
-        .filter((marker) =>
-          hasValidCoordinates(marker.latitude, marker.longitude),
-        )
-        .map((marker) => [marker.latitude, marker.longitude] as [number, number]),
-    ];
-  }, [organizationMarkers, rescueMarkers]);
-
-  useEffect(() => {
-    if (points.length === 0) return;
-    if (points.length === 1) {
-      map.setView(points[0], Math.max(map.getZoom(), 13));
-      return;
-    }
-
-    map.fitBounds(points, {
-      padding: [40, 40],
-    });
-  }, [map, points]);
-
-  return null;
-}
-
-function MapViewController({
-  zoomToLocation,
-}: {
-  zoomToLocation?: { latitude: number; longitude: number; zoom?: number } | null;
-}) {
-  const map = useMap();
-
-  useEffect(() => {
-    if (zoomToLocation) {
-      const { latitude, longitude, zoom = 16 } = zoomToLocation;
-      map.flyTo([latitude, longitude], zoom, {
-        animate: true,
-        duration: 1.0,
-      });
-    }
-  }, [map, zoomToLocation]);
-
-  return null;
 }
 
 export default function MapRescue({
@@ -143,105 +72,131 @@ export default function MapRescue({
   onOrganizationMarkerClick,
   zoomToLocation,
 }: MapProps) {
-  const [mapCenter, setMapCenter] = useState<[number, number]>(initialCenter);
-  const [userLocation, setUserLocation] = useState<[number, number] | null>(
-    null,
-  );
+  const mapRef = useRef<MapRef | null>(null);
+  const [ready, setReady] = useState(false);
+  const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
+  const [showUserPopup, setShowUserPopup] = useState(false);
+
   const validRescueMarkers = useMemo(
-    () =>
-      rescueMarkers.filter((marker) =>
-        hasValidCoordinates(marker.latitude, marker.longitude),
-      ),
+    () => rescueMarkers.filter((m) => hasValidCoordinates(m.latitude, m.longitude)),
     [rescueMarkers],
   );
   const validOrganizationMarkers = useMemo(
-    () =>
-      organizationMarkers.filter((marker) =>
-        hasValidCoordinates(marker.latitude, marker.longitude),
-      ),
+    () => organizationMarkers.filter((m) => hasValidCoordinates(m.latitude, m.longitude)),
     [organizationMarkers],
   );
 
+  // Show every marker: one point gets a close-up, several get a frame around them.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!ready || !map) return;
+    const points = [...validRescueMarkers, ...validOrganizationMarkers].map(
+      (m) => [m.longitude, m.latitude] as [number, number],
+    );
+    if (points.length === 0) return;
+    if (points.length === 1) {
+      map.easeTo({ center: points[0], zoom: Math.max(map.getZoom(), 13) });
+      return;
+    }
+    const lngs = points.map((p) => p[0]);
+    const lats = points.map((p) => p[1]);
+    map.fitBounds(
+      [
+        [Math.min(...lngs), Math.min(...lats)],
+        [Math.max(...lngs), Math.max(...lats)],
+      ],
+      { padding: 48, maxZoom: 15, duration: 600 },
+    );
+  }, [ready, validRescueMarkers, validOrganizationMarkers]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!ready || !map || !zoomToLocation) return;
+    const { latitude, longitude, zoom = 16 } = zoomToLocation;
+    map.flyTo({ center: [longitude, latitude], zoom, duration: 1000 });
+  }, [ready, zoomToLocation]);
+
   useEffect(() => {
     if (!showUserLocation || !("geolocation" in navigator)) return;
-
     navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords;
-        const userCoords: [number, number] = [latitude, longitude];
-        setUserLocation(userCoords);
-        setMapCenter(userCoords);
-      },
-      (error) => {
-        console.warn("Geolocation error:", error.message);
-      },
-      {
-        enableHighAccuracy: false,
-        timeout: 10000,
-        maximumAge: 300000,
-      },
+      (position) => setUserLocation([position.coords.latitude, position.coords.longitude]),
+      (error) => console.warn("Geolocation error:", error.message),
+      { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 },
     );
   }, [showUserLocation]);
 
   return (
     <div className={`relative z-0 ${className}`}>
-      <MapContainer
-        center={mapCenter}
+      <BaseMap
+        ref={mapRef}
+        latitude={initialCenter[0]}
+        longitude={initialCenter[1]}
         zoom={initialZoom}
-        scrollWheelZoom
-        className="z-0 h-full w-full"
+        className="h-full w-full"
+        onLoad={() => setReady(true)}
       >
-        <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        />
-
-        <FitMapBounds
-          rescueMarkers={validRescueMarkers}
-          organizationMarkers={validOrganizationMarkers}
-        />
-
-        <MapViewController zoomToLocation={zoomToLocation} />
-
-        {userLocation && (
-          <Marker position={userLocation} icon={createMarkerIcon("organization")}>
-            <Popup>
-              <div className="space-y-1">
-                <p className="font-semibold">Vị trí của bạn</p>
-                <p className="text-xs text-gray-600">
-                  {userLocation[0].toFixed(4)}, {userLocation[1].toFixed(4)}
-                </p>
-              </div>
-            </Popup>
+        {userLocation ? (
+          <Marker
+            latitude={userLocation[0]}
+            longitude={userLocation[1]}
+            onClick={(event) => {
+              event.originalEvent.stopPropagation();
+              setShowUserPopup(true);
+            }}
+          >
+            <UserPin />
           </Marker>
-        )}
+        ) : null}
+        {userLocation && showUserPopup ? (
+          <Popup
+            latitude={userLocation[0]}
+            longitude={userLocation[1]}
+            offset={14}
+            closeOnClick={false}
+            onClose={() => setShowUserPopup(false)}
+          >
+            <p className="font-semibold">Vị trí của bạn</p>
+            <p className="text-xs text-gray-600">
+              {userLocation[0].toFixed(4)}, {userLocation[1].toFixed(4)}
+            </p>
+          </Popup>
+        ) : null}
 
         {!loading &&
           validOrganizationMarkers.map((marker) => (
             <Marker
               key={marker.organizationId}
-              position={[marker.latitude, marker.longitude]}
-              icon={createMarkerIcon("organization")}
-              eventHandlers={{
-                click: () => onOrganizationMarkerClick?.(marker.organizationId),
+              latitude={marker.latitude}
+              longitude={marker.longitude}
+              anchor="bottom"
+              onClick={(event) => {
+                event.originalEvent.stopPropagation();
+                onOrganizationMarkerClick?.(marker.organizationId);
               }}
-            />
+              style={{ cursor: "pointer" }}
+            >
+              <span title={marker.name}>
+                <OrganizationPin />
+              </span>
+            </Marker>
           ))}
 
         {!loading &&
           validRescueMarkers.map((marker) => (
             <Marker
               key={marker.caseId}
-              position={[marker.latitude, marker.longitude]}
-              icon={createMarkerIcon("rescue", {
-                level: getPriorityLevel(marker.priority),
-              })}
-              eventHandlers={{
-                click: () => onRescueMarkerClick?.(marker.caseId),
+              latitude={marker.latitude}
+              longitude={marker.longitude}
+              onClick={(event) => {
+                event.originalEvent.stopPropagation();
+                onRescueMarkerClick?.(marker.caseId);
               }}
-            />
+              style={{ cursor: "pointer" }}
+            >
+              <RescuePin level={getPriorityLevel(marker.priority)} />
+            </Marker>
           ))}
-      </MapContainer>
+      </BaseMap>
 
       {loading ? (
         <div className="pointer-events-none absolute bottom-4 left-4 z-10 rounded-lg bg-white p-3 shadow-lg">

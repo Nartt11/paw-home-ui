@@ -1,4 +1,9 @@
-import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
+"use client";
+
+import { Marker } from "react-map-gl/maplibre";
+
+import BaseMap from "@/components/map/BaseMap";
+import { PlacePin } from "@/components/map/MapPins";
 
 export interface Props {
   title: string;
@@ -15,6 +20,7 @@ function hasValidCoordinates(latitude: unknown, longitude: unknown) {
   );
 }
 
+/** Shows one place; scrolling the page does not zoom it. */
 export default function MapPicker({ title, latitude, longitude }: Props) {
   if (!hasValidCoordinates(latitude, longitude)) {
     return (
@@ -25,19 +31,12 @@ export default function MapPicker({ title, latitude, longitude }: Props) {
   }
 
   return (
-    <MapContainer
-      center={[latitude, longitude]}
-      zoom={15}
-      scrollWheelZoom={false}
-      className="h-64 w-full"
-    >
-      <TileLayer
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-      />
-      <Marker position={[latitude, longitude]}>
-        <Popup> {title} </Popup>
+    <BaseMap latitude={latitude} longitude={longitude} zoom={15} scrollZoom={false} className="h-64 w-full">
+      <Marker latitude={latitude} longitude={longitude} anchor="bottom">
+        <span title={title}>
+          <PlacePin />
+        </span>
       </Marker>
-    </MapContainer>
+    </BaseMap>
   );
 }

@@ -341,9 +341,11 @@ export default function MapRescuePage() {
   );
 
   return (
-    <div className="flex h-[calc(100vh-4rem)]">
-      <main className="relative flex-1 overflow-hidden">
+    // Phones: map on top, list below. From md up: map beside the list.
+    <div className="flex h-[calc(100vh-4rem)] flex-col md:flex-row">
+      <main className="relative h-[55%] shrink-0 overflow-hidden md:h-auto md:flex-1">
         <Map
+          className="h-full w-full"
           rescueMarkers={rescueMarkers}
           organizationMarkers={organizationMarkers}
           loading={isLoadingMap}
@@ -362,7 +364,7 @@ export default function MapRescuePage() {
         </Button>
       </main>
 
-      <aside className="w-80 border-l bg-white shadow-xl">
+      <aside className="min-h-0 w-full flex-1 border-t bg-white shadow-xl md:w-80 md:flex-none md:border-l md:border-t-0">
         <div className="flex h-full min-h-0 flex-col">
           <div className="border-b px-5 py-4">
             <h2 className="text-base font-semibold text-gray-900">

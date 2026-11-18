@@ -53,9 +53,16 @@ export const PET_GENDER_LABEL: Record<PetGender, string> = {
   UNKNOWN: "Chưa rõ giới tính",
 };
 
+// The backend stores species as the English catalog name (pet_species.name).
 const SPECIES_FALLBACK: Record<string, string> = {
   DOG: "Chó",
   CAT: "Mèo",
+  RABBIT: "Thỏ",
+  HAMSTER: "Chuột Hamster",
+  "GUINEA PIG": "Chuột lang",
+  BIRD: "Chim",
+  FISH: "Cá",
+  TURTLE: "Rùa",
   OTHER: "Khác",
 };
 

@@ -1,17 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
-import {
-  MapContainer,
-  Marker,
-  TileLayer,
-  useMap,
-  useMapEvents,
-} from "react-leaflet";
-import type { Marker as LeafletMarker } from "leaflet";
-import "leaflet/dist/leaflet.css";
+import { useEffect, useRef, useState } from "react";
+import { Marker, type MapRef } from "react-map-gl/maplibre";
 
-import { createMarkerIcon } from "@/components/map/marker-factory";
+import BaseMap from "@/components/map/BaseMap";
+import { RescuePin } from "@/components/map/MapPins";
 
 interface LocationPickerMapProps {
   latitude?: number | null;
@@ -24,40 +17,11 @@ interface LocationPickerMapProps {
 
 const DEFAULT_CENTER: [number, number] = [10.7769, 106.7009];
 
-function MapClickHandler({
-  onChange,
-  disabled,
-}: {
-  onChange?: (coords: { latitude: number; longitude: number }) => void;
-  disabled?: boolean;
-}) {
-  useMapEvents({
-    click(event) {
-      if (disabled) return;
-      onChange?.({
-        latitude: Number(event.latlng.lat.toFixed(6)),
-        longitude: Number(event.latlng.lng.toFixed(6)),
-      });
-    },
-  });
-
-  return null;
+function round6(value: number) {
+  return Number(value.toFixed(6));
 }
 
-function MapCenterSync({
-  center,
-}: {
-  center: [number, number];
-}) {
-  const map = useMap();
-
-  useEffect(() => {
-    map.setView(center);
-  }, [center, map]);
-
-  return null;
-}
-
+/** Pick a place: click the map, or drag the marker. */
 export default function LocationPickerMap({
   latitude,
   longitude,
@@ -66,7 +30,8 @@ export default function LocationPickerMap({
   zoom = 14,
   disabled = false,
 }: LocationPickerMapProps) {
-  const markerRef = useRef<LeafletMarker | null>(null);
+  const mapRef = useRef<MapRef | null>(null);
+  const [ready, setReady] = useState(false);
 
   const hasCoordinates =
     typeof latitude === "number" &&
@@ -74,49 +39,42 @@ export default function LocationPickerMap({
     typeof longitude === "number" &&
     Number.isFinite(longitude);
 
-  const center = useMemo<[number, number]>(() => {
-    if (hasCoordinates) {
-      return [latitude as number, longitude as number];
-    }
+  const centerLat = hasCoordinates ? (latitude as number) : DEFAULT_CENTER[0];
+  const centerLng = hasCoordinates ? (longitude as number) : DEFAULT_CENTER[1];
 
-    return DEFAULT_CENTER;
-  }, [hasCoordinates, latitude, longitude]);
+  // Follow the value when it changes from outside (address search, "use my location").
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!ready || !map || !hasCoordinates) return;
+    map.easeTo({ center: [centerLng, centerLat], duration: 500 });
+  }, [ready, hasCoordinates, centerLat, centerLng]);
 
   return (
-    <MapContainer
-      center={center}
+    <BaseMap
+      ref={mapRef}
+      latitude={centerLat}
+      longitude={centerLng}
       zoom={zoom}
-      scrollWheelZoom
       className={className}
+      onLoad={() => setReady(true)}
+      onClick={
+        disabled
+          ? undefined
+          : (event) => onChange?.({ latitude: round6(event.lngLat.lat), longitude: round6(event.lngLat.lng) })
+      }
     >
-      <TileLayer
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        attribution="&copy; OpenStreetMap contributors"
-      />
-
-      <MapCenterSync center={center} />
-      <MapClickHandler onChange={onChange} disabled={disabled} />
-
       {hasCoordinates ? (
         <Marker
-          ref={markerRef}
-          position={[latitude as number, longitude as number]}
-          icon={createMarkerIcon("rescue", { level: "high" })}
+          latitude={latitude as number}
+          longitude={longitude as number}
           draggable={!disabled}
-          eventHandlers={{
-            dragend: () => {
-              const marker = markerRef.current;
-              if (!marker) return;
-
-              const position = marker.getLatLng();
-              onChange?.({
-                latitude: Number(position.lat.toFixed(6)),
-                longitude: Number(position.lng.toFixed(6)),
-              });
-            },
-          }}
-        />
+          onDragEnd={(event) =>
+            onChange?.({ latitude: round6(event.lngLat.lat), longitude: round6(event.lngLat.lng) })
+          }
+        >
+          <RescuePin level="high" pulse={false} />
+        </Marker>
       ) : null}
-    </MapContainer>
+    </BaseMap>
   );
 }
