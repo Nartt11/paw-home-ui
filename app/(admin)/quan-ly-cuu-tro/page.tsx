@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { Building2, MapPinned, Siren, TriangleAlert, CheckCircle2, User } from "lucide-react";
 
 import TitlePerPage from "@/components/common/admin/TitlePerPage";
+import { Button } from "@/components/ui/button";
 import type {
   OrganizationMapMarker,
   RescueMapMarker,
@@ -15,7 +16,7 @@ import { RescueCaseCreate, type RescueCaseCreateValues } from "@/components/resc
 import { RescueCaseViewDetail } from "@/components/rescue-case/RescueCaseViewDetail";
 import { RescueCompletionCompareDialog } from "@/components/rescue-case/RescueCompletionCompareDialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useCreateRescueCase, useRescueCaseDetail, useRescueCasesInBoundingBox, useRescueMapMarkers, useRescueCompletions, useRescueCases } from "@/hooks/use-rescue-case";
+import { useCreateRescueCase, useRescueCaseDetail, useRescueCasesInBoundingBox, useRescueMapMarkers, useRescueCompletions, useRescueCases, useCompletionReviewQueue } from "@/hooks/use-rescue-case";
 import {
   useOrganizationDetail,
   useOrganizationMapMarkers,
@@ -74,8 +75,7 @@ export default function RescueCaseManagementPage() {
   const [selectedCaseId, setSelectedCaseId] = React.useState<string | null>(null);
 
   const { data: currentUser } = useCurrentUser();
-  // Members of an organization carry an organizationRole; the backend system role is MEMBER, not MEMBERSHIP.
-  const isOrganizationUser = !!currentUser?.organizationRole && !currentUser?.roles.includes("ADMIN");
+  const isOrganizationUser = currentUser?.roles.includes(SYSTEM_ROLES.MEMBER) && !!currentUser?.organizationRole;
   const currentOrgId = isOrganizationUser ? currentUser?.organizationId : undefined;
 
   const canCreate = React.useMemo(() => {
@@ -117,7 +117,12 @@ export default function RescueCaseManagementPage() {
     organizationViewOpen ? selectedOrganizationId ?? undefined : undefined,
   );
   const createRescueCaseMutation = useCreateRescueCase();
-  const completionsQuery = useRescueCompletions({ isResolved: false, page: 0, pageSize: 100 });
+  const isAdmin = currentUser?.roles.includes(SYSTEM_ROLES.ADMIN) ?? false;
+  const [escalatedOnly, setEscalatedOnly] = React.useState(false);
+  const pendingCompletionsQuery = useRescueCompletions({ isResolved: false, page: 0, pageSize: 100 });
+  // Disputed reports and those nobody reviewed in time: only an admin can settle them.
+  const reviewQueueQuery = useCompletionReviewQueue({ page: 0, pageSize: 100 }, isAdmin);
+  const completionsQuery = escalatedOnly ? reviewQueueQuery : pendingCompletionsQuery;
   const rescueCasesListQuery = useRescueCases({ page: 0, pageSize: 100 });
 
   const rescueCases = React.useMemo(
@@ -395,6 +400,27 @@ export default function RescueCaseManagementPage() {
                 {completionsQuery.data.totalElements} ca
               </span>
             ) : null}
+            {isAdmin && (
+              <div className="ml-auto flex gap-1 rounded-lg border p-0.5 text-xs">
+                <Button
+                  size="sm"
+                  variant={escalatedOnly ? "ghost" : "secondary"}
+                  onClick={() => setEscalatedOnly(false)}
+                >
+                  Tất cả chờ duyệt
+                </Button>
+                <Button
+                  size="sm"
+                  variant={escalatedOnly ? "secondary" : "ghost"}
+                  onClick={() => setEscalatedOnly(true)}
+                >
+                  Cần admin xử lý
+                  {reviewQueueQuery.data?.totalElements
+                    ? ` (${reviewQueueQuery.data.totalElements})`
+                    : ""}
+                </Button>
+              </div>
+            )}
           </div>
 
           {completionsQuery.isPending ? (
@@ -441,9 +467,15 @@ export default function RescueCaseManagementPage() {
                         {item.rescueNote || "Không có ghi chú"}
                       </p>
                     </div>
-                    <span className="shrink-0 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700 border border-amber-100">
-                      Chờ duyệt
-                    </span>
+                    {item.status === "DISPUTED" ? (
+                      <span className="shrink-0 rounded-full bg-rose-50 px-2 py-0.5 text-[10px] font-semibold text-rose-700 border border-rose-100">
+                        Bị khiếu nại
+                      </span>
+                    ) : (
+                      <span className="shrink-0 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700 border border-amber-100">
+                        Chờ duyệt
+                      </span>
+                    )}
                   </div>
                   <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground w-full border-t pt-2">
                     {/* A report waiting for review has no verifier yet; show who sent it. */}

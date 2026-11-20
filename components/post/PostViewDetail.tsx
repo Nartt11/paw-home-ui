@@ -19,6 +19,8 @@ import {
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { parseApiDate, VN_TIME_ZONE } from "@/lib/datetime";
+import { CommentSection } from "@/components/community/CommentSection";
+import { PostAnalysisPanel } from "@/components/post/PostAnalysisPanel";
 
 export interface PostViewDetailProps {
   open: boolean;
@@ -168,6 +170,28 @@ export function PostViewDetail({
                   </CardHeader>
                 </Card>
               ) : null}
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Phân tích AI</CardTitle>
+                  <CardDescription>
+                    Gợi ý phân loại do AI đọc từ nội dung bài đăng.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <PostAnalysisPanel postId={post.postId} />
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Bình luận</CardTitle>
+                  <CardDescription>Quản trị viên có thể xóa bình luận vi phạm.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <CommentSection postId={post.postId} canModerate />
+                </CardContent>
+              </Card>
             </div>
           )}
         </div>

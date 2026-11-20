@@ -12,6 +12,7 @@ export const ORGANIZATION_STATUS_LABEL: Record<OrganizationStatus, string> = {
   ACTIVE: "Đang hoạt động",
   INACTIVE: "Ngừng hoạt động",
   PENDING: "Chờ duyệt",
+  REJECTED: "Bị từ chối",
 };
 
 export function organizationTypeLabel(type?: string) {

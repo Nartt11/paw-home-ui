@@ -3,7 +3,6 @@
 import * as React from "react";
 
 import { NavMain } from "@/components/nav-main";
-import { NavSecondary } from "@/components/nav-secondary";
 import { NavUser } from "@/components/nav-user";
 import {
   Sidebar,
@@ -20,7 +19,6 @@ import {
   InboxIcon,
   CommandIcon,
   HeartHandshakeIcon,
-  HomeIcon,
   ImageIcon,
   LayoutDashboardIcon,
   NewspaperIcon,
@@ -28,6 +26,9 @@ import {
   SirenIcon,
   UserCogIcon,
   UsersIcon,
+  ShieldCheckIcon,
+  SparklesIcon,
+  TagIcon,
 } from "lucide-react";
 
 import { APP_ROUTES } from "@/constants/routes";
@@ -82,13 +83,31 @@ const data = {
       allowedSystemRoles: [SYSTEM_ROLES.ADMIN],
     },
     {
+      title: "Vai trò & quyền",
+      url: `${APP_ROUTES.ROLE_MANAGEMENT}`,
+      icon: <ShieldCheckIcon />,
+      allowedSystemRoles: [SYSTEM_ROLES.ADMIN],
+    },
+  ],
+  navContent: [
+    {
       title: "Quản lý bài đăng",
       url: `${APP_ROUTES.POST_MANAGEMENT}`,
       icon: <NewspaperIcon />,
       allowedSystemRoles: [SYSTEM_ROLES.ADMIN],
     },
-  ],
-  navContent: [
+    {
+      title: "Quản lý thẻ",
+      url: `${APP_ROUTES.TAG_MANAGEMENT}`,
+      icon: <TagIcon />,
+      allowedSystemRoles: [SYSTEM_ROLES.ADMIN],
+    },
+    {
+      title: "Cấu hình AI",
+      url: `${APP_ROUTES.AI_SETTINGS}`,
+      icon: <SparklesIcon />,
+      allowedSystemRoles: [SYSTEM_ROLES.ADMIN],
+    },
     {
       title: "Quản lý banner",
       url: `${APP_ROUTES.BANNER_MANAGEMENT}`,
@@ -132,13 +151,6 @@ const data = {
       icon: <ClipboardCheckIcon />,
       allowedSystemRoles: [SYSTEM_ROLES.ADMIN],
       allowedOrganizationRoles: [ORGANIZATION_ROLES.OWNER, ORGANIZATION_ROLES.STAFF],
-    },
-  ],
-  navSecondary: [
-    {
-      title: "Về trang công khai",
-      url: APP_ROUTES.HOME,
-      icon: <HomeIcon />,
     },
   ],
 };
@@ -197,7 +209,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         {filteredNavContent.length > 0 && (
           <NavMain label="Quản lý nội dung" items={filteredNavContent} />
         )}
-        <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={sidebarUser} />

@@ -9,7 +9,6 @@ import type { RescueClaimReleaseReason } from "@/types/rescue-case.type";
 export const rescueFlowKeys = {
   claims: (caseId: string) => [...rescueCaseKeys.all, "claims", caseId] as const,
   updates: (caseId: string) => [...rescueCaseKeys.all, "updates", caseId] as const,
-  reviewQueue: (page: number) => [...rescueCaseKeys.all, "review-queue", page] as const,
   orgQueue: (page: number) => [...rescueCaseKeys.all, "org-queue", page] as const,
   duplicates: (lat?: number, lng?: number, species?: string) =>
     [...rescueCaseKeys.all, "duplicates", lat, lng, species] as const,
@@ -88,14 +87,6 @@ export function useDecideCompletion() {
       return rescueFlowService.rejectCompletion(completionId, reason);
     },
     onSuccess: refresh,
-  });
-}
-
-export function useCompletionReviewQueue(page = 0, enabled = true) {
-  return useQuery({
-    queryKey: rescueFlowKeys.reviewQueue(page),
-    queryFn: () => rescueFlowService.getCompletionReviewQueue(page),
-    enabled,
   });
 }
 

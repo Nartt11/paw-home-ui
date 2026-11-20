@@ -91,6 +91,8 @@ class Http {
     this.instance = axios.create({
       baseURL: BASE_URL,
       timeout: 10000,
+      // Spring binds repeated keys (status=A&status=B), not axios' default status[]=A.
+      paramsSerializer: { indexes: null },
       headers: {
         "Content-Type": "application/json",
       },
@@ -119,7 +121,26 @@ class Http {
     this.instance.interceptors.response.use(
       (response: AxiosResponse) => response,
 
-      (error: AxiosError<ApiErrorResponse>) => {
+      async (error: AxiosError<ApiErrorResponse>) => {
+        const original = error.config as
+          | (InternalAxiosRequestConfig & { _retried?: boolean })
+          | undefined;
+
+        // Silent refresh: retry the request once with a new access token.
+        if (
+          error.response?.status === 401 &&
+          original &&
+          !original._retried &&
+          !original.url?.startsWith("/auth/")
+        ) {
+          original._retried = true;
+          const token = await this.refreshAccessToken();
+          if (token) {
+            original.headers.Authorization = `Bearer ${token}`;
+            return this.instance(original);
+          }
+        }
+
         const data = error.response?.data;
 
         const customError = new HttpError({
@@ -136,6 +157,32 @@ class Http {
         return Promise.reject(customError);
       },
     );
+  }
+
+  // Shared so parallel 401s trigger one refresh call (BE rotates refresh tokens).
+  private refreshing: Promise<string | null> | null = null;
+
+  private refreshAccessToken(): Promise<string | null> {
+    const refreshToken = tokenStorage.getRefreshToken();
+    if (!refreshToken) return Promise.resolve(null);
+
+    this.refreshing ??= axios
+      .post<ApiResponse<{ accessToken: string; refreshToken: string }>>(
+        `${BASE_URL}/auth/refresh`,
+        { refreshToken },
+      )
+      .then((res) => {
+        const { accessToken, refreshToken: next } = res.data.data;
+        tokenStorage.setAccessToken(accessToken);
+        tokenStorage.setRefreshToken(next);
+        return accessToken;
+      })
+      .catch(() => null)
+      .finally(() => {
+        this.refreshing = null;
+      });
+
+    return this.refreshing;
   }
 
   async get<T>(url: string, params?: object): Promise<T> {

@@ -7,6 +7,7 @@ import {
   PetMedicalRecord,
   PetOwnership,
   PetStatus,
+  PetTraits,
   PetSummary,
   PetListParams,
   PetCreatePayload,
@@ -83,6 +84,16 @@ const petService = {
   ): Promise<Pet> {
     return await http.put<Pet>(apiEndpoints.pets.byId(petId), payload);
   },
+  // GET /api/v1/pets/{petId}/traits - public; fields nobody recorded are absent
+  async getPetTraits(petId: string): Promise<PetTraits> {
+    return http.get<PetTraits>(apiEndpoints.pets.traits(petId));
+  },
+
+  // PUT /api/v1/pets/{petId}/traits - pet owner, org OWNER/STAFF/VET or admin; replaces the record
+  async savePetTraits(petId: string, traits: PetTraits): Promise<PetTraits> {
+    return http.put<PetTraits, PetTraits>(apiEndpoints.pets.traits(petId), traits);
+  },
+
 
   // PATCH /api/v1/pets/{id}/status - Change pet status
   async updatePetStatus(petId: string, status: PetStatus): Promise<Pet> {

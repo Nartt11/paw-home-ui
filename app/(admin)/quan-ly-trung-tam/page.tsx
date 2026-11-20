@@ -4,6 +4,7 @@ import { useCallback, useState } from "react";
 
 import { DeleteModal } from "@/components/common/admin/DeleteModal";
 import TitlePerPage from "@/components/common/admin/TitlePerPage";
+import { OrganizationAccountDialog } from "@/components/organization/OrganizationAccountDialog";
 import { OrganizationFormDialog } from "@/components/organization/OrganizationFormDialog";
 import { OrganizationListTable } from "@/components/organization/OrganizationListTable";
 import { OrganizationViewDetail } from "@/components/organization/OrganizationViewDetail";
@@ -38,6 +39,7 @@ export default function CenterManagementPage() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [openCreate, setOpenCreate] = useState(false);
   const [openUpdate, setOpenUpdate] = useState(false);
+  const [accountOrgId, setAccountOrgId] = useState<string | null>(null);
 
   const organizationsQuery = useOrganizations({
     page,
@@ -123,6 +125,7 @@ export default function CenterManagementPage() {
       <OrganizationListTable
         data={data?.content ?? []}
         loading={organizationsQuery.isPending}
+        onCreateAccount={(organizationId) => setAccountOrgId(organizationId)}
         onViewDetail={(organizationId) => {
           setSelectedId(organizationId);
           setOpenDetail(true);
@@ -157,6 +160,17 @@ export default function CenterManagementPage() {
             }
           }}
           organization={selectedOrganization}
+        />
+      )}
+
+      {accountOrgId && (
+        <OrganizationAccountDialog
+          organizationId={accountOrgId}
+          organizationName={
+            data?.content.find((o) => o.organizationId === accountOrgId)?.name
+          }
+          open
+          onOpenChange={(open) => !open && setAccountOrgId(null)}
         />
       )}
 

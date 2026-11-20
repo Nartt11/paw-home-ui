@@ -149,3 +149,14 @@ export function useCompleteAdoption() {
     },
   });
 }
+
+export function useReclaimLogs(
+  params: { organizationId?: string; page?: number; pageSize?: number },
+  enabled = true,
+) {
+  return useQuery({
+    queryKey: [...adoptionKeys.all, "reclaims", params],
+    queryFn: () => adoptionService.getReclaimLogs(params),
+    enabled,
+  });
+}

@@ -6,6 +6,7 @@ import { AdoptionDecisionDialog } from "@/components/adoption/AdoptionDecisionDi
 import { AdoptionListTable } from "@/components/adoption/AdoptionListTable";
 import AdoptionRequestList from "@/components/adoption/AdoptionRequestList";
 import { AdoptionViewDetail } from "@/components/adoption/AdoptionViewDetail";
+import { ReclaimLogTable } from "@/components/adoption/ReclaimLogTable";
 import TitlePerPage from "@/components/common/admin/TitlePerPage";
 import { PageControls } from "@/components/common/PageControl";
 import {
@@ -49,8 +50,7 @@ export default function AdoptionManagementPage() {
   const [pendingTab, setPendingTab] = React.useState<"ALL" | "PENDING" | "APPROVED">("ALL");
 
   const { data: currentUser } = useCurrentUser();
-  // Members of an organization carry an organizationRole; the backend system role is MEMBER, not MEMBERSHIP.
-  const isOrganizationUser = !!currentUser?.organizationRole && !currentUser?.roles.includes("ADMIN");
+  const isOrganizationUser = currentUser?.roles.includes(SYSTEM_ROLES.MEMBER) && !!currentUser?.organizationRole;
   const currentOrgId = isOrganizationUser ? currentUser?.organizationId : undefined;
 
   const canManage = React.useMemo(() => {
@@ -348,6 +348,8 @@ export default function AdoptionManagementPage() {
             }}
           />
         </section>
+
+        <ReclaimLogTable organizationId={currentOrgId} />
 
         <AdoptionViewDetail
           open={openDetail}

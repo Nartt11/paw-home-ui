@@ -222,7 +222,7 @@ export interface RescueCompletion {
   submittedByName?: string;
   outcome?: RescueOutcome;
   status?: RescueCompletionStatus;
-  rejectReason?: string;
+  rejectReason?: string | null;
   rescuedAt: string;
   rescueNote: string;
   locationNote: string;

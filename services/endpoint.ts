@@ -45,6 +45,7 @@ export const apiEndpoints = {
     status: (id: string) => `/pets/${id}/status`,
     transferOwnership: (id: string) => `/pets/${id}/transfer-ownership`,
     medicalRecords: (petId: string) => `/pets/${petId}/medical-records`,
+    traits: (petId: string) => `/pets/${petId}/traits`,
     ownerships: (petId: string) => `/pets/${petId}/ownerships`,
     media: (petId: string) => `/pets/${petId}/media`,
     deleteMedia: (petId: string, mediaId: string) =>
@@ -100,6 +101,7 @@ export const apiEndpoints = {
     returnRequest: (id: string) => `/adoptions/${id}/return-request`,
     outcome: (id: string) => `/adoptions/${id}/outcome`,
     followups: (id: string) => `/adoptions/${id}/followups`,
+    reclaims: "/adoptions/reclaims",
   },
   followups: {
     respond: "/followups/respond",
@@ -117,6 +119,7 @@ export const apiEndpoints = {
     feed: "/posts/feed",
     comments: (postId: string) => `/posts/${postId}/comments`,
     like: (postId: string) => `/posts/${postId}/like`,
+    analysis: (postId: string) => `/posts/${postId}/analysis`,
   },
   comments: {
     byId: (id: string) => `/comments/${id}`,
@@ -153,6 +156,10 @@ export const apiEndpoints = {
         `/admin/organizations/${organizationId}/members`,
       pets: (organizationId: string) =>
         `/admin/organizations/${organizationId}/pets`,
+    },
+    ai: {
+      metrics: "/admin/ai/post-analysis/metrics",
+      model: "/admin/ai/post-analysis/model",
     },
     dashboard: {
       overview: "/admin/dashboard/overview",

@@ -1,7 +1,7 @@
 import { ListParams } from "./api.type";
 
 export type OrganizationType = "SHELTER" | "VET_CENTER";
-export type OrganizationStatus = "ACTIVE" | "INACTIVE" | "PENDING";
+export type OrganizationStatus = "ACTIVE" | "INACTIVE" | "PENDING" | "REJECTED";
 export interface OrganizationSummary {
   organizationId: string;
   name: string;

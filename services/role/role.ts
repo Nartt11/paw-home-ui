@@ -1,28 +1,23 @@
 import http from "@/lib/http";
 import apiEndpoints from "@/services/endpoint";
-
-import type { ApiEntity, ListParams, PageDto } from "../api-dto";
-
-export type RoleDto = ApiEntity;
-export type CreateRolePayload = ApiEntity;
+import type { PaginatedResponse } from "@/types/api.type";
+import type { Role, RoleCreatePayload, RoleListParams } from "@/types/role.type";
 
 const roleService = {
-  async getAllRoles(params: ListParams): Promise<PageDto<RoleDto>> {
-    return http.get<PageDto<RoleDto>>(apiEndpoints.roles.root, { params });
+  // GET /api/v1/roles
+  async getAllRoles(params: RoleListParams): Promise<PaginatedResponse<Role>> {
+    return http.get<PaginatedResponse<Role>>(apiEndpoints.roles.root, { params });
   },
 
-  async getRoleById(id: string | number): Promise<RoleDto> {
-    return http.get<RoleDto>(apiEndpoints.roles.byId(id));
+  // POST /api/v1/roles (ADMIN)
+  async createRole(payload: RoleCreatePayload): Promise<Role> {
+    return http.post<Role, RoleCreatePayload>(apiEndpoints.roles.root, payload);
   },
 
-  async createRole(payload: CreateRolePayload): Promise<RoleDto> {
-    return http.post<RoleDto, CreateRolePayload>(apiEndpoints.roles.root, payload);
-  },
-
-  async deleteRole(id: string | number): Promise<void> {
+  // DELETE /api/v1/roles/{id} (ADMIN)
+  async deleteRole(id: number): Promise<void> {
     await http.delete(apiEndpoints.roles.byId(id));
   },
-
 };
 
 export default roleService;

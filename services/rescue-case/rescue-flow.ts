@@ -71,13 +71,6 @@ const rescueFlowService = {
     );
   },
 
-  // Admin only: disputed reports, overdue ones, and those nobody else can confirm.
-  getCompletionReviewQueue(page = 0, pageSize = 20) {
-    return http.get<PaginatedResponse<RescueCompletion>>(apiEndpoints.rescueCases.completionReviewQueue, {
-      params: { page, pageSize },
-    });
-  },
-
   // The organization creates the pet record for a rescued animal it holds; the pet starts in FOSTERING.
   intake(caseId: string, payload: Partial<PetCreatePayload>) {
     return http.post<Pet, Partial<PetCreatePayload>>(apiEndpoints.rescueCases.intake(caseId), payload);
