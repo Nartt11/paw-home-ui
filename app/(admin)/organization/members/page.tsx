@@ -320,8 +320,8 @@ export default function OrganizationMembersPage() {
                                     </span>
                                   )}
                                 </div>
-                                <div className="text-xs text-muted-foreground font-mono">
-                                  ID: {memberUserId.substring(0, 8)}...
+                                <div className="text-xs text-muted-foreground">
+                                  {member.email || (member.username ? `@${member.username}` : "")}
                                 </div>
                               </div>
                             </div>

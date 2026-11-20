@@ -1,5 +1,7 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
+import { MyAdoptions } from "@/components/adoption/MyAdoptions";
 import React, { useEffect, useRef, useState } from "react";
 import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,24 +11,14 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
   User,
-  Settings,
-  CreditCard,
-  Palette,
-  Bell,
-  Sliders,
   Plus,
   Trash2,
   HeartHandshake,
-  Calendar,
-  FileText,
   Loader2,
   XCircle,
   CheckCircle2,
   HelpCircle,
-  ChevronDown,
-  ChevronUp,
   Building,
-  ExternalLink,
   Mail,
   Phone,
   ArrowRight,
@@ -35,8 +27,7 @@ import {
 
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { useUpdateMyProfile } from "@/hooks/use-user";
-import { useAdoptionsByUser, useCancelAdoption } from "@/hooks/use-adoption";
-import { useCreateOrganization, useOrganizations, useMyOrganization } from "@/hooks/use-organization";
+import { useCreateOrganization, useMyOrganization } from "@/hooks/use-organization";
 import { OrganizationFormDialog } from "@/components/organization/OrganizationFormDialog";
 import type { OrganizationCreatePayload } from "@/types/organization.type";
 
@@ -60,7 +51,6 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
-import { formatDate } from "@/lib/datetime";
 
 const profileFormSchema = z.object({
   username: z
@@ -85,23 +75,32 @@ const profileFormSchema = z.object({
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
+const PROFILE_TABS = ["profile", "adoptions", "centers"];
+
 export default function MyProfilePage() {
+  return (
+    <React.Suspense fallback={null}>
+      <MyProfileContent />
+    </React.Suspense>
+  );
+}
+
+function MyProfileContent() {
   const { data: currentUser, isPending: isUserPending } = useCurrentUser();
   const updateProfileMutation = useUpdateMyProfile();
+  // ?tab=adoptions opens a tab directly, e.g. from a notification about an adoption.
+  const requestedTab = useSearchParams().get("tab");
 
-  const [activeTab, setActiveTab] = useState("profile");
+  const [activeTab, setActiveTab] = useState(
+    requestedTab && PROFILE_TABS.includes(requestedTab) ? requestedTab : "profile",
+  );
   const [avatarPreview, setAvatarPreview] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const sidebarItems = [
-    { id: "profile", label: "Profile", icon: User },
+    { id: "profile", label: "Thông tin cá nhân", icon: User },
     { id: "adoptions", label: "Hồ sơ nhận nuôi", icon: HeartHandshake },
     { id: "centers", label: "Hồ sơ trung tâm", icon: Building },
-    { id: "account", label: "Account", icon: Settings },
-    { id: "billing", label: "Billing", icon: CreditCard },
-    { id: "appearance", label: "Appearance", icon: Palette },
-    { id: "notifications", label: "Notifications", icon: Bell },
-    { id: "display", label: "Display", icon: Sliders },
   ];
 
   const form = useForm<ProfileFormValues>({
@@ -180,7 +179,7 @@ export default function MyProfilePage() {
 
   const renderTabContent = () => {
     if (activeTab === "adoptions") {
-      return <AdoptionApplicationsTab />;
+      return <MyAdoptions />;
     }
     if (activeTab === "centers") {
       return <CenterProfilesTab />;
@@ -423,304 +422,6 @@ export default function MyProfilePage() {
       </div>
     </div>
   );
-}
-
-const MOCK_ADOPTIONS = [
-  {
-    applicationId: "mock-1",
-    adoptionCode: "AD-72819",
-    petName: "Bé Miu Miu",
-    petPrimaryImageUrl: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=400",
-    status: "PENDING" as const,
-    createdAt: "2026-05-27T10:00:00Z",
-    experience: "Đã có kinh nghiệm chăm sóc mèo ta 3 năm, biết xử lý các bệnh cơ bản.",
-    liveCondition: "Căn hộ chung cư rộng rãi 65m2, đã lắp lưới an toàn ban công.",
-  },
-  {
-    applicationId: "mock-2",
-    adoptionCode: "AD-52901",
-    petName: "Cậu Vàng",
-    petPrimaryImageUrl: "https://images.unsplash.com/photo-1543466835-00a7907e9de1?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=400",
-    status: "APPROVED" as const,
-    createdAt: "2026-05-18T09:30:00Z",
-    experience: "Từng nuôi chó và chăm sóc chu đáo, yêu động vật.",
-    liveCondition: "Nhà vườn rộng rãi ở Bình Chánh, sống cùng gia đình 4 người.",
-  },
-  {
-    applicationId: "mock-3",
-    adoptionCode: "AD-38102",
-    petName: "Bông Bông",
-    petPrimaryImageUrl: "https://images.unsplash.com/photo-1535268647977-a403b69fc756?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=400",
-    status: "REJECTED" as const,
-    createdAt: "2026-05-12T14:20:00Z",
-    experience: "Chưa từng nuôi thú cưng, thời gian biểu bận rộn.",
-    liveCondition: "Phòng trọ diện tích nhỏ 18m2, thường xuyên vắng nhà.",
-  },
-];
-
-function AdoptionApplicationsTab() {
-  const { data: currentUser } = useCurrentUser();
-  const adoptionsQuery = useAdoptionsByUser(currentUser?.userId);
-  const cancelMutation = useCancelAdoption();
-
-  const [expandedIds, setExpandedIds] = useState<Record<string, boolean>>({});
-  const [selectedStatus, setSelectedStatus] = useState<string>("ALL");
-
-  const toggleExpand = (id: string) => {
-    setExpandedIds((prev) => ({ ...prev, [id]: !prev[id] }));
-  };
-
-  const adoptionsList = React.useMemo(() => {
-    if (!currentUser) return MOCK_ADOPTIONS;
-    if (adoptionsQuery.isError) return MOCK_ADOPTIONS;
-    if (
-      adoptionsQuery.data &&
-      adoptionsQuery.data.content &&
-      adoptionsQuery.data.content.length > 0
-    ) {
-      return adoptionsQuery.data.content;
-    }
-    // Default to mock data if user is logged in but hasn't submitted any adoption forms yet
-    return MOCK_ADOPTIONS;
-  }, [currentUser, adoptionsQuery.data, adoptionsQuery.isError]);
-
-  const statusCounts = React.useMemo(() => {
-    const counts: Record<string, number> = {
-      ALL: adoptionsList.length,
-      PENDING: 0,
-      APPROVED: 0,
-      REJECTED: 0,
-      CANCELLED: 0,
-    };
-    adoptionsList.forEach((item) => {
-      if (item.status in counts) {
-        counts[item.status]++;
-      }
-    });
-    return counts;
-  }, [adoptionsList]);
-
-  const filteredList = React.useMemo(() => {
-    if (selectedStatus === "ALL") return adoptionsList;
-    return adoptionsList.filter((item) => item.status === selectedStatus);
-  }, [adoptionsList, selectedStatus]);
-
-  const handleCancel = async (applicationId: string) => {
-    if (applicationId.startsWith("mock-")) {
-      toast.success("Hủy đơn nhận nuôi thành công! (Dữ liệu Mock)");
-      return;
-    }
-
-    try {
-      await cancelMutation.mutateAsync(applicationId);
-      toast.success("Hủy đơn nhận nuôi thành công!");
-    } catch (error) {
-      toast.error("Hủy đơn nhận nuôi thất bại!");
-      console.error(error);
-    }
-  };
-
-  if (adoptionsQuery.isPending && currentUser) {
-    return (
-      <div className="flex flex-col items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="mt-4 text-sm text-muted-foreground">
-          Đang tải danh sách hồ sơ...
-        </p>
-      </div>
-    );
-  }
-
-  const filterPills = [
-    { value: "ALL", label: "Tất cả" },
-    { value: "PENDING", label: "Chờ duyệt" },
-    { value: "APPROVED", label: "Đã duyệt" },
-    { value: "REJECTED", label: "Đã từ chối" },
-    { value: "CANCELLED", label: "Đã hủy" },
-  ];
-
-  return (
-    <div className="space-y-6">
-      <div>
-        <h3 className="text-lg font-medium">Hồ sơ nhận nuôi của tôi</h3>
-        <p className="text-sm text-muted-foreground">
-          Xem và theo dõi trạng thái các đơn đăng ký nhận nuôi thú cưng bạn đã gửi.
-        </p>
-      </div>
-      <Separator />
-
-      {adoptionsList.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-border bg-card p-12 text-center">
-          <HeartHandshake className="h-10 w-10 text-muted-foreground mx-auto mb-4 opacity-50" />
-          <p className="text-sm text-muted-foreground font-medium">
-            Bạn chưa gửi đơn nhận nuôi nào.
-          </p>
-          <Button asChild className="mt-4" variant="outline">
-            <a href="/nhan-nuoi">Tìm kiếm thú cưng ngay</a>
-          </Button>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          <div className="flex flex-wrap gap-2 pb-2">
-            {filterPills.map((pill) => {
-              const isActive = selectedStatus === pill.value;
-              const count = statusCounts[pill.value] || 0;
-              return (
-                <button
-                  key={pill.value}
-                  onClick={() => setSelectedStatus(pill.value)}
-                  className={`px-4 py-1.5 text-xs font-semibold rounded-full transition cursor-pointer select-none border ${
-                    isActive
-                      ? "bg-primary text-primary-foreground border-primary"
-                      : "border-border text-muted-foreground hover:bg-accent hover:text-foreground bg-card"
-                  }`}
-                >
-                  {pill.label} ({count})
-                </button>
-              );
-            })}
-          </div>
-
-          {filteredList.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-border bg-card p-12 text-center">
-              <HeartHandshake className="h-10 w-10 text-muted-foreground mx-auto mb-4 opacity-50" />
-              <p className="text-sm text-muted-foreground font-medium">
-                Không có đơn nhận nuôi nào ở trạng thái này.
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-          {filteredList.map((item) => {
-            const isExpanded = !!expandedIds[item.applicationId];
-            return (
-              <div
-                key={item.applicationId}
-                className="rounded-2xl border border-border bg-card p-5 shadow-sm transition-all hover:shadow-md"
-              >
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div className="flex items-center gap-4">
-                    <div className="relative h-14 w-14 overflow-hidden rounded-xl bg-muted shrink-0 border border-border">
-                      <Image
-                        src={
-                          item.petPrimaryImageUrl ||
-                          "https://images.unsplash.com/photo-1517849845537-4d257902454a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=200"
-                        }
-                        alt={item.petName}
-                        fill
-                        unoptimized
-                        className="object-cover"
-                      />
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-slate-900 text-base">
-                        {item.petName}
-                      </h4>
-                      <p className="text-xs text-muted-foreground mt-0.5 font-medium flex items-center gap-1.5">
-                        <FileText className="h-3 w-3" /> Mã đơn: {item.adoptionCode}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1.5">
-                        <Calendar className="h-3 w-3" /> Ngày gửi:{" "}
-                        {formatDate(item.createdAt)}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-3 self-end sm:self-center">
-                    <StatusBadge status={item.status} />
-
-                    {item.status === "PENDING" && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={cancelMutation.isPending}
-                        onClick={() => handleCancel(item.applicationId)}
-                        className="text-xs border-destructive/30 hover:border-destructive hover:bg-destructive/10 text-destructive rounded-xl h-8 cursor-pointer px-3"
-                      >
-                        Hủy đơn
-                      </Button>
-                    )}
-                  </div>
-                </div>
-
-                <div className="mt-4 pt-3 border-t border-border/60">
-                  <button
-                    onClick={() => toggleExpand(item.applicationId)}
-                    className="flex items-center gap-1 text-xs font-semibold text-primary hover:text-primary/80 transition cursor-pointer select-none"
-                  >
-                    <span>
-                      {isExpanded ? "Thu gọn chi tiết" : "Xem chi tiết đơn gửi"}
-                    </span>
-                    {isExpanded ? (
-                      <ChevronUp className="h-3 w-3" />
-                    ) : (
-                      <ChevronDown className="h-3 w-3" />
-                    )}
-                  </button>
-
-                  {isExpanded && (
-                    <div className="mt-3 space-y-3 bg-muted/40 p-4 rounded-xl text-sm leading-relaxed text-slate-600">
-                      <div>
-                        <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                          Kinh nghiệm chăm sóc
-                        </p>
-                        <p className="mt-1 font-medium text-slate-700">
-                          {item.experience || "Chưa cập nhật thông tin."}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                          Điều kiện sống & Môi trường
-                        </p>
-                        <p className="mt-1 font-medium text-slate-700">
-                          {item.liveCondition || "Chưa cập nhật thông tin."}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function StatusBadge({ status }: { status: string }) {
-  switch (status) {
-    case "PENDING":
-      return (
-        <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700 border border-amber-200">
-          <HelpCircle className="h-3.5 w-3.5 text-amber-500" />
-          Chờ duyệt
-        </span>
-      );
-    case "APPROVED":
-      return (
-        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 border border-emerald-200">
-          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
-          Đã duyệt
-        </span>
-      );
-    case "REJECTED":
-      return (
-        <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700 border border-red-200">
-          <XCircle className="h-3.5 w-3.5 text-red-500" />
-          Đã từ chối
-        </span>
-      );
-    case "CANCELLED":
-    default:
-      return (
-        <span className="inline-flex items-center gap-1 rounded-full bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-600 border border-slate-200">
-          <XCircle className="h-3.5 w-3.5 text-slate-400" />
-          Đã hủy
-        </span>
-      );
-  }
 }
 
 interface MockCenterItem {

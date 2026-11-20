@@ -22,9 +22,21 @@ export const completeRescueSchema = z.object({
   rescueNote: z.string().trim().optional(),
   rescuedAt: z.string().min(1, "Vui lòng chọn thời gian cứu hộ thành công."),
   locationNote: z.string().trim().optional(),
+  outcome: z.enum(["HANDED_TO_ORG", "TEMP_HOLDING", "KEPT_BY_RESCUER", "RELEASED", "DECEASED"]),
   confirmRescued: z.boolean().refine((val) => val === true, {
     message: "Bạn phải xác nhận thú đã được cứu hộ thành công.",
   }),
 });
 
 export type CompleteRescueFormValues = z.infer<typeof completeRescueSchema>;
+
+// RescueCompletionDecisionRequestDto: reject / dispute need a reason.
+export const completionDecisionSchema = z.object({
+  reason: z
+    .string()
+    .trim()
+    .min(1, "Vui lòng nhập lý do.")
+    .max(1000, "Lý do tối đa 1000 ký tự."),
+});
+
+export type CompletionDecisionValues = z.infer<typeof completionDecisionSchema>;

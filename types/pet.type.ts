@@ -35,6 +35,12 @@ export interface PetSummary {
   ward: string;
   wardCode: string;
   imageUrl: string;
+  /** SELF_REGISTERED, ADOPTED or ORG_INTAKE; only on my pets. */
+  acquisitionType?: "SELF_REGISTERED" | "ADOPTED" | "ORG_INTAKE" | "TRANSFERRED";
+  /** The adoption this pet came from, when acquisitionType is ADOPTED. */
+  adoptionApplicationId?: string;
+  /** The organization the pet was adopted from. */
+  sourceOrganization?: { organizationId: string; name: string };
 }
 export interface Pet extends Omit<PetSummary, "imageUrl"> {
   color: string;
@@ -97,6 +103,8 @@ export interface PetListParams extends ListParams {
   status?: PetStatus[];
   userId?: string;
   organizationId?: string;
+  /** Province code or name. */
+  province?: string;
 }
 
 export interface PetBreed {
@@ -126,7 +134,8 @@ export interface PetCreatePayload {
   neutered: boolean;
   healthStatus: PetHealthStatus;
   mediaIds: string[];
-  shelterId: string;
+  /** Left out when a person keeps the animal they rescued. */
+  shelterId?: string;
   rescueCaseId?: string;
 }
 
@@ -171,4 +180,27 @@ export interface PetMediaCreatePayload {
 
 export interface PetDetailParams extends ListParams {
   petId?: string;
+}
+
+// PetTraitsDto (GET/PUT /pets/{petId}/traits). Scales are 1-5; absent = nobody recorded it.
+export interface PetTraits {
+  petId?: string;
+  friendlyPeople?: number | null;
+  friendlyChildren?: number | null;
+  fearStrangers?: number | null;
+  fearNoise?: number | null;
+  energy?: number | null;
+  goodWithDogs?: number | null;
+  goodWithCats?: number | null;
+  aloneMinutes?: number | null;
+  houseTrained?: number | null;
+  biteHistory?: "NONE" | "MINOR" | "INJURY" | null;
+  biteVerified?: boolean;
+  size?: "SMALL" | "MEDIUM" | "LARGE" | null;
+  noiseLevel?: number | null;
+  monthlyCost?: number | null;
+  careLevel?: "LOW" | "MEDIUM" | "HIGH" | null;
+  sourceRole?: "FOSTER" | "STAFF" | "PREVIOUS_OWNER" | "OWNER" | null;
+  note?: string | null;
+  updatedAt?: string | null;
 }

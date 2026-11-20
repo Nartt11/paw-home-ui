@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { Building2, MapPinned, Siren, TriangleAlert, CheckCircle2, User } from "lucide-react";
 
 import TitlePerPage from "@/components/common/admin/TitlePerPage";
+import { Button } from "@/components/ui/button";
 import type {
   OrganizationMapMarker,
   RescueMapMarker,
@@ -15,7 +16,7 @@ import { RescueCaseCreate, type RescueCaseCreateValues } from "@/components/resc
 import { RescueCaseViewDetail } from "@/components/rescue-case/RescueCaseViewDetail";
 import { RescueCompletionCompareDialog } from "@/components/rescue-case/RescueCompletionCompareDialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useCreateRescueCase, useRescueCaseDetail, useRescueCasesInBoundingBox, useRescueMapMarkers, useRescueCompletions, useRescueCases } from "@/hooks/use-rescue-case";
+import { useCreateRescueCase, useRescueCaseDetail, useRescueCasesInBoundingBox, useRescueMapMarkers, useRescueCompletions, useRescueCases, useCompletionReviewQueue } from "@/hooks/use-rescue-case";
 import {
   useOrganizationDetail,
   useOrganizationMapMarkers,
@@ -27,7 +28,9 @@ import type { RescueCaseBoundingBoxParams, RescueCaseMarkers, RescueCaseSummary,
 import { useCurrentUser } from "@/hooks/use-current-user";
 import RequireAuth from "@/components/auth/RequireAuth";
 import { SYSTEM_ROLES, ORGANIZATION_ROLES } from "@/constants/roles";
-import { set } from "zod";
+import { organizationStatusLabel, organizationTypeLabel } from "@/lib/organization-display";
+import { speciesLabel } from "@/lib/pet-display";
+import { RESCUE_CASE_TYPE_LABEL, rescuePriorityLabel, rescueStatusLabel } from "@/lib/rescue-case-display";
 import { formatDate } from "@/lib/datetime";
 
 const Map = dynamic(() => import("@/components/map-rescue/MapRescue"), {
@@ -72,7 +75,7 @@ export default function RescueCaseManagementPage() {
   const [selectedCaseId, setSelectedCaseId] = React.useState<string | null>(null);
 
   const { data: currentUser } = useCurrentUser();
-  const isOrganizationUser = currentUser?.roles.includes("MEMBERSHIP") && !!currentUser?.organizationRole;
+  const isOrganizationUser = currentUser?.roles.includes(SYSTEM_ROLES.MEMBER) && !!currentUser?.organizationRole;
   const currentOrgId = isOrganizationUser ? currentUser?.organizationId : undefined;
 
   const canCreate = React.useMemo(() => {
@@ -114,7 +117,12 @@ export default function RescueCaseManagementPage() {
     organizationViewOpen ? selectedOrganizationId ?? undefined : undefined,
   );
   const createRescueCaseMutation = useCreateRescueCase();
-  const completionsQuery = useRescueCompletions({ isResolved: false, page: 0, pageSize: 100 });
+  const isAdmin = currentUser?.roles.includes(SYSTEM_ROLES.ADMIN) ?? false;
+  const [escalatedOnly, setEscalatedOnly] = React.useState(false);
+  const pendingCompletionsQuery = useRescueCompletions({ isResolved: false, page: 0, pageSize: 100 });
+  // Disputed reports and those nobody reviewed in time: only an admin can settle them.
+  const reviewQueueQuery = useCompletionReviewQueue({ page: 0, pageSize: 100 }, isAdmin);
+  const completionsQuery = escalatedOnly ? reviewQueueQuery : pendingCompletionsQuery;
   const rescueCasesListQuery = useRescueCases({ page: 0, pageSize: 100 });
 
   const rescueCases = React.useMemo(
@@ -261,27 +269,36 @@ export default function RescueCaseManagementPage() {
         <button
           key={caseItem.caseId}
           type="button"
-          onClick={() => handleCardRescueClick(caseItem.caseId)}
+          onClick={() => {
+            // Show the case on the map and open its detail in one click.
+            handleCardRescueClick(caseItem.caseId);
+            handleOpenDetail(caseItem.caseId);
+          }}
           className="w-full rounded-xl border p-4 text-left transition hover:border-primary hover:bg-muted/40"
         >
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <p className="font-mono text-xs text-muted-foreground">
-                {caseItem.caseCode || caseItem.caseId}
-              </p>
-              <p className="mt-1 font-medium text-foreground">
-                {caseItem.species}
+              <p className="font-medium text-foreground">
+                {speciesLabel({ species: caseItem.species })}
+                {caseItem.caseType && caseItem.caseType !== "RESCUE" ? (
+                  <span className="ml-2 rounded-full bg-sky-50 px-2 py-0.5 text-xs font-medium text-sky-800">
+                    {RESCUE_CASE_TYPE_LABEL[caseItem.caseType]}
+                  </span>
+                ) : null}
               </p>
               <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
                 {caseItem.locationText}
               </p>
+              <p className="mt-1 text-xs text-muted-foreground tabular-nums">
+                Mã ca {caseItem.caseCode}
+              </p>
             </div>
-            <span className="rounded-full bg-muted px-2 py-1 text-xs font-semibold">
-              {caseItem.priority}
+            <span className="shrink-0 rounded-full bg-muted px-2 py-1 text-xs font-semibold">
+              {rescuePriorityLabel(caseItem.priority)}
             </span>
           </div>
           <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
-            <span>{caseItem.status}</span>
+            <span>{rescueStatusLabel(caseItem.status)}</span>
             <span>
               {formatDate(caseItem.reportedAt)}
             </span>
@@ -289,7 +306,7 @@ export default function RescueCaseManagementPage() {
         </button>
       ));
     },
-    [handleCardRescueClick, isLoadingMap],
+    [handleCardRescueClick, handleOpenDetail, isLoadingMap],
   );
 
 
@@ -325,7 +342,7 @@ export default function RescueCaseManagementPage() {
                 {organization.name}
               </p>
               <p className="mt-1 text-xs text-muted-foreground">
-                {organization.type}
+                {organizationTypeLabel(organization.type)}
               </p>
               <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
                 {[
@@ -338,7 +355,7 @@ export default function RescueCaseManagementPage() {
               </p>
             </div>
             <span className="rounded-full bg-muted px-2 py-1 text-xs font-semibold">
-              {organization.status}
+              {organizationStatusLabel(organization.status)}
             </span>
           </div>
           <div className="mt-3 flex items-center justify-between gap-3 text-xs text-muted-foreground">
@@ -383,6 +400,27 @@ export default function RescueCaseManagementPage() {
                 {completionsQuery.data.totalElements} ca
               </span>
             ) : null}
+            {isAdmin && (
+              <div className="ml-auto flex gap-1 rounded-lg border p-0.5 text-xs">
+                <Button
+                  size="sm"
+                  variant={escalatedOnly ? "ghost" : "secondary"}
+                  onClick={() => setEscalatedOnly(false)}
+                >
+                  Tất cả chờ duyệt
+                </Button>
+                <Button
+                  size="sm"
+                  variant={escalatedOnly ? "secondary" : "ghost"}
+                  onClick={() => setEscalatedOnly(true)}
+                >
+                  Cần admin xử lý
+                  {reviewQueueQuery.data?.totalElements
+                    ? ` (${reviewQueueQuery.data.totalElements})`
+                    : ""}
+                </Button>
+              </div>
+            )}
           </div>
 
           {completionsQuery.isPending ? (
@@ -422,20 +460,27 @@ export default function RescueCaseManagementPage() {
                 >
                   <div className="flex items-start justify-between gap-3 w-full">
                     <div className="min-w-0">
-                      <p className="font-mono text-[10px] text-muted-foreground">
-                        Mã ca: {item.caseId.substring(0, 8)}...
+                      <p className="text-xs font-medium text-muted-foreground tabular-nums">
+                        Ca {item.caseCode ?? "chưa có mã"}
                       </p>
                       <p className="mt-1 font-semibold text-foreground text-sm line-clamp-1">
                         {item.rescueNote || "Không có ghi chú"}
                       </p>
                     </div>
-                    <span className="shrink-0 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700 border border-amber-100">
-                      Chờ duyệt
-                    </span>
+                    {item.status === "DISPUTED" ? (
+                      <span className="shrink-0 rounded-full bg-rose-50 px-2 py-0.5 text-[10px] font-semibold text-rose-700 border border-rose-100">
+                        Bị khiếu nại
+                      </span>
+                    ) : (
+                      <span className="shrink-0 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700 border border-amber-100">
+                        Chờ duyệt
+                      </span>
+                    )}
                   </div>
                   <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground w-full border-t pt-2">
-                    <span className="truncate max-w-[150px] flex items-center gap-1">
-                      <User className="h-3 w-3" /> {item.verifiedByName}
+                    {/* A report waiting for review has no verifier yet; show who sent it. */}
+                    <span className="truncate max-w-[150px] flex items-center gap-1" title="Người gửi báo cáo">
+                      <User className="h-3 w-3" aria-hidden /> {item.submittedByName ?? "Chưa rõ người gửi"}
                     </span>
                     <span className="shrink-0">
                       {formatDate(item.rescuedAt)}

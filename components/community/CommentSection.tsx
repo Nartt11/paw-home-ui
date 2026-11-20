@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { Loader2, Send } from "lucide-react";
+import { Loader2, Send, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -10,20 +10,32 @@ import { Button } from "@/components/ui/button";
 import { FieldError } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useCreateComment, usePostComments } from "@/hooks/use-post-interactions";
+import { useCreateComment, useDeleteComment, usePostComments } from "@/hooks/use-post-interactions";
 import { useRequireLogin } from "@/hooks/use-require-login";
 import { formatRelativeTime } from "@/lib/rescue-case-display";
 import { commentSchema, type CommentValues } from "@/lib/schemas/comment";
 
 export interface CommentSectionProps {
   postId: string;
+  /** Admin view: shows a delete button on every comment. */
+  canModerate?: boolean;
 }
 
 /** Comments of one post: read by anyone, written by members. Loaded only when opened. */
-export function CommentSection({ postId }: CommentSectionProps) {
+export function CommentSection({ postId, canModerate = false }: CommentSectionProps) {
   const { signedIn, requireLogin } = useRequireLogin();
   const commentsQuery = usePostComments(postId);
   const createCommentMutation = useCreateComment(postId);
+  const deleteCommentMutation = useDeleteComment(postId);
+
+  const removeComment = async (commentId: string) => {
+    try {
+      await deleteCommentMutation.mutateAsync(commentId);
+      toast.success("Đã xóa bình luận");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Không xóa được bình luận");
+    }
+  };
 
   const {
     formState: { errors },
@@ -113,6 +125,18 @@ export function CommentSection({ postId }: CommentSectionProps) {
                   {comment.content}
                 </p>
               </div>
+              {canModerate && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  aria-label="Xóa bình luận"
+                  disabled={deleteCommentMutation.isPending}
+                  onClick={() => removeComment(comment.commentId)}
+                >
+                  <Trash2 className="size-4 text-destructive" />
+                </Button>
+              )}
             </li>
           ))}
         </ul>

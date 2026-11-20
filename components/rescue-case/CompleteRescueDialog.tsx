@@ -32,6 +32,9 @@ import { useUploadTempMedia } from "@/hooks/use-media";
 import { useCompleteRescue } from "@/hooks/use-rescue-case";
 import { completeRescueSchema, type CompleteRescueFormValues } from "@/lib/schemas/rescue";
 import { toApiDateTime, toDateTimeLocalValue } from "@/lib/datetime";
+import { RESCUE_OUTCOME_LABEL } from "@/lib/rescue-case-display";
+import type { RescueOutcome } from "@/types/rescue-case.type";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface CompleteRescueDialogProps {
   rescueId: string;
@@ -57,6 +60,7 @@ export function CompleteRescueDialog({
     // now, in Vietnam: toISOString() would show the UTC time, 7 hours behind
     rescuedAt: toDateTimeLocalValue(),
     locationNote: "",
+    outcome: "HANDED_TO_ORG",
     confirmRescued: false,
   }), []);
 
@@ -144,10 +148,11 @@ export function CompleteRescueDialog({
           rescuedAt: toApiDateTime(values.rescuedAt),
           locationNote: values.locationNote,
           confirmRescued: values.confirmRescued,
+          outcome: values.outcome,
         },
       });
 
-      toast.success("Xác nhận cứu hộ thành công!");
+      toast.success("Đã gửi báo cáo. Người báo ca sẽ được hỏi để xác nhận.");
       onSuccess?.();
       onOpenChange(false);
     } catch (error) {
@@ -163,9 +168,9 @@ export function CompleteRescueDialog({
     <Dialog open={open} onOpenChange={(val) => !isPending && handleOpenChange(val)}>
       <DialogContent className="w-full p-0 sm:max-w-2xl bg-white">
         <DialogHeader className="px-6 pt-6">
-          <DialogTitle>Xác nhận cứu hộ thành công</DialogTitle>
+          <DialogTitle>Báo đã cứu xong</DialogTitle>
           <DialogDescription>
-            Cung cấp thông tin xác thực quá trình cứu hộ thành công cho ca này.
+            Ảnh và kết quả giúp người báo ca và tổ chức xác nhận. Ca chuyển sang “Đã cứu” sau khi được xác nhận.
           </DialogDescription>
         </DialogHeader>
 
@@ -246,6 +251,31 @@ export function CompleteRescueDialog({
                 </Field>
 
                 <Field>
+                  <FieldLabel htmlFor="rescue-outcome">Bé hiện thế nào? *</FieldLabel>
+                  <FieldContent>
+                    <Controller
+                      control={control}
+                      name="outcome"
+                      render={({ field }) => (
+                        <Select value={field.value} onValueChange={field.onChange} disabled={isPending}>
+                          <SelectTrigger id="rescue-outcome" className="w-full">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {(Object.keys(RESCUE_OUTCOME_LABEL) as RescueOutcome[]).map((value) => (
+                              <SelectItem key={value} value={value}>
+                                {RESCUE_OUTCOME_LABEL[value]}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                    <FieldError errors={[errors.outcome]} />
+                  </FieldContent>
+                </Field>
+
+                <Field>
                   <FieldLabel htmlFor="rescue-note">Ghi chú quá trình cứu hộ</FieldLabel>
                   <FieldContent>
                     <Textarea
@@ -289,7 +319,7 @@ export function CompleteRescueDialog({
                   />
                   <div className="grid gap-1.5 leading-none">
                     <FieldLabel htmlFor="confirm-rescued" className="cursor-pointer">
-                      Tôi xác nhận thú đã được cứu hộ thành công
+                      Tôi xác nhận thông tin trên là đúng
                     </FieldLabel>
                     <FieldError errors={[errors.confirmRescued]} />
                   </div>
@@ -314,7 +344,7 @@ export function CompleteRescueDialog({
                   Đang xử lý...
                 </>
               ) : (
-                "Xác nhận hoàn tất"
+                "Gửi báo cáo"
               )}
             </Button>
           </DialogFooter>

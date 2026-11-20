@@ -17,9 +17,6 @@ import {
 } from "@/types/rescue-case.type";
 import { ListParams, PaginatedResponse } from "@/types/api.type";
 
-// The backend reads repeated keys (status=A&status=B), not the bracket form axios writes by default.
-const repeatArrayKeys = { indexes: null };
-
 const rescueService = {
   // GET /api/v1/rescue-cases?status=&priority=&species=&province=&search=&lat=&lng=&distance=
   async searchRescueCases(
@@ -27,7 +24,7 @@ const rescueService = {
   ): Promise<PaginatedResponse<RescueCaseSummary>> {
     return await http.get<PaginatedResponse<RescueCaseSummary>>(
       apiEndpoints.rescueCases.root,
-      { params, paramsSerializer: repeatArrayKeys },
+      { params },
     );
   },
 
@@ -37,7 +34,7 @@ const rescueService = {
   ): Promise<PaginatedResponse<RescueCaseSummary>> {
     return await http.get<PaginatedResponse<RescueCaseSummary>>(
       apiEndpoints.users.myRescueCases,
-      { params, paramsSerializer: repeatArrayKeys },
+      { params },
     );
   },
 
@@ -114,9 +111,13 @@ const rescueService = {
     );
   },
 
-  // PATCH /api/v1/rescue-cases/{id}/status - Change rescue case status
-  async updateRescueCaseStatus(id: string, status: string): Promise<RescueCase> {
-    return await http.patch<RescueCase, string>(apiEndpoints.rescueCases.status(id), status);
+  // PATCH /api/v1/rescue-cases/{id}/status - Change rescue case status.
+  // Only admins move a case freely; others may only close it, with a reason.
+  async updateRescueCaseStatus(id: string, status: string, reason?: string): Promise<RescueCase> {
+    return await http.patch<RescueCase, { status: string; reason?: string }>(
+      apiEndpoints.rescueCases.status(id),
+      { status, reason },
+    );
   },
 
   // POST /api/v1/rescue-cases/{id}/complete - Complete rescue case
@@ -149,11 +150,31 @@ const rescueService = {
     );
   },
 
-  // POST /api/v1/rescue-cases/completions/{id}/approved - Approve rescue case completion
+  // POST /api/v1/rescue-cases/completions/{id}/approve - Approve rescue case completion
   async approveRescueCompletion(id: string): Promise<any> {
     return await http.post<any, void>(
       apiEndpoints.rescueCases.approveCompletion(id),
     );
+  },
+
+  // POST /api/v1/rescue-cases/completions/{id}/reject - only an admin settles a DISPUTED one
+  async rejectRescueCompletion(id: string, reason: string): Promise<void> {
+    await http.post(apiEndpoints.rescueCases.rejectCompletion(id), { reason });
+  },
+
+  // GET /api/v1/rescue-cases/completions/review-queue (ADMIN) - disputed or escalated reports
+  async getCompletionReviewQueue(
+    params: RescueCompletionQueryParams,
+  ): Promise<PaginatedResponse<RescueCompletion>> {
+    return await http.get<PaginatedResponse<RescueCompletion>>(
+      apiEndpoints.rescueCases.completionReviewQueue,
+      { params },
+    );
+  },
+
+  // GET /api/v1/rescue-cases/{id}/claims - who took the case, newest first
+  async getRescueCaseClaims(id: string): Promise<RescueClaim[]> {
+    return await http.get<RescueClaim[]>(apiEndpoints.rescueCases.claims(id));
   },
 };
 

@@ -113,3 +113,20 @@ export function useCreateComment(postId: string) {
     },
   });
 }
+
+/** Author or admin (requireSelfOrAdmin in the backend). */
+export function useDeleteComment(postId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (commentId: string) => commentService.deleteComment(commentId),
+
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: commentKeys.byPost(postId) });
+      patchPostEverywhere(queryClient, postId, (post) => ({
+        ...post,
+        commentCount: Math.max(0, post.commentCount - 1),
+      }));
+    },
+  });
+}

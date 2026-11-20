@@ -1,5 +1,7 @@
 "use client";
 
+
+import { adoptionStatusBadge, adoptionStatusLabel } from "@/lib/adoption-display";
 import * as React from "react";
 import Image from "next/image";
 import {
@@ -55,33 +57,8 @@ function formatDateVi(value?: string) {
   });
 }
 
-function adoptionStatusBadge(status: AdoptionSummary["status"]) {
-  const map: Record<string, { label: string; className?: string }> = {
-    PENDING: {
-      label: "Chờ xét duyệt",
-      className: "bg-amber-50 text-amber-700 hover:bg-amber-50",
-    },
-    APPROVED: {
-      label: "Đã duyệt",
-      className: "bg-emerald-50 text-emerald-700 hover:bg-emerald-50",
-    },
-    REJECTED: {
-      label: "Từ chối",
-      className: "bg-rose-50 text-rose-700 hover:bg-rose-50",
-    },
-    CANCELLED: {
-      label: "Đã hủy",
-      className: "bg-slate-100 text-slate-700 hover:bg-slate-100",
-    },
-  };
-
-  const item = map[status] ?? { label: status };
-
-  return item.className ? (
-    <Badge className={item.className}>{item.label}</Badge>
-  ) : (
-    <Badge variant="secondary">{item.label}</Badge>
-  );
+function statusBadge(status: AdoptionSummary["status"]) {
+  return <Badge className={adoptionStatusBadge(status)}>{adoptionStatusLabel(status)}</Badge>;
 }
 
 const columns: ColumnDef<AdoptionSummary>[] = [
@@ -145,7 +122,7 @@ const columns: ColumnDef<AdoptionSummary>[] = [
   {
     accessorKey: "status",
     header: "Trạng thái",
-    cell: ({ row }) => adoptionStatusBadge(row.original.status),
+    cell: ({ row }) => statusBadge(row.original.status),
   },
   {
     id: "actions",

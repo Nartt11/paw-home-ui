@@ -12,7 +12,9 @@ import type {
 } from "@/types/dashboard.type";
 import type { CreateAccountPayload } from "@/types/user.type";
 
-export type AdminOrganizationAccountPayload = ApiEntity;
+import type { OrganizationAccountValues } from "@/lib/schemas/organization";
+
+export type AdminOrganizationAccountPayload = OrganizationAccountValues;
 export type AdminOrganizationMemberPayload = ApiEntity;
 export type AdminUserPetPayload = ApiEntity;
 export type AdminAccountDto = ApiEntity;

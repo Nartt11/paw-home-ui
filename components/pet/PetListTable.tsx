@@ -208,7 +208,13 @@ export function PetListTable({ data, loading = false }: PetListTableProps) {
                   onClick={() =>
                     router.push(`/quan-ly-thu-cung/${row.original.petId}`)
                   }
-                  className="cursor-pointer hover:bg-muted/50"
+                  // The whole row opens the pet; Enter does the same from the keyboard.
+                  tabIndex={0}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") router.push(`/quan-ly-thu-cung/${row.original.petId}`);
+                  }}
+                  aria-label={`Mở hồ sơ ${row.original.name}`}
+                  className="cursor-pointer hover:bg-muted/50 focus-visible:bg-muted/50 focus-visible:outline-2 focus-visible:outline-primary"
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>

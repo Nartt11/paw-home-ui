@@ -10,7 +10,7 @@ import { PetListTable } from "@/components/pet/PetListTable";
 import { useListUrlState } from "@/hooks/use-list-url-state";
 import { useOrganizations } from "@/hooks/use-organization";
 import { useCreatePet, usePets, usePetsByOrganization } from "@/hooks/use-pet";
-import type { PetCreatePayload, PetSummary } from "@/types/pet.type";
+import type { PetCreatePayload, PetStatus, PetSummary } from "@/types/pet.type";
 import {
   AlertTriangle,
   CheckCircle2,
@@ -27,23 +27,21 @@ function getErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : "Có lỗi xảy ra";
 }
 
-function getKpis(pets: PetSummary[], totalItems: number) {
-  return pets.reduce(
-    (acc, pet) => {
-      if (pet.status === "AVAILABLE") acc.pending += 1;
-      if (pet.status === "ADOPTED") acc.adopted += 1;
-      if (pet.status === "FOSTERING") acc.fostered += 1;
-      if (pet.healthStatus !== "HEALTHY") acc.healthAlert += 1;
-      return acc;
-    },
-    {
-      total: totalItems,
-      pending: 0,
-      adopted: 0,
-      fostered: 0,
-      healthAlert: 0,
-    },
+/** Health has no filter on the API, so this one counts the rows on screen only. */
+function countHealthAlerts(pets: PetSummary[]) {
+  return pets.filter((pet) => pet.healthStatus && pet.healthStatus !== "HEALTHY").length;
+}
+
+/**
+ * How many pets have a status, across every page: one tiny request (pageSize 1) whose
+ * totalElements is the count. Statuses other than AVAILABLE need an admin or a member.
+ */
+function usePetCount(status: PetStatus, organizationId: string | undefined, enabled: boolean) {
+  const query = usePets(
+    { page: 0, pageSize: 1, status: [status], ...(organizationId ? { organizationId } : {}) },
+    { enabled },
   );
+  return query.data?.totalElements;
 }
 
 export default function PetManagementPage() {
@@ -51,7 +49,7 @@ export default function PetManagementPage() {
   const [createOpen, setCreateOpen] = React.useState(false);
   
   const { data: currentUser } = useCurrentUser();
-  const isOrganizationUser = currentUser?.roles.includes("MEMBERSHIP") && !!currentUser?.organizationRole;
+  const isOrganizationUser = currentUser?.roles.includes(SYSTEM_ROLES.MEMBER) && !!currentUser?.organizationRole;
 
   const canCreate = React.useMemo(() => {
     if (!isOrganizationUser) return true;
@@ -79,10 +77,15 @@ export default function PetManagementPage() {
 
   const data = listQuery.data;
   const pets = React.useMemo(() => data?.content ?? [], [data?.content]);
-  const kpis = React.useMemo(
-    () => getKpis(pets, data?.totalElements ?? 0),
-    [data?.totalElements, pets],
-  );
+  const countScope = isOrganizationUser ? currentUser?.organizationId : undefined;
+  const countsEnabled = !isOrganizationUser || !!currentUser?.organizationId;
+  const kpis = {
+    total: data?.totalElements,
+    pending: usePetCount("AVAILABLE", countScope, countsEnabled),
+    adopted: usePetCount("ADOPTED", countScope, countsEnabled),
+    fostered: usePetCount("FOSTERING", countScope, countsEnabled),
+    healthAlert: listQuery.isPending ? undefined : countHealthAlerts(pets),
+  };
 
   const filteredOrganizations = React.useMemo(() => {
     const orgs = organizationsQuery.data?.content ?? [];

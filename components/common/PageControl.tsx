@@ -34,13 +34,14 @@ export function PageControls({
   return (
     <div className="flex items-center justify-between px-4">
       <div className="hidden flex-1 text-sm text-muted-foreground lg:flex">
-        Tổng số: {" "}
-        {typeof totalItems === "number" ? `${totalItems} items` : null}
+        {typeof totalItems === "number"
+          ? `Tổng số: ${totalItems.toLocaleString("vi-VN")} mục`
+          : null}
       </div>
       <div className="flex w-full items-center gap-8 lg:w-fit">
         <div className="hidden items-center gap-2 lg:flex">
           <Label htmlFor="rows-per-page" className="text-sm font-medium">
-            Rows per page
+            Số dòng mỗi trang
           </Label>
           <Select
             value={`${resolvedPageSize}`}
@@ -64,7 +65,7 @@ export function PageControls({
           </Select>
         </div>
         <div className="flex w-fit items-center justify-center text-sm font-medium">
-          Page {displayPage} of {safeTotalPages}
+          Trang {displayPage}/{safeTotalPages}
         </div>
         <div className="ml-auto flex items-center gap-2 lg:ml-0">
           <Button
@@ -73,7 +74,7 @@ export function PageControls({
             onClick={() => onPageChange(0)}
             disabled={!canPreviousPage}
           >
-            <span className="sr-only">Go to first page</span>
+            <span className="sr-only">Trang đầu</span>
             <ChevronsLeftIcon />
           </Button>
           <Button
@@ -83,7 +84,7 @@ export function PageControls({
             onClick={() => onPageChange(safePageIndex - 1)}
             disabled={!canPreviousPage}
           >
-            <span className="sr-only">Go to previous page</span>
+            <span className="sr-only">Trang trước</span>
             <ChevronLeftIcon />
           </Button>
           <Button
@@ -93,7 +94,7 @@ export function PageControls({
             onClick={() => onPageChange(safePageIndex + 1)}
             disabled={!canNextPage}
           >
-            <span className="sr-only">Go to next page</span>
+            <span className="sr-only">Trang sau</span>
             <ChevronRightIcon />
           </Button>
           <Button
@@ -103,7 +104,7 @@ export function PageControls({
             onClick={() => onPageChange(safeTotalPages - 1)}
             disabled={!canNextPage}
           >
-            <span className="sr-only">Go to last page</span>
+            <span className="sr-only">Trang cuối</span>
             <ChevronsRightIcon />
           </Button>
         </div>

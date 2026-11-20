@@ -59,6 +59,22 @@ function readOnlyValue(value?: string) {
   return value?.trim() ? value : "Chưa cập nhật";
 }
 
+const SYSTEM_ROLE_LABEL: Record<string, string> = {
+  ADMIN: "Quản trị viên",
+  USER: "Người dùng",
+  MEMBER: "Thành viên tổ chức",
+  MEMBERSHIP: "Thành viên tổ chức",
+};
+
+const ORG_ROLE_LABEL: Record<string, string> = {
+  OWNER: "Chủ trung tâm",
+  STAFF: "Nhân viên",
+  VET: "Bác sĩ thú y",
+  MEMBER: "Thành viên",
+};
+
+const GENDER_LABEL: Record<string, string> = { MALE: "Nam", FEMALE: "Nữ", OTHER: "Khác" };
+
 export default function ProfilePage() {
   const queryClient = useQueryClient();
   const currentUserQuery = useCurrentUser();
@@ -115,8 +131,8 @@ export default function ProfilePage() {
 
   const rolesText =
     Array.isArray(currentUser.roles) && currentUser.roles.length > 0
-      ? currentUser.roles.join(", ")
-      : "Chưa có role";
+      ? currentUser.roles.map((role) => SYSTEM_ROLE_LABEL[role.toUpperCase()] ?? role).join(", ")
+      : "Chưa có vai trò";
 
   const avatarFallback = getInitials(
     currentUser.fullName || currentUser.username,
@@ -128,7 +144,7 @@ export default function ProfilePage() {
       <div>
         <h1 className="text-3xl font-bold text-foreground">Trang cá nhân</h1>
         <p className="font-medium text-muted-foreground">
-          Xem thông tin tài khoản hiện tại và cập nhật profile từ API user/me.
+          Thông tin tài khoản bạn đang dùng để quản lý hệ thống.
         </p>
       </div>
 
@@ -160,7 +176,9 @@ export default function ProfilePage() {
                   </Badge>
                   <Badge variant="secondary">
                     <UserRound className="mr-1 h-3.5 w-3.5" />
-                    {currentUser.organizationRole || "Không có vai trò tổ chức"}
+                    {currentUser.organizationRole
+                      ? ORG_ROLE_LABEL[currentUser.organizationRole] ?? currentUser.organizationRole
+                      : "Không thuộc tổ chức nào"}
                   </Badge>
                   <Badge
                     variant={currentUser.emailVerified ? "default" : "outline"}
@@ -179,15 +197,15 @@ export default function ProfilePage() {
             <div className="grid gap-4 md:grid-cols-2">
               <div className="rounded-xl border border-border p-4">
                 <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  User ID
+                  Tên đăng nhập
                 </div>
-                <div className="mt-2 break-all font-mono text-sm">
-                  {currentUser.userId}
+                <div className="mt-2 break-all text-sm">
+                  @{currentUser.username}
                 </div>
               </div>
               <div className="rounded-xl border border-border p-4">
                 <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  Roles
+                  Vai trò hệ thống
                 </div>
                 <div className="mt-2 text-sm">{rolesText}</div>
               </div>
@@ -209,23 +227,15 @@ export default function ProfilePage() {
                   Giới tính
                 </div>
                 <div className="mt-2 text-sm">
-                  {readOnlyValue(currentUser.gender)}
+                  {currentUser.gender ? GENDER_LABEL[currentUser.gender] ?? currentUser.gender : readOnlyValue(currentUser.gender)}
                 </div>
               </div>
               <div>
                 <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  To chuc
+                  Tổ chức
                 </div>
                 <div className="mt-2 text-sm">
                   {readOnlyValue(currentUser.organizationName)}
-                </div>
-              </div>
-              <div>
-                <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  Organization ID
-                </div>
-                <div className="mt-2 break-all font-mono text-sm">
-                  {readOnlyValue(currentUser.organizationId)}
                 </div>
               </div>
             </div>

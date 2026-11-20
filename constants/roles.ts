@@ -1,7 +1,8 @@
 export const SYSTEM_ROLES = {
   USER: "USER",
   ADMIN: "ADMIN",
-  MEMBERSHIP: "MEMBERSHIP",
+  // seeded role code; the Java enum SystemRole.MEMBERSHIP is not what the API returns
+  MEMBER: "MEMBER",
   STAFF: "STAFF",
   OWNER: "OWNER",
   VET: "VET",

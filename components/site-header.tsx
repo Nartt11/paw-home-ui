@@ -1,5 +1,6 @@
 "use client";
 
+import { NotificationBell } from "@/components/notification/NotificationBell";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -14,10 +15,15 @@ const SECTIONS: Array<{ href: string; label: string }> = [
   { href: APP_ROUTES.ORGANIZATION_MEMBER_MANAGEMENT, label: "Quản lý thành viên" },
   { href: APP_ROUTES.CENTER_MANAGEMENT, label: "Quản lý trung tâm" },
   { href: APP_ROUTES.USER_MANAGEMENT, label: "Quản lý người dùng" },
+  { href: APP_ROUTES.ROLE_MANAGEMENT, label: "Vai trò & quyền" },
   { href: APP_ROUTES.POST_MANAGEMENT, label: "Quản lý bài đăng" },
+  { href: APP_ROUTES.TAG_MANAGEMENT, label: "Quản lý thẻ" },
+  { href: APP_ROUTES.AI_SETTINGS, label: "Cấu hình AI" },
   { href: APP_ROUTES.BANNER_MANAGEMENT, label: "Quản lý banner" },
   { href: APP_ROUTES.RESCUE_CASE_MANAGEMENT, label: "Quản lý cứu trợ" },
+  { href: APP_ROUTES.RESCUE_QUEUE, label: "Hàng chờ cứu hộ" },
   { href: APP_ROUTES.ADOPTION_MANAGEMENT, label: "Quản lý nhận nuôi" },
+  { href: APP_ROUTES.FOLLOWUP_ALERTS, label: "Việc sau nhận nuôi" },
   { href: APP_ROUTES.PROFILE, label: "Trang cá nhân" },
 ];
 
@@ -60,6 +66,7 @@ export function SiteHeader() {
             </span>
           )}
         </nav>
+        <NotificationBell className="ml-auto" />
       </div>
     </header>
   );

@@ -1,10 +1,14 @@
 "use client";
 
+
+import { AdoptionDecisionDialog } from "@/components/adoption/AdoptionDecisionDialog";
+import { adoptionStatusBadge, adoptionStatusLabel } from "@/lib/adoption-display";
 import * as React from "react";
 import Image from "next/image";
 import { CalendarDays, Home, PawPrint, ShieldCheck, UserRound, Loader2 } from "lucide-react";
 
-import type { Adoption, AdoptionStatus } from "@/types/adoption.type";
+import type { Adoption, AdoptionApprovePayload, AdoptionRejectPayload, AdoptionStatus } from "@/types/adoption.type";
+import { AdoptionMatchSection } from "@/components/adoption/AdoptionMatchSection";
 import { toast } from "sonner";
 import {
   useApproveAdoption,
@@ -57,40 +61,7 @@ function formatDateTimeVi(value?: string) {
 }
 
 function statusToBadge(status?: string) {
-  const s = status ?? "PENDING";
-  const map: Record<
-    string,
-    { label: string; className?: string; variant?: "secondary" }
-  > = {
-    PENDING: {
-      label: "Chờ xét duyệt",
-      className: "bg-amber-50 text-amber-700 hover:bg-amber-50",
-    },
-    APPROVED: {
-      label: "Đã duyệt",
-      className: "bg-emerald-50 text-emerald-700 hover:bg-emerald-50",
-    },
-    REJECTED: {
-      label: "Từ chối",
-      className: "bg-rose-50 text-rose-700 hover:bg-rose-50",
-    },
-    CANCELLED: {
-      label: "Đã hủy",
-      className: "bg-slate-100 text-slate-700 hover:bg-slate-100",
-    },
-    COMPLETED: {
-      label: "Hoàn thành",
-      className: "bg-blue-50 text-blue-700 hover:bg-blue-50",
-    },
-  };
-
-  const item = map[s] ?? { label: s };
-
-  return item.className ? (
-    <Badge className={item.className}>{item.label}</Badge>
-  ) : (
-    <Badge variant="secondary">{item.label}</Badge>
-  );
+  return <Badge className={adoptionStatusBadge(status)}>{adoptionStatusLabel(status)}</Badge>;
 }
 
 export interface AdoptionViewDetailProps {
@@ -239,6 +210,8 @@ export function AdoptionViewDetail({
                 </section>
               </div>
 
+              <AdoptionMatchSection match={adoption.match} />
+
               {adoption.rejectReason ? (
                 <section className="space-y-3 rounded-3xl border border-rose-100 bg-rose-50/60 p-5">
                   <div className="text-sm font-semibold text-rose-800">
@@ -352,13 +325,13 @@ const STATUS_ACTIONS: Record<AdoptionStatus, ActionConfig[]> = {
   PENDING: [
     {
       label: "Từ chối",
-      loadingLabel: "Rejecting...",
+      loadingLabel: "Đang từ chối...",
       variant: "destructive",
       actionType: "REJECT",
     },
     {
       label: "Duyệt đơn",
-      loadingLabel: "Approving...",
+      loadingLabel: "Đang duyệt...",
       variant: "default",
       actionType: "APPROVE",
     },
@@ -366,19 +339,20 @@ const STATUS_ACTIONS: Record<AdoptionStatus, ActionConfig[]> = {
   APPROVED: [
     {
       label: "Hủy đơn",
-      loadingLabel: "Cancelling...",
+      loadingLabel: "Đang huỷ...",
       variant: "destructive",
       actionType: "CANCEL",
     },
     {
       label: "Hoàn thành",
-      loadingLabel: "Completing...",
+      loadingLabel: "Đang hoàn tất...",
       variant: "default",
       actionType: "COMPLETE",
     },
   ],
   REJECTED: [],
-  CANCELLED: [],
+  CANCELED: [],
+  COMPLETED: [],
 };
 
 const CONFIRM_DETAILS = {
@@ -494,7 +468,26 @@ function AdoptionActionSection({
     }
   };
 
-  const confirmInfo = confirmingAction ? CONFIRM_DETAILS[confirmingAction] : null;
+  // Approving needs a pick-up date and rejecting needs a reason, so both open the decision form.
+  const decisionMode =
+    confirmingAction === "APPROVE" ? "approve" : confirmingAction === "REJECT" ? "reject" : null;
+  const confirmInfo =
+    confirmingAction && !decisionMode ? CONFIRM_DETAILS[confirmingAction] : null;
+
+  const submitDecision = async (payload: AdoptionApprovePayload | AdoptionRejectPayload) => {
+    try {
+      if (decisionMode === "approve") {
+        await approveMutation.mutateAsync({ id: adoptionId, payload: payload as AdoptionApprovePayload });
+        toast.success("Đã duyệt đơn. Người nộp sẽ được báo ngày hẹn đón.");
+      } else {
+        await rejectMutation.mutateAsync({ id: adoptionId, payload: payload as AdoptionRejectPayload });
+        toast.success("Đã từ chối đơn. Người nộp sẽ thấy lý do.");
+      }
+      setConfirmingAction(null);
+    } catch (error) {
+      toast.error(getAuthErrorMessage(error, "Thực hiện thao tác thất bại."));
+    }
+  };
 
   return (
     <>
@@ -522,6 +515,16 @@ function AdoptionActionSection({
           );
         })}
       </section>
+
+      {decisionMode ? (
+        <AdoptionDecisionDialog
+          open
+          onOpenChange={(open) => !open && setConfirmingAction(null)}
+          mode={decisionMode}
+          submitting={isSubmitting}
+          onSubmit={submitDecision}
+        />
+      ) : null}
 
       {confirmInfo && (
         <ConfirmationDialog

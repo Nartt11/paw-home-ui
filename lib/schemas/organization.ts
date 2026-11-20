@@ -87,3 +87,36 @@ export function toOrganizationPayload(
 ): OrganizationCreatePayload {
   return { ...values };
 }
+
+// CreateOrganizationAccountRequestDto (POST /admin/organizations/{id}/accounts)
+export const ORGANIZATION_ACCOUNT_ROLES = ["OWNER", "STAFF", "MEMBER", "VET"] as const;
+
+export const ORGANIZATION_ROLE_LABEL: Record<(typeof ORGANIZATION_ACCOUNT_ROLES)[number], string> = {
+  OWNER: "Chủ trạm",
+  STAFF: "Nhân viên",
+  MEMBER: "Thành viên",
+  VET: "Bác sĩ thú y",
+};
+
+export const organizationAccountSchema = z.object({
+  username: z
+    .string()
+    .trim()
+    .min(3, "Tên đăng nhập phải có ít nhất 3 ký tự")
+    .max(50, "Tên đăng nhập không được vượt quá 50 ký tự"),
+  email: z.string().trim().email("Email không hợp lệ"),
+  password: z
+    .string()
+    .min(8, "Mật khẩu phải có ít nhất 8 ký tự")
+    .max(100, "Mật khẩu không được vượt quá 100 ký tự"),
+  organizationRole: z.enum(ORGANIZATION_ACCOUNT_ROLES),
+});
+
+export type OrganizationAccountValues = z.infer<typeof organizationAccountSchema>;
+
+export const organizationAccountDefaultValues: OrganizationAccountValues = {
+  username: "",
+  email: "",
+  password: "",
+  organizationRole: "STAFF",
+};

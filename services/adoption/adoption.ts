@@ -7,21 +7,23 @@ import {
   AdoptionCreatePayload,
   AdoptionApprovePayload,
   AdoptionRejectPayload,
+  ReclaimLog,
 } from "@/types/adoption.type";
 import { PaginatedResponse } from "@/types/api.type";
 
 const adoptionService = {
-  // GET /api/v1/adoptions - List all adoption applications
+  // GET /api/v1/adoptions is for admins only. With an organizationId the list comes from
+  // GET /api/v1/adoptions/organization/{orgId}, which owners and staff may read.
   async getAllAdoptions(
     params: AdoptionListParams,
   ): Promise<PaginatedResponse<AdoptionSummary>> {
-    const dto = await http.get<PaginatedResponse<AdoptionSummary>>(
-      apiEndpoints.adoptions.root,
-      {
-        params,
-      },
-    );
-    return dto;
+    const { organizationId, ...rest } = params;
+    const url = organizationId ? apiEndpoints.adoptions.byOrganization(organizationId) : apiEndpoints.adoptions.root;
+    return await http.get<PaginatedResponse<AdoptionSummary>>(url, {
+      params: rest,
+      // The backend reads status=A&status=B, not status[]=A.
+      paramsSerializer: { indexes: null },
+    });
   },
 
   // GET /api/v1/adoptions/{id} - Get adoption application by ID
@@ -83,6 +85,18 @@ const adoptionService = {
   ): Promise<PaginatedResponse<AdoptionSummary>> {
     return await http.get<PaginatedResponse<AdoptionSummary>>(
       apiEndpoints.adoptions.byUser(userId),
+      { params },
+    );
+  },
+
+  // GET /api/v1/adoptions/reclaims - all for an admin, one organization for its members
+  async getReclaimLogs(params: {
+    organizationId?: string;
+    page?: number;
+    pageSize?: number;
+  }): Promise<PaginatedResponse<ReclaimLog>> {
+    return await http.get<PaginatedResponse<ReclaimLog>>(
+      apiEndpoints.adoptions.reclaims,
       { params },
     );
   },

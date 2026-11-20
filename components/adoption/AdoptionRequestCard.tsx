@@ -1,5 +1,7 @@
 "use client";
 
+
+import { adoptionStatusBadge, adoptionStatusLabel } from "@/lib/adoption-display";
 import * as React from "react";
 import {
   CalendarDays,
@@ -53,24 +55,7 @@ function formatDateVi(value?: string) {
 
 function statusMeta(status?: string) {
   const s = status ?? "PENDING";
-  const labelMap: Record<string, string> = {
-    PENDING: "Chờ xét duyệt",
-    APPROVED: "Đã duyệt",
-    REJECTED: "Từ chối",
-    CANCELLED: "Đã huỷ",
-  };
-  const classMap: Record<string, string> = {
-    PENDING: "bg-amber-50 text-amber-700 border-amber-200",
-    APPROVED: "bg-emerald-50 text-emerald-700 border-emerald-200",
-    REJECTED: "bg-rose-50 text-rose-700 border-rose-200",
-    CANCELLED: "bg-muted text-muted-foreground border-border",
-  };
-
-  return {
-    label: labelMap[s] ?? s,
-    className: classMap[s] ?? "bg-muted text-muted-foreground border-border",
-    key: s,
-  };
+  return { label: adoptionStatusLabel(s), className: adoptionStatusBadge(s), key: s };
 }
 
 export default function AdoptionRequestCard({
@@ -113,16 +98,19 @@ export default function AdoptionRequestCard({
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <div className="truncate text-base font-semibold text-foreground">
-                {applicantName}{" "}
-                <span className="font-normal">đăng ký nhận</span>{" "}
-                <span className="font-semibold">{petName}</span>
+              <div className="truncate text-base font-semibold text-foreground" title={petName}>
+                {petName}
+              </div>
+              <div className="truncate text-sm text-muted-foreground">
+                Người nộp: <span className="font-medium text-foreground">{applicantName}</span>
               </div>
 
               <div className="mt-2 flex flex-wrap items-center gap-2">
-                <Badge variant="secondary" className="rounded-full">
-                  {applicationId}
-                </Badge>
+                {adoption.adoptionCode ? (
+                  <Badge variant="secondary" className="rounded-full tabular-nums">
+                    {adoption.adoptionCode}
+                  </Badge>
+                ) : null}
                 <span
                   className={cn(
                     "inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium",

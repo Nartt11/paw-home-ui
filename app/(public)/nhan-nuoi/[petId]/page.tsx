@@ -20,7 +20,7 @@ import {
   Heart,
   FileText,
 } from "lucide-react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 
 import { APP_ROUTES } from "@/constants/routes";
@@ -28,9 +28,11 @@ import { useCurrentUser } from "@/hooks/use-current-user";
 import adoptionService from "@/services/adoption/adoption";
 import petService, { petDetailsService } from "@/services/pet/pet";
 import {
+  HOUSING_OPTIONS,
   adoptionRequestSchema,
   type AdoptionRequestSchema,
 } from "@/lib/schemas/adoption-request";
+import { apiErrorMessage } from "@/lib/api-error";
 import { getAuthErrorMessage } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -117,10 +119,12 @@ export default function AdoptionPetDetailPage() {
   const form = useForm<AdoptionRequestSchema>({
     resolver: zodResolver(adoptionRequestSchema),
     defaultValues: {
+      housingCondition: undefined,
       experience: "",
       liveCondition: "",
     },
   });
+  const selectedHousing = useWatch({ control: form.control, name: "housingCondition" });
 
   const createAdoptionMutation = useMutation({
     mutationFn: adoptionService.createAdoption,
@@ -168,6 +172,7 @@ export default function AdoptionPetDetailPage() {
       await createAdoptionMutation.mutateAsync({
         petId,
         organizationId,
+        housingCondition: values.housingCondition,
         experience: values.experience.trim(),
         liveCondition: values.liveCondition.trim(),
       });
@@ -182,7 +187,7 @@ export default function AdoptionPetDetailPage() {
         type: "server",
         message: getAuthErrorMessage(error, "Gửi đơn nhận nuôi thất bại."),
       });
-      toast.error("Gửi đơn nhận nuôi thất bại. Vui lòng thử lại.");
+      toast.error(apiErrorMessage(error, "Gửi đơn nhận nuôi thất bại. Vui lòng thử lại."));
     }
   });
 
@@ -704,6 +709,34 @@ export default function AdoptionPetDetailPage() {
                     {form.formState.errors.root.message}
                   </FieldError>
                 ) : null}
+
+                <Field>
+                  <FieldLabel className="text-slate-700 font-semibold">Bạn đang ở</FieldLabel>
+                  <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Bạn đang ở">
+                    {HOUSING_OPTIONS.map((option) => {
+                      const checked = selectedHousing === option.value;
+                      return (
+                        <label
+                          key={option.value}
+                          className={`cursor-pointer rounded-full border px-4 py-2 text-sm transition ${
+                            checked
+                              ? "border-orange-500 bg-orange-500 text-white"
+                              : "border-slate-200 bg-slate-50 text-slate-700 hover:bg-orange-50"
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            className="sr-only"
+                            value={option.value}
+                            {...form.register("housingCondition")}
+                          />
+                          {option.label}
+                        </label>
+                      );
+                    })}
+                  </div>
+                  <FieldError errors={[form.formState.errors.housingCondition]} />
+                </Field>
 
                 <Field>
                   <FieldLabel htmlFor="experience" className="text-slate-700 font-semibold">

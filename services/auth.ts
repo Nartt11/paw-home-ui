@@ -64,9 +64,8 @@ export const authService = {
   },
 
   // POST /api/v1/auth/refresh - Refresh access token (silent refresh)
-  async refresh(): Promise<Auth> {
-    const res = await http.post<Auth>(apiEndpoints.auth.refresh, {});
-    return res;
+  async refresh(refreshToken: string): Promise<Auth> {
+    return http.post<Auth>(apiEndpoints.auth.refresh, { refreshToken });
   },
 
   // POST /api/v1/auth/register - Register a new account

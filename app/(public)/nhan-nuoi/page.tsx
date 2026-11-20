@@ -42,6 +42,7 @@ import {
   type AdoptionSearchSchema,
 } from "@/lib/schemas/adoption-search";
 import petService from "@/services/pet/pet";
+import { useProvinces } from "@/hooks/use-location";
 
 function getPaginationItems(current: number, total: number, maxButtons = 5) {
   if (total <= maxButtons) {
@@ -71,34 +72,44 @@ export default function AdoptionPage() {
     gender === "MALE" || gender === "FEMALE" || gender === "UNKNOWN"
       ? gender
       : "ALL";
+  // Province code; people adopt close to home, so this is the first filter that matters.
+  const province = getOptionalSearchParam(searchParams.get("province")) ?? "ALL";
+  const provincesQuery = useProvinces();
 
   const form = useForm<AdoptionSearchSchema>({
     resolver: zodResolver(adoptionSearchSchema),
     defaultValues: {
       searchName,
       gender: normalizedGender,
+      province,
     },
   });
   const selectedGender = useWatch({
     control: form.control,
     name: "gender",
   });
+  const selectedProvince = useWatch({
+    control: form.control,
+    name: "province",
+  });
 
   React.useEffect(() => {
     form.reset({
       searchName,
       gender: normalizedGender,
+      province,
     });
-  }, [form, normalizedGender, searchName]);
+  }, [form, normalizedGender, searchName, province]);
 
   const availablePetsQuery = useQuery({
-    queryKey: ["available-pets", { page, size, searchName, gender }],
+    queryKey: ["available-pets", { page, size, searchName, gender, province }],
     queryFn: () =>
       petService.getAvailablePets({
         page: Math.max(page - 1, 0),
         pageSize: size,
         search: searchName || undefined,
         gender: normalizedGender === "ALL" ? undefined : normalizedGender,
+        province: province === "ALL" ? undefined : province,
       }),
     placeholderData: (previousData) => previousData,
   });
@@ -166,6 +177,7 @@ export default function AdoptionPage() {
       page: 1,
       q: values.searchName.trim(),
       gender: values.gender === "ALL" ? undefined : values.gender,
+      province: values.province === "ALL" ? undefined : values.province,
     });
   });
 
@@ -173,11 +185,13 @@ export default function AdoptionPage() {
     form.reset({
       searchName: "",
       gender: "ALL",
+      province: "ALL",
     });
     setParams({
       page: 1,
       q: undefined,
       gender: undefined,
+      province: undefined,
     });
   };
 
@@ -367,7 +381,7 @@ export default function AdoptionPage() {
           </div>
 
           <form onSubmit={onSubmit} className="mt-8">
-            <FieldGroup className="gap-4 md:grid md:grid-cols-[1.8fr_0.9fr_auto_auto] md:items-end">
+            <FieldGroup className="gap-4 md:grid md:grid-cols-[1.6fr_1fr_0.9fr_auto_auto] md:items-end">
               <Field>
                 <FieldLabel htmlFor="adoption-search">Tên thú cưng</FieldLabel>
                 <div className="relative">
@@ -380,6 +394,26 @@ export default function AdoptionPage() {
                   />
                 </div>
                 <FieldError errors={[form.formState.errors.searchName]} />
+              </Field>
+
+              <Field>
+                <FieldLabel>Tỉnh, thành</FieldLabel>
+                <Select
+                  value={selectedProvince}
+                  onValueChange={(value) => form.setValue("province", value)}
+                >
+                  <SelectTrigger className="h-11 w-full rounded-xl" aria-label="Lọc theo tỉnh, thành">
+                    <SelectValue placeholder="Mọi tỉnh, thành" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-72">
+                    <SelectItem value="ALL">Mọi tỉnh, thành</SelectItem>
+                    {(provincesQuery.data?.content ?? []).map((item) => (
+                      <SelectItem key={item.code} value={String(item.code)}>
+                        {item.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </Field>
 
               <Field>
