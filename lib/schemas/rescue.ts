@@ -22,6 +22,7 @@ export const completeRescueSchema = z.object({
   rescueNote: z.string().trim().optional(),
   rescuedAt: z.string().min(1, "Vui lòng chọn thời gian cứu hộ thành công."),
   locationNote: z.string().trim().optional(),
+  outcome: z.enum(["HANDED_TO_ORG", "TEMP_HOLDING", "KEPT_BY_RESCUER", "RELEASED", "DECEASED"]),
   confirmRescued: z.boolean().refine((val) => val === true, {
     message: "Bạn phải xác nhận thú đã được cứu hộ thành công.",
   }),

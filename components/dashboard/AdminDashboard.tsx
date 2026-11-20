@@ -38,6 +38,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { SYSTEM_ROLES } from "@/constants/roles";
+import { APP_ROUTES } from "@/constants/routes";
 import {
   useDashboardAdoptionTrend,
   useDashboardOverview,
@@ -115,7 +116,9 @@ function KpiCard({
         {loading ? (
           <Skeleton className="h-8 w-16" />
         ) : (
-          <CardTitle className="text-2xl font-semibold tabular-nums">
+          // The small card shrinks its title through a group variant, so the
+          // number has to override that same variant to stay the largest text.
+          <CardTitle className="text-3xl leading-tight font-semibold tabular-nums group-data-[size=sm]/card:text-3xl">
             {item?.value.toLocaleString("vi-VN") ?? "—"}
           </CardTitle>
         )}
@@ -132,6 +135,13 @@ function KpiCard({
     </Card>
   );
 }
+
+const TASK_STATUS_LABEL: Record<string, string> = {
+  PENDING: "Chờ duyệt",
+  APPROVED: "Đã duyệt",
+  REJECTED: "Đã từ chối",
+  IN_PROGRESS: "Đang xử lý",
+};
 
 function AdoptionTrendChart({ items }: { items: AdoptionTrendItem[] }) {
   return (
@@ -247,7 +257,7 @@ export function AdminDashboard() {
 
   if (isUserPending) {
     return (
-      <div className="grid gap-4 p-4 lg:p-6">
+      <div className="grid gap-4">
         <Skeleton className="h-32 w-full" />
         <Skeleton className="h-72 w-full" />
       </div>
@@ -255,29 +265,74 @@ export function AdminDashboard() {
   }
 
   if (!isAdmin) {
+    // The backend has no per-organization statistics yet, so give the team
+    // a starting point instead of an empty page.
+    const shortcuts = [
+      {
+        href: APP_ROUTES.ADOPTION_MANAGEMENT,
+        title: "Duyệt đơn nhận nuôi",
+        description: "Xem đơn mới, duyệt hoặc từ chối.",
+      },
+      {
+        href: APP_ROUTES.RESCUE_CASE_MANAGEMENT,
+        title: "Ca cứu hộ",
+        description: "Nhận ca gần trung tâm và gửi báo cáo hoàn tất.",
+      },
+      {
+        href: APP_ROUTES.PET_MANAGEMENT,
+        title: "Thú cưng của trung tâm",
+        description: "Thêm hồ sơ, cập nhật sức khỏe và trạng thái.",
+      },
+      {
+        href: APP_ROUTES.ORGANIZATION_MEMBER_MANAGEMENT,
+        title: "Thành viên",
+        description: "Mời nhân viên và phân vai trò.",
+      },
+    ];
+
     return (
-      <div className="p-4 lg:p-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Dashboard</CardTitle>
-            <CardDescription>
-              Thống kê toàn hệ thống chỉ dành cho quản trị viên. Hãy dùng các mục
-              quản lý ở thanh bên để làm việc với dữ liệu của trung tâm.
-            </CardDescription>
-          </CardHeader>
-        </Card>
+      <div className="grid gap-6">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">
+            {currentUser?.organizationName ?? "Trung tâm của bạn"}
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Bắt đầu từ một trong các việc dưới đây.
+          </p>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          {shortcuts.map((item) => (
+            <Link key={item.href} href={item.href} className="block">
+              <Card className="h-full transition hover:border-primary">
+                <CardHeader>
+                  <CardTitle>{item.title}</CardTitle>
+                  <CardDescription>{item.description}</CardDescription>
+                </CardHeader>
+              </Card>
+            </Link>
+          ))}
+        </div>
       </div>
     );
   }
 
   const trendItems = trendQuery.data?.items ?? [];
+  // The API returns one row per month even when every count is zero.
+  const trendHasData = trendItems.some(
+    (item) => item.pending + item.approved + item.rejected + item.completed > 0,
+  );
   const pendingTasks = pendingTasksQuery.data?.items ?? [];
   const topOrganizations = topOrganizationsQuery.data?.items ?? [];
 
   return (
-    <div className="flex flex-col gap-4 p-4 lg:gap-6 lg:p-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-xl font-semibold">Dashboard</h1>
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Tổng quan</h1>
+          <p className="font-medium text-muted-foreground">
+            Số liệu cứu hộ, nhận nuôi và việc cần xử lý trong tháng.
+          </p>
+        </div>
         <div className="flex items-center gap-2">
           <Select
             value={String(month)}
@@ -345,7 +400,7 @@ export function AdminDashboard() {
             <SectionMessage>
               Không thể tải biểu đồ: {trendQuery.error.message}
             </SectionMessage>
-          ) : trendItems.length === 0 ? (
+          ) : !trendHasData ? (
             <SectionMessage>Chưa có đơn nhận nuôi trong năm này.</SectionMessage>
           ) : (
             <AdoptionTrendChart items={trendItems} />
@@ -422,7 +477,7 @@ export function AdminDashboard() {
                       {task.title}
                     </Link>
                     <Badge variant="outline" className="shrink-0">
-                      {task.status}
+                      {TASK_STATUS_LABEL[task.status] ?? task.status}
                     </Badge>
                   </li>
                 ))}

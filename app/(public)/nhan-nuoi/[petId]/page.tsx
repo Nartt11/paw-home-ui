@@ -20,7 +20,7 @@ import {
   Heart,
   FileText,
 } from "lucide-react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 
 import { APP_ROUTES } from "@/constants/routes";
@@ -28,9 +28,11 @@ import { useCurrentUser } from "@/hooks/use-current-user";
 import adoptionService from "@/services/adoption/adoption";
 import petService, { petDetailsService } from "@/services/pet/pet";
 import {
+  HOUSING_OPTIONS,
   adoptionRequestSchema,
   type AdoptionRequestSchema,
 } from "@/lib/schemas/adoption-request";
+import { apiErrorMessage } from "@/lib/api-error";
 import { getAuthErrorMessage } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -53,79 +55,42 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import {
+  PET_STATUS_BADGE_SOLID,
+  breedLabel,
+  formatPetAge,
+  isAdoptable as isAdoptableStatus,
+  petGenderLabel,
+  petHealthLabel,
+  petStatusLabel,
+  speciesLabel,
+} from "@/lib/pet-display";
+import type { PetStatus } from "@/types/pet.type";
+import { parseApiDate, VN_TIME_ZONE } from "@/lib/datetime";
 
 const IMAGE_FALLBACK =
   "https://images.unsplash.com/photo-1517849845537-4d257902454a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&w=1600";
 
 function formatDateVi(value?: string) {
   if (!value) return "—";
-  const date = new Date(value);
+  const date = parseApiDate(value);
   if (Number.isNaN(date.getTime())) return "—";
   return date.toLocaleDateString("vi-VN", {
+    timeZone: VN_TIME_ZONE,
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
   });
 }
 
-function getGenderLabel(gender?: string) {
-  switch (gender) {
-    case "MALE":
-      return "Đực";
-    case "FEMALE":
-      return "Cái";
-    default:
-      return "Chưa rõ";
-  }
-}
-
-function getHealthLabel(status?: string) {
-  switch (status) {
-    case "HEALTHY":
-      return "Khỏe mạnh";
-    case "UNDER_TREATMENT":
-      return "Đang điều trị";
-    case "RECOVERING":
-      return "Đang hồi phục";
-    case "SPECIAL_NEEDS":
-      return "Cần chăm sóc đặc biệt";
-    default:
-      return status || "Đang cập nhật";
-  }
-}
-
-function getPetStatusLabel(status?: string) {
-  switch (status) {
-    case "AVAILABLE":
-      return "Sẵn sàng nhận nuôi";
-    case "LOST":
-      return "Đang thất lạc";
-    case "ADOPTED":
-      return "Đã được nhận nuôi";
-    case "FOSTERING":
-      return "Đang được nuôi tạm";
-    case "DECEASED":
-      return "Đã mất";
-    default:
-      return "Đang cập nhật";
-  }
-}
+const getGenderLabel = petGenderLabel;
+const getHealthLabel = petHealthLabel;
+const getPetStatusLabel = petStatusLabel;
 
 function getPetStatusBadgeClass(status?: string) {
-  switch (status) {
-    case "AVAILABLE":
-      return "bg-emerald-500 text-white hover:bg-emerald-600 border-emerald-600";
-    case "LOST":
-      return "bg-amber-500 text-white hover:bg-amber-600 border-amber-600";
-    case "ADOPTED":
-      return "bg-sky-500 text-white hover:bg-sky-600 border-sky-600";
-    case "FOSTERING":
-      return "bg-indigo-500 text-white hover:bg-indigo-600 border-indigo-600";
-    case "DECEASED":
-      return "bg-slate-500 text-white hover:bg-slate-600 border-slate-600";
-    default:
-      return "bg-slate-500 text-white hover:bg-slate-600 border-slate-600";
-  }
+  return (
+    PET_STATUS_BADGE_SOLID[status as PetStatus] ?? "bg-slate-700 text-white"
+  );
 }
 
 export default function AdoptionPetDetailPage() {
@@ -154,10 +119,12 @@ export default function AdoptionPetDetailPage() {
   const form = useForm<AdoptionRequestSchema>({
     resolver: zodResolver(adoptionRequestSchema),
     defaultValues: {
+      housingCondition: undefined,
       experience: "",
       liveCondition: "",
     },
   });
+  const selectedHousing = useWatch({ control: form.control, name: "housingCondition" });
 
   const createAdoptionMutation = useMutation({
     mutationFn: adoptionService.createAdoption,
@@ -205,6 +172,7 @@ export default function AdoptionPetDetailPage() {
       await createAdoptionMutation.mutateAsync({
         petId,
         organizationId,
+        housingCondition: values.housingCondition,
         experience: values.experience.trim(),
         liveCondition: values.liveCondition.trim(),
       });
@@ -219,7 +187,7 @@ export default function AdoptionPetDetailPage() {
         type: "server",
         message: getAuthErrorMessage(error, "Gửi đơn nhận nuôi thất bại."),
       });
-      toast.error("Gửi đơn nhận nuôi thất bại. Vui lòng thử lại.");
+      toast.error(apiErrorMessage(error, "Gửi đơn nhận nuôi thất bại. Vui lòng thử lại."));
     }
   });
 
@@ -254,7 +222,7 @@ export default function AdoptionPetDetailPage() {
   }
 
   const imageUrls = pet.imageUrls && pet.imageUrls.length > 0 ? pet.imageUrls : [IMAGE_FALLBACK];
-  const isAdoptable = pet.status === "AVAILABLE";
+  const isAdoptable = isAdoptableStatus(pet.status);
 
   return (
     <div className="bg-[linear-gradient(180deg,#fffaf5_0%,#ffffff_22%,#f8fafc_100%)]">
@@ -305,10 +273,10 @@ export default function AdoptionPetDetailPage() {
                 <div className="absolute bottom-6 left-6 right-6 z-10">
                   <div className="flex flex-wrap items-center gap-2">
                     <Badge className="rounded-full bg-white/20 text-white backdrop-blur-md hover:bg-white/30 border border-white/10 font-medium px-2.5 py-0.5">
-                      {pet.species}
+                      {speciesLabel(pet)}
                     </Badge>
                     <Badge className="rounded-full bg-white/20 text-white backdrop-blur-md hover:bg-white/30 border border-white/10 font-medium px-2.5 py-0.5">
-                      {pet.breed || "Đang cập nhật"}
+                      {breedLabel(pet)}
                     </Badge>
                     <Badge className="rounded-full bg-white/20 text-white backdrop-blur-md hover:bg-white/30 border border-white/10 font-medium px-2.5 py-0.5">
                       {getGenderLabel(pet.gender)}
@@ -353,7 +321,7 @@ export default function AdoptionPetDetailPage() {
               <InfoCard
                 icon={<PawPrint className="h-5 w-5 text-orange-500" />}
                 label="Tuổi"
-                value={pet.ageDisplay || `${pet.age} tháng`}
+                value={formatPetAge(pet.age)}
               />
               <InfoCard
                 icon={<ShieldPlus className="h-5 w-5 text-emerald-500" />}
@@ -382,11 +350,11 @@ export default function AdoptionPetDetailPage() {
                   />
                   <DetailRow
                     label="Loài"
-                    value={pet.species}
+                    value={speciesLabel(pet)}
                   />
                   <DetailRow
                     label="Giống"
-                    value={pet.breed || "Đang cập nhật"}
+                    value={breedLabel(pet)}
                   />
                   <DetailRow
                     label="Giới tính"
@@ -741,6 +709,34 @@ export default function AdoptionPetDetailPage() {
                     {form.formState.errors.root.message}
                   </FieldError>
                 ) : null}
+
+                <Field>
+                  <FieldLabel className="text-slate-700 font-semibold">Bạn đang ở</FieldLabel>
+                  <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Bạn đang ở">
+                    {HOUSING_OPTIONS.map((option) => {
+                      const checked = selectedHousing === option.value;
+                      return (
+                        <label
+                          key={option.value}
+                          className={`cursor-pointer rounded-full border px-4 py-2 text-sm transition ${
+                            checked
+                              ? "border-orange-500 bg-orange-500 text-white"
+                              : "border-slate-200 bg-slate-50 text-slate-700 hover:bg-orange-50"
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            className="sr-only"
+                            value={option.value}
+                            {...form.register("housingCondition")}
+                          />
+                          {option.label}
+                        </label>
+                      );
+                    })}
+                  </div>
+                  <FieldError errors={[form.formState.errors.housingCondition]} />
+                </Field>
 
                 <Field>
                   <FieldLabel htmlFor="experience" className="text-slate-700 font-semibold">

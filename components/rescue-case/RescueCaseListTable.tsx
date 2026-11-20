@@ -23,6 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { parseApiDate, VN_TIME_ZONE } from "@/lib/datetime";
 
 export interface RescueCaseListTableProps {
   data: RescueCaseSummary[];
@@ -37,9 +38,10 @@ export interface RescueCaseListTableProps {
 
 function formatDateTimeVi(value?: string) {
   if (!value) return "—";
-  const d = new Date(value);
+  const d = parseApiDate(value);
   if (Number.isNaN(d.getTime())) return "—";
   return d.toLocaleString("vi-VN", {
+    timeZone: VN_TIME_ZONE,
     hour12: false,
     day: "2-digit",
     month: "2-digit",

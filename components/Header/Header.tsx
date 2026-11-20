@@ -3,10 +3,11 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Menu, User, Settings, LogOut } from "lucide-react";
+import { Menu, User, LayoutDashboard, LogOut, HandHeart, PawPrint } from "lucide-react";
+import { NotificationBell } from "@/components/notification/NotificationBell";
 
 import { APP_ROUTES } from "@/constants/routes";
-import { useLogout } from "@/hooks/use-auth";
+import { getPostAuthRedirectPath, useLogout } from "@/hooks/use-auth";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { cn } from "@/lib/utils";
 
@@ -71,6 +72,14 @@ export default function Header() {
   const [scrolled, setScrolled] = useState(false);
 
   const isLoggedIn = Boolean(currentUser);
+  const canManage =
+    !!currentUser &&
+    getPostAuthRedirectPath(currentUser) === APP_ROUTES.DASHBOARD;
+  const manageLabel = currentUser?.roles?.some(
+    (role) => role.toUpperCase() === "ADMIN",
+  )
+    ? "Trang quản trị"
+    : "Quản lý trung tâm";
 
   useEffect(() => {
     const handleScroll = () => {
@@ -153,6 +162,7 @@ export default function Header() {
         <div className="hidden lg:flex items-center gap-3">
           {isLoggedIn && currentUser ? (
             <>
+              <NotificationBell />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
@@ -195,15 +205,28 @@ export default function Header() {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    {/* TODO: Update proper settings route if available in future */}
-                    <Link
-                      href={`${APP_ROUTES.USER_SETTING}`}
-                      className="flex w-full items-center gap-2 cursor-pointer"
-                    >
-                      <Settings className="h-4 w-4" />
-                      <span>Cài đặt</span>
+                    <Link href={APP_ROUTES.MY_CASES} className="flex w-full items-center gap-2 cursor-pointer">
+                      <HandHeart className="h-4 w-4" />
+                      <span>Ca của tôi</span>
                     </Link>
                   </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href={APP_ROUTES.MY_PETS} className="flex w-full items-center gap-2 cursor-pointer">
+                      <PawPrint className="h-4 w-4" />
+                      <span>Thú của tôi</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  {canManage ? (
+                    <DropdownMenuItem asChild>
+                      <Link
+                        href={APP_ROUTES.DASHBOARD}
+                        className="flex w-full items-center gap-2 cursor-pointer"
+                      >
+                        <LayoutDashboard className="h-4 w-4" />
+                        <span>{manageLabel}</span>
+                      </Link>
+                    </DropdownMenuItem>
+                  ) : null}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={() => void handleLogout()}
@@ -225,13 +248,14 @@ export default function Header() {
               asChild
               className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90 font-medium px-5 cursor-pointer"
             >
-              <Link href={APP_ROUTES.LOGIN}>Tham gia</Link>
+              <Link href={APP_ROUTES.LOGIN}>Đăng nhập</Link>
             </Button>
           )}
         </div>
 
         {/* Mobile / Tablet Controls (Hamburger Menu) */}
         <div className="flex lg:hidden items-center gap-3">
+          {isLoggedIn && currentUser ? <NotificationBell /> : null}
           <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
             <SheetTrigger asChild>
               <Button
@@ -311,18 +335,33 @@ export default function Header() {
                       </Link>
                     </Button>
 
-                    <Button
-                      variant="outline"
-                      asChild
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="w-full justify-start rounded-xl cursor-pointer"
-                    >
-                      {/* TODO: Update proper settings route if available in future */}
-                      <Link href={APP_ROUTES.USER_SETTING} className="flex gap-2">
-                        <Settings className="h-4 w-4" />
-                        <span>Cài đặt</span>
+                    <Button variant="outline" asChild onClick={() => setMobileMenuOpen(false)} className="w-full justify-start rounded-xl cursor-pointer">
+                      <Link href={APP_ROUTES.MY_CASES} className="flex gap-2">
+                        <HandHeart className="h-4 w-4" />
+                        <span>Ca của tôi</span>
                       </Link>
                     </Button>
+
+                    <Button variant="outline" asChild onClick={() => setMobileMenuOpen(false)} className="w-full justify-start rounded-xl cursor-pointer">
+                      <Link href={APP_ROUTES.MY_PETS} className="flex gap-2">
+                        <PawPrint className="h-4 w-4" />
+                        <span>Thú của tôi</span>
+                      </Link>
+                    </Button>
+
+                    {canManage ? (
+                      <Button
+                        variant="outline"
+                        asChild
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="w-full justify-start rounded-xl cursor-pointer"
+                      >
+                        <Link href={APP_ROUTES.DASHBOARD} className="flex gap-2">
+                          <LayoutDashboard className="h-4 w-4" />
+                          <span>{manageLabel}</span>
+                        </Link>
+                      </Button>
+                    ) : null}
 
                     <Button
                       variant="destructive"
@@ -344,7 +383,7 @@ export default function Header() {
                     onClick={() => setMobileMenuOpen(false)}
                     className="w-full rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 font-semibold cursor-pointer"
                   >
-                    <Link href={APP_ROUTES.LOGIN}>Tham gia ngay</Link>
+                    <Link href={APP_ROUTES.LOGIN}>Đăng nhập</Link>
                   </Button>
                 )}
               </div>

@@ -124,7 +124,7 @@ export default function PostManagementPage() {
     <div className="space-y-6">
       <TitlePerPage
         title="Quản lý bài đăng"
-        description="Danh sách bài đăng được đồng bộ từ các API post"
+        description="Bài đăng trên bảng tin cộng đồng: xem, sửa hoặc gỡ bài không phù hợp."
         buttonText="Thêm bài đăng"
         handleOpenModal={() => setCreateOpen(true)}
       />

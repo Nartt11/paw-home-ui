@@ -18,6 +18,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
+import { parseApiDate, VN_TIME_ZONE } from "@/lib/datetime";
 import { CommentSection } from "@/components/community/CommentSection";
 import { PostAnalysisPanel } from "@/components/post/PostAnalysisPanel";
 
@@ -31,10 +32,10 @@ export interface PostViewDetailProps {
 function formatDateTime(value?: string) {
   if (!value) return "Chưa có";
 
-  const parsed = new Date(value);
+  const parsed = parseApiDate(value);
   if (Number.isNaN(parsed.getTime())) return value;
 
-  return parsed.toLocaleString("vi-VN");
+  return parsed.toLocaleString("vi-VN", { timeZone: VN_TIME_ZONE });
 }
 
 function renderValue(value?: string) {
@@ -76,19 +77,9 @@ export function PostViewDetail({
               <Card>
                 <CardHeader>
                   <CardTitle className="flex flex-wrap items-center gap-2">
-                    <span>{post.postId || "Bài đăng không có ID"}</span>
-                    {post.authorId ? (
-                      <Badge variant="secondary">Author: {post.authorId}</Badge>
-                    ) : null}
-                    {post.authorUsername ? (
-                      <Badge variant="secondary">
-                        Username: {post.authorUsername}
-                      </Badge>
-                    ) : null}
-                    {post.rescueCaseId ? (
-                      <Badge variant="outline">
-                        Rescue: {post.rescueCaseId}
-                      </Badge>
+                    <span>Bài đăng của {post.authorUsername ? `@${post.authorUsername}` : "người dùng"}</span>
+                    {post.rescueCase?.caseCode ? (
+                      <Badge variant="outline">Ca {post.rescueCase.caseCode}</Badge>
                     ) : null}
                   </CardTitle>
                   <CardDescription>
@@ -126,7 +117,7 @@ export function PostViewDetail({
                         {tags.length > 0 ? (
                           tags.map((tag) => (
                             <Badge key={tag} variant="outline">
-                              {tag}
+                              #{tag}
                             </Badge>
                           ))
                         ) : (
@@ -137,31 +128,28 @@ export function PostViewDetail({
                       </div>
                     </div>
                     <div className="rounded-lg border border-border p-4 text-sm">
-                      <div className="mb-2 font-medium">Media</div>
-                      <div className="space-y-2">
+                      <div className="mb-2 font-medium">Ảnh</div>
+                      <div className="flex flex-wrap gap-2">
                         {mediaList.length > 0 ? (
-                          mediaList.map((media) => (
-                            <div
+                          mediaList.map((media, index) => (
+                            <a
                               key={media.mediaId}
-                              className="rounded-md bg-muted/50 p-3"
+                              href={media.url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="block size-20 overflow-hidden rounded-md border"
                             >
-                              <div className="font-mono text-xs">
-                                {media.mediaId}
-                              </div>
-                              <div className="break-all text-muted-foreground">
-                                {media.url}
-                              </div>
-                              <div className="mt-1 text-xs text-muted-foreground">
-                                {media.type}
-                                {media.createdAt
-                                  ? ` • ${formatDateTime(media.createdAt)}`
-                                  : ""}
-                              </div>
-                            </div>
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={media.url}
+                                alt={`Ảnh ${index + 1} của bài đăng`}
+                                className="h-full w-full object-cover"
+                              />
+                            </a>
                           ))
                         ) : (
                           <span className="text-muted-foreground">
-                            Chưa có media
+                            Bài đăng không có ảnh
                           </span>
                         )}
                       </div>
@@ -170,28 +158,18 @@ export function PostViewDetail({
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle>Thông tin bổ sung</CardTitle>
-                  <CardDescription>
-                    Các trường được trả về trong chi tiết bài đăng.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="grid gap-3 md:grid-cols-2">
-                  <div className="rounded-lg border border-border p-4 text-sm">
-                    <div className="mb-1 font-medium">Post ID</div>
-                    <div className="font-mono text-muted-foreground">
-                      {post.postId}
-                    </div>
-                  </div>
-                  <div className="rounded-lg border border-border p-4 text-sm">
-                    <div className="mb-1 font-medium">Rescue case</div>
-                    <div className="text-muted-foreground">
-                      {renderValue(post.rescueCaseId)}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              {post.rescueCase ? (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Ca cứu hộ được nhắc tới</CardTitle>
+                    <CardDescription>
+                      Ca {post.rescueCase.caseCode}
+                      {post.rescueCase.locationText ? ` · ${post.rescueCase.locationText}` : ""}
+                      {post.rescueCase.open ? " · đang cần giúp" : " · đã xử lý"}
+                    </CardDescription>
+                  </CardHeader>
+                </Card>
+              ) : null}
 
               <Card>
                 <CardHeader>

@@ -8,9 +8,14 @@ export interface AdoptionSummary {
   experience: string;
   liveCondition: string;
   createdAt: string;
+  petId?: string;
+  organizationId?: string;
+  organizationName?: string;
+  /** Pick-up date set when the organization approves. */
+  readyAt?: string;
 }
 
-export interface Adoption extends AdoptionSummary {
+export interface Adoption extends Omit<AdoptionSummary, "petId" | "organizationId" | "organizationName" | "readyAt"> {
   petId: string;
   applicantId: string;
   organizationId: string;
@@ -24,6 +29,7 @@ export interface Adoption extends AdoptionSummary {
   match?: MatchResult | null;
 }
 
+/** Mirrors the backend's AdoptionApplicationStatus. */
 export type AdoptionStatus = "PENDING" | "APPROVED" | "COMPLETED" | "REJECTED" | "CANCELED";
 export interface AdoptionRejectPayload {
   note: string;
@@ -46,6 +52,7 @@ export interface AdoptionCreatePayload {
   organizationId: string;
   experience: string;
   liveCondition: string;
+  housingCondition: "HOUSE" | "APARTMENT" | "DORMITORY" | "FARM" | "OTHER";
 }
 
 export interface AdoptionListParams {

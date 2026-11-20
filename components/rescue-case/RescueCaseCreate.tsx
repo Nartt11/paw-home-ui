@@ -1,5 +1,6 @@
 "use client";
 
+import { FirstAidTips, PossibleDuplicates } from "@/components/rescue-case/ReportHelpers";
 import * as React from "react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
@@ -176,15 +177,9 @@ export function RescueCaseCreate({
     }
   };
 
-  const canSubmit = React.useMemo(() => {
-    return (
-      Boolean(values.locationText.trim()) &&
-      selectedFiles.length > 0
-    );
-  }, [
-    values.locationText,
-    selectedFiles.length,
-  ]);
+  // Only the place is required: an urgent report should not wait for a photo.
+  const hasLocation = Boolean(values.locationText.trim()) || (Boolean(values.latitude) && Boolean(values.longitude));
+  const canSubmit = hasLocation;
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -192,7 +187,7 @@ export function RescueCaseCreate({
         <DialogHeader className="px-6 pt-6">
           <DialogTitle>Báo cáo ca cứu hộ mới</DialogTitle>
           <DialogDescription>
-            Nhập thông tin ca cứu hộ. 
+            Chỉ cần vị trí là gửi được. Ảnh và mô tả giúp người đến giúp nhận ra bé nhanh hơn.
           </DialogDescription>
         </DialogHeader>
 
@@ -202,7 +197,7 @@ export function RescueCaseCreate({
           {/* REQUIRED FIELDS SECTION */}
           <div className="space-y-5">
             <div className="space-y-2">
-              <Label className="font-semibold text-gray-700">Ảnh ca cứu hộ *</Label>
+              <Label className="font-semibold text-gray-700">Ảnh ca cứu hộ (nên có, không bắt buộc)</Label>
               <div className="flex items-center gap-2">
                 <Input
                   id="create-rescue-images"
@@ -298,6 +293,9 @@ export function RescueCaseCreate({
                 Nhấn lên bản đồ hoặc kéo marker để tự động cập nhật địa chỉ.
               </p>
             </div>
+
+            <PossibleDuplicates latitude={values.latitude} longitude={values.longitude} species={values.species} />
+            <FirstAidTips />
           </div>
 
           <Separator className="my-6" />
@@ -418,6 +416,9 @@ export function RescueCaseCreate({
         </div>
 
         <DialogFooter className="px-6 pb-6 bg-gray-50/50 py-4 border-t rounded-b-lg">
+          {!hasLocation ? (
+            <p className="mr-auto self-center text-sm text-muted-foreground">Chọn vị trí trên bản đồ để gửi.</p>
+          ) : null}
           <Button
             variant="secondary"
             type="button"
@@ -437,7 +438,7 @@ export function RescueCaseCreate({
                 Đang tạo...
               </>
             ) : (
-              "Tạo ca cứu hộ"
+              "Gửi báo cứu hộ"
             )}
           </Button>
         </DialogFooter>

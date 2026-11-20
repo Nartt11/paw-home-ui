@@ -11,8 +11,8 @@ export const PET_UPDATE_HEALTH_STATUS_VALUES = [
 ] as const;
 // PetStatus enum in the backend.
 export const PET_UPDATE_STATUS_VALUES = [
-  "FOSTERING",
   "AVAILABLE",
+  "FOSTERING",
   "ADOPTED",
   "LOST",
   "DECEASED",

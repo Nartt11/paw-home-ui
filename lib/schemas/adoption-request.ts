@@ -1,6 +1,18 @@
 import { z } from "zod";
 
+/** Where the adopter lives; the backend requires it to match the pet. */
+export const HOUSING_OPTIONS = [
+  { value: "HOUSE", label: "Nhà riêng" },
+  { value: "APARTMENT", label: "Chung cư" },
+  { value: "DORMITORY", label: "Ký túc xá, nhà trọ" },
+  { value: "FARM", label: "Trang trại, vườn" },
+  { value: "OTHER", label: "Khác" },
+] as const;
+
 export const adoptionRequestSchema = z.object({
+  housingCondition: z.enum(["HOUSE", "APARTMENT", "DORMITORY", "FARM", "OTHER"], {
+    message: "Hãy chọn nơi bạn đang ở",
+  }),
   experience: z
     .string()
     .trim()

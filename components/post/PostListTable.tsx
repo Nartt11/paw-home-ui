@@ -29,6 +29,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import type { PostSummary } from "@/types/post.type";
+import { parseApiDate, VN_TIME_ZONE } from "@/lib/datetime";
 
 export interface PostListTableProps {
   data: PostSummary[];
@@ -41,10 +42,11 @@ export interface PostListTableProps {
 function formatDate(value?: string) {
   if (!value) return "—";
 
-  const parsed = new Date(value);
+  const parsed = parseApiDate(value);
   if (Number.isNaN(parsed.getTime())) return value;
 
   return parsed.toLocaleDateString("vi-VN", {
+    timeZone: VN_TIME_ZONE,
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -61,12 +63,9 @@ const columns: ColumnDef<PostSummary>[] = [
     accessorKey: "content",
     header: "Bài đăng",
     cell: ({ row }) => (
-      <div className="min-w-80 space-y-1">
-        <div className="line-clamp-3 text-sm text-slate-900">
+      <div className="min-w-64 max-w-xl space-y-1">
+        <div className="line-clamp-2 whitespace-normal text-sm text-slate-900">
           {getContentPreview(row.original.content)}
-        </div>
-        <div className="text-xs text-slate-500">
-          ID: {row.original.postId || "—"}
         </div>
       </div>
     ),

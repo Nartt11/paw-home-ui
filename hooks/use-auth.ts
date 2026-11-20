@@ -16,13 +16,30 @@ import type { Auth } from "@/types/auth.type";
 import type { User } from "@/types/user.type";
 import { APP_ROUTES } from "@/constants/routes";
 
-export function getAuthErrorMessage(error: unknown, fallback: string) {
-  if (error instanceof HttpError) {
-    return error.message;
+/** The backend answers login in English; say the same thing in Vietnamese. */
+function translateAuthMessage(message: string): string | undefined {
+  const remaining = message.match(/(\d+)\s+attempts? remaining/i);
+  if (remaining) {
+    return `Email/tên đăng nhập hoặc mật khẩu không đúng. Bạn còn ${remaining[1]} lần thử.`;
   }
+  if (/invalid email or password|bad credentials/i.test(message)) {
+    return "Email/tên đăng nhập hoặc mật khẩu không đúng.";
+  }
+  if (/locked/i.test(message)) {
+    return "Tài khoản đang tạm khoá do nhập sai nhiều lần. Vui lòng thử lại sau ít phút.";
+  }
+  if (/banned/i.test(message)) {
+    return "Tài khoản này đã bị khoá. Vui lòng liên hệ quản trị viên.";
+  }
+  if (/verify your email/i.test(message)) {
+    return "Bạn cần xác thực email trước khi đăng nhập.";
+  }
+  return undefined;
+}
 
-  if (error instanceof Error && error.message) {
-    return error.message;
+export function getAuthErrorMessage(error: unknown, fallback: string) {
+  if (error instanceof HttpError || (error instanceof Error && error.message)) {
+    return translateAuthMessage(error.message) ?? error.message;
   }
 
   return fallback;

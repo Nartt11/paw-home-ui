@@ -219,8 +219,8 @@ export function useUpdateRescueCaseStatus() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, status }: { id: string; status: string }) =>
-      rescueService.updateRescueCaseStatus(id, status),
+    mutationFn: ({ id, status, reason }: { id: string; status: string; reason?: string }) =>
+      rescueService.updateRescueCaseStatus(id, status, reason),
 
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({

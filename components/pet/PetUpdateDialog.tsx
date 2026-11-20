@@ -38,6 +38,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { PET_STATUS_OPTIONS } from "@/lib/pet-display";
 import {
   Select,
   SelectContent,
@@ -59,13 +60,8 @@ const HEALTH_OPTIONS: Array<{ value: PetHealthStatus; label: string }> = [
   { value: "SPECIAL_NEEDS", label: "Cần chăm sóc đặc biệt" },
 ];
 
-const STATUS_OPTIONS: Array<{ value: PetStatus; label: string }> = [
-  { value: "AVAILABLE", label: "Sẵn sàng nhận nuôi" },
-  { value: "LOST", label: "Thất lạc" },
-  { value: "ADOPTED", label: "Đã nhận nuôi" },
-  { value: "FOSTERING", label: "Đang foster" },
-  { value: "DECEASED", label: "Đã mất" },
-];
+const STATUS_OPTIONS: Array<{ value: PetStatus; label: string }> =
+  PET_STATUS_OPTIONS;
 
 export interface PetUpdateDialogProps {
   open: boolean;

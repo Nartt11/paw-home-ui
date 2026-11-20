@@ -1,5 +1,7 @@
 "use client";
 
+
+import { adoptionStatusBadge, adoptionStatusLabel } from "@/lib/adoption-display";
 import * as React from "react";
 import Image from "next/image";
 import {
@@ -33,6 +35,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { parseApiDate, VN_TIME_ZONE } from "@/lib/datetime";
 
 export interface AdoptionListTableProps {
   data: AdoptionSummary[];
@@ -44,46 +47,18 @@ export interface AdoptionListTableProps {
 
 function formatDateVi(value?: string) {
   if (!value) return "—";
-  const d = new Date(value);
+  const d = parseApiDate(value);
   if (Number.isNaN(d.getTime())) return "—";
   return d.toLocaleDateString("vi-VN", {
+    timeZone: VN_TIME_ZONE,
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
   });
 }
 
-function adoptionStatusBadge(status: AdoptionSummary["status"]) {
-  const map: Record<string, { label: string; className?: string }> = {
-    PENDING: {
-      label: "Chờ xét duyệt",
-      className: "bg-amber-50 text-amber-700 hover:bg-amber-50",
-    },
-    APPROVED: {
-      label: "Đã duyệt",
-      className: "bg-emerald-50 text-emerald-700 hover:bg-emerald-50",
-    },
-    REJECTED: {
-      label: "Từ chối",
-      className: "bg-rose-50 text-rose-700 hover:bg-rose-50",
-    },
-    CANCELED: {
-      label: "Đã hủy",
-      className: "bg-slate-100 text-slate-700 hover:bg-slate-100",
-    },
-    COMPLETED: {
-      label: "Hoàn thành",
-      className: "bg-blue-50 text-blue-700 hover:bg-blue-50",
-    },
-  };
-
-  const item = map[status] ?? { label: status };
-
-  return item.className ? (
-    <Badge className={item.className}>{item.label}</Badge>
-  ) : (
-    <Badge variant="secondary">{item.label}</Badge>
-  );
+function statusBadge(status: AdoptionSummary["status"]) {
+  return <Badge className={adoptionStatusBadge(status)}>{adoptionStatusLabel(status)}</Badge>;
 }
 
 const columns: ColumnDef<AdoptionSummary>[] = [
@@ -147,7 +122,7 @@ const columns: ColumnDef<AdoptionSummary>[] = [
   {
     accessorKey: "status",
     header: "Trạng thái",
-    cell: ({ row }) => adoptionStatusBadge(row.original.status),
+    cell: ({ row }) => statusBadge(row.original.status),
   },
   {
     id: "actions",
@@ -187,6 +162,8 @@ export function AdoptionListTable({
                 className="size-8"
                 onClick={() => onApprove?.(applicationId)}
                 disabled={!onApprove || !canDecide}
+                aria-label="Duyệt đơn"
+                title="Duyệt đơn"
               >
                 <Check className="size-4" />
               </Button>
@@ -197,12 +174,20 @@ export function AdoptionListTable({
                 className="size-8"
                 onClick={() => onReject?.(applicationId)}
                 disabled={!onReject || !canDecide}
+                aria-label="Từ chối đơn"
+                title="Từ chối đơn"
               >
                 <X className="size-4" />
               </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="size-8">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="size-8"
+                    aria-label="Thao tác khác"
+                    title="Thao tác khác"
+                  >
                     <EllipsisVerticalIcon className="size-4" />
                   </Button>
                 </DropdownMenuTrigger>

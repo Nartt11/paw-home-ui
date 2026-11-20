@@ -14,11 +14,18 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import {
-  ChartBarIcon,
+  Building2Icon,
+  ClipboardCheckIcon,
+  InboxIcon,
   CommandIcon,
-  FolderIcon,
+  HeartHandshakeIcon,
+  ImageIcon,
   LayoutDashboardIcon,
-  ListIcon,
+  NewspaperIcon,
+  PawPrintIcon,
+  SirenIcon,
+  UserCogIcon,
+  UsersIcon,
   ShieldCheckIcon,
   SparklesIcon,
   TagIcon,
@@ -32,7 +39,7 @@ import { canAccessByRoles } from "@/lib/permission";
 const data = {
   navSystem: [
     {
-      title: "Dashboard",
+      title: "Tổng quan",
       url: `${APP_ROUTES.DASHBOARD}`,
       icon: <LayoutDashboardIcon />,
       allowedSystemRoles: [SYSTEM_ROLES.ADMIN],
@@ -45,7 +52,7 @@ const data = {
     {
       title: "Quản lý thú cưng",
       url: `${APP_ROUTES.PET_MANAGEMENT}`,
-      icon: <ListIcon />,
+      icon: <PawPrintIcon />,
       allowedSystemRoles: [SYSTEM_ROLES.ADMIN],
       allowedOrganizationRoles: [
         ORGANIZATION_ROLES.OWNER,
@@ -56,7 +63,7 @@ const data = {
     {
       title: "Quản lý thành viên",
       url: `${APP_ROUTES.ORGANIZATION_MEMBER_MANAGEMENT}`,
-      icon: <FolderIcon />,
+      icon: <UsersIcon />,
       allowedSystemRoles: [],
       allowedOrganizationRoles: [
         ORGANIZATION_ROLES.OWNER,
@@ -66,13 +73,13 @@ const data = {
     {
       title: "Quản lý trung tâm",
       url: `${APP_ROUTES.CENTER_MANAGEMENT}`,
-      icon: <ChartBarIcon />,
+      icon: <Building2Icon />,
       allowedSystemRoles: [SYSTEM_ROLES.ADMIN],
     },
     {
       title: "Quản lý người dùng",
       url: `${APP_ROUTES.USER_MANAGEMENT}`,
-      icon: <FolderIcon />,
+      icon: <UserCogIcon />,
       allowedSystemRoles: [SYSTEM_ROLES.ADMIN],
     },
     {
@@ -86,7 +93,7 @@ const data = {
     {
       title: "Quản lý bài đăng",
       url: `${APP_ROUTES.POST_MANAGEMENT}`,
-      icon: <LayoutDashboardIcon />,
+      icon: <NewspaperIcon />,
       allowedSystemRoles: [SYSTEM_ROLES.ADMIN],
     },
     {
@@ -104,7 +111,7 @@ const data = {
     {
       title: "Quản lý banner",
       url: `${APP_ROUTES.BANNER_MANAGEMENT}`,
-      icon: <LayoutDashboardIcon />,
+      icon: <ImageIcon />,
       allowedSystemRoles: [SYSTEM_ROLES.ADMIN],
     },
   ],
@@ -112,7 +119,7 @@ const data = {
     {
       title: "Quản lý cứu trợ",
       url: `${APP_ROUTES.RESCUE_CASE_MANAGEMENT}`,
-      icon: <LayoutDashboardIcon />,
+      icon: <SirenIcon />,
       allowedSystemRoles: [SYSTEM_ROLES.ADMIN],
       allowedOrganizationRoles: [
         ORGANIZATION_ROLES.OWNER,
@@ -121,15 +128,29 @@ const data = {
       ],
     },
     {
+      title: "Hàng chờ cứu hộ",
+      url: APP_ROUTES.RESCUE_QUEUE,
+      icon: <InboxIcon />,
+      allowedSystemRoles: [SYSTEM_ROLES.ADMIN],
+      allowedOrganizationRoles: [ORGANIZATION_ROLES.OWNER, ORGANIZATION_ROLES.STAFF],
+    },
+    {
       title: "Quản lý nhận nuôi",
       url: `${APP_ROUTES.ADOPTION_MANAGEMENT}`,
-      icon: <ListIcon />,
+      icon: <HeartHandshakeIcon />,
       allowedSystemRoles: [SYSTEM_ROLES.ADMIN],
       allowedOrganizationRoles: [
         ORGANIZATION_ROLES.OWNER,
         ORGANIZATION_ROLES.STAFF,
         ORGANIZATION_ROLES.MEMBER,
       ],
+    },
+    {
+      title: "Việc sau nhận nuôi",
+      url: APP_ROUTES.FOLLOWUP_ALERTS,
+      icon: <ClipboardCheckIcon />,
+      allowedSystemRoles: [SYSTEM_ROLES.ADMIN],
+      allowedOrganizationRoles: [ORGANIZATION_ROLES.OWNER, ORGANIZATION_ROLES.STAFF],
     },
   ],
 };

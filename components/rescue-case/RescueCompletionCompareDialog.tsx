@@ -33,6 +33,7 @@ import {
   type CompletionDecisionValues,
 } from "@/lib/schemas/rescue";
 import type { RescueClaim, RescueOutcome } from "@/types/rescue-case.type";
+import { apiErrorMessage } from "@/lib/api-error";
 
 const OUTCOME_LABEL: Record<RescueOutcome, string> = {
   HANDED_TO_ORG: "Bàn giao cho trạm",
@@ -114,7 +115,7 @@ export function RescueCompletionCompareDialog({
       onSuccess?.();
       close();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Có lỗi xảy ra khi từ chối.");
+      toast.error(apiErrorMessage(err, "Có lỗi xảy ra khi từ chối."));
     }
   });
 
@@ -127,7 +128,7 @@ export function RescueCompletionCompareDialog({
       close();
     } catch (err) {
       toast.error(
-        err instanceof Error ? err.message : "Có lỗi xảy ra khi duyệt.",
+        apiErrorMessage(err, "Có lỗi xảy ra khi duyệt."),
       );
     }
   };

@@ -112,7 +112,7 @@ export function OrganizationViewDetail({
 
   const title = organization.name
     ? `Trung tâm - ${organization.name}`
-    : `Trung tâm - ${organization.organizationId}`;
+    : `Trung tâm ${organization.organizationCode ?? ""}`.trim();
 
   const addressLine = [
     organization.streetAddress,
@@ -158,20 +158,11 @@ export function OrganizationViewDetail({
             </div>
 
             <div className="grid gap-5 md:grid-cols-2">
-              <FieldRow
-                label="Organization ID"
-                value={organization.organizationId}
-                mono
-              />
-              <FieldRow
-                label="Người tạo"
-                value={organization.createdBy || "-"}
-                mono
-              />
+              <FieldRow label="Mã trung tâm" value={organization.organizationCode || "—"} />
               <FieldRow label="Email" value={organization.email || "-"} />
               <FieldRow label="Điện thoại" value={organization.phone || "-"} />
               <FieldRow
-                label="Official link"
+                label="Trang chính thức"
                 value={
                   organization.officialLink ? (
                     <a
@@ -188,27 +179,7 @@ export function OrganizationViewDetail({
                 }
               />
               <FieldRow label="Địa chỉ" value={addressLine || "-"} />
-              <FieldRow
-                label="Latitude"
-                value={canShowMap ? String(organization.latitude) : "-"}
-                mono
-              />
-              <FieldRow
-                label="Longitude"
-                value={canShowMap ? String(organization.longitude) : "-"}
-                mono
-              />
             </div>
-          </div>
-
-          <Separator />
-
-          <div className="grid gap-5 md:grid-cols-2">
-            <FieldRow label="Loại" value={typeLabel(organization.type)} />
-            <FieldRow
-              label="Trạng thái"
-              value={(organization.status ?? "-").toString()}
-            />
           </div>
         </div>
       </DialogContent>

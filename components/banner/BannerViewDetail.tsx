@@ -14,6 +14,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
+import { parseApiDate, VN_TIME_ZONE } from "@/lib/datetime";
 
 function FieldRow({
   label,
@@ -35,11 +36,12 @@ function FieldRow({
 function formatDateTimeVi(value?: string) {
   if (!value) return "-";
 
-  const date = new Date(value);
+  const date = parseApiDate(value);
 
   if (Number.isNaN(date.getTime())) return "-";
 
   return date.toLocaleString("vi-VN", {
+    timeZone: VN_TIME_ZONE,
     hour12: false,
     day: "2-digit",
     month: "2-digit",

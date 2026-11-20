@@ -243,10 +243,10 @@ export default function AdoptionManagementPage() {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="text-xl font-semibold text-foreground">
-                Đơn chờ xét duyệt
+                Đơn đang xử lý
               </h2>
               <p className="text-sm text-muted-foreground">
-                Ưu tiên xem nhanh các hồ sơ đang chờ xử lý.
+                Đơn chờ xét duyệt và đơn đã duyệt đang chờ người nhận đến đón.
               </p>
             </div>
 
@@ -273,7 +273,7 @@ export default function AdoptionManagementPage() {
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >
-                Đợi xét duyệt ({pendingCounts.PENDING})
+                Chờ xét duyệt ({pendingCounts.PENDING})
               </button>
               <button
                 type="button"
@@ -285,7 +285,7 @@ export default function AdoptionManagementPage() {
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >
-                Đợi nhận nuôi ({pendingCounts.APPROVED})
+                Chờ đón về ({pendingCounts.APPROVED})
               </button>
             </div>
           </div>
@@ -323,7 +323,7 @@ export default function AdoptionManagementPage() {
               Tất cả đơn nhận nuôi
             </h2>
             <p className="text-sm text-muted-foreground">
-              Danh sách tổng hợp hồ sơ nhận nuôi, hiển thị thông tin pet và người nộp đơn.
+              Danh sách tổng hợp hồ sơ nhận nuôi, kể cả đơn đã đón về, bị từ chối hoặc đã huỷ.
             </p>
           </div>
 

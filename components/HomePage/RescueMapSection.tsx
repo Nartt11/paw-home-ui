@@ -4,6 +4,7 @@ import { ArrowRight, MapPin } from "lucide-react";
 import Link from "next/link";
 import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
+import HomeMapPreview from "./HomeMapPreview";
 
 interface RescueMapSectionProps {
   stats: RescueMapStat[];
@@ -65,26 +66,18 @@ export default function RescueMapSection({ stats }: RescueMapSectionProps) {
                   ))}
                 </div>
 
-                <Link href={APP_ROUTES.MAP}>
-                  <Button>
+                <Button asChild>
+                  <Link href={APP_ROUTES.MAP}>
                     <MapPin size={18} />
                     Xem bản đồ cứu hộ
                     <ArrowRight size={16} />
-                  </Button>
-                </Link>
+                  </Link>
+                </Button>
               </div>
 
               <div className="rounded-2xl border border-foreground/20 bg-foreground/10 p-4">
                 <div className="relative flex h-72 items-center justify-center overflow-hidden rounded-xl bg-slate-900">
-                  <iframe
-                    src="https://www.google.com/maps"
-                    width="600"
-                    height="400"
-                    title="Mô tả trang web"
-                    className="h-full w-full rounded-xl opacity-90"
-                  ></iframe>
-
-                
+                  <HomeMapPreview />
                 </div>
               </div>
             </div>

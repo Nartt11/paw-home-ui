@@ -1,4 +1,4 @@
-// NotificationType enum in the backend.
+/** Mirrors the backend's NotificationType. */
 export type NotificationType =
   | "RESCUE_CLAIMED"
   | "RESCUE_CLAIM_RELEASED"
@@ -11,19 +11,26 @@ export type NotificationType =
   | "RESCUE_COMPLETION_APPROVED"
   | "RESCUE_COMPLETION_REJECTED"
   | "RESCUE_COMPLETION_NEEDS_REVIEW"
+  | "RESCUE_CASE_UPDATED"
+  | "RESCUE_CASE_FLAGGED"
+  | "RESCUE_MATCH_SUGGESTED"
+  | "RESCUE_MATCH_CONFIRMED"
   | "ADOPTION_SUBMITTED"
   | "ADOPTION_APPROVED"
   | "ADOPTION_REJECTED"
   | "ADOPTION_CANCELED"
   | "ADOPTION_COMPLETED"
-  | "ADOPTION_RECLAIMED";
+  | "ADOPTION_RECLAIMED"
+  | "FOLLOWUP_DUE"
+  | "FOLLOWUP_REMINDER"
+  | "FOLLOWUP_ALERT";
 
-// NotificationResponseDto
 export interface AppNotification {
   notificationId: string;
   type: NotificationType;
   title: string;
   body: string;
+  /** Ids of what the notification is about: caseId, applicationId, petId, completionId, token... */
   data?: Record<string, string>;
   readAt?: string | null;
   createdAt: string;

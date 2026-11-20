@@ -5,7 +5,7 @@ import RequireAuth from "@/components/auth/RequireAuth";
 import { SYSTEM_ROLES, ORGANIZATION_ROLES } from "@/constants/roles";
 
 export const metadata: Metadata = {
-  title: "Dashboard",
+  title: "Tổng quan",
   description: "Báo cáo thống kê, biểu đồ hoạt động cứu trợ, nhận nuôi và quyên góp trên hệ thống Paw Home.",
 };
 
