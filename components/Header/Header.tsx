@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Menu, User, LayoutDashboard, LogOut } from "lucide-react";
+import { Menu, User, LayoutDashboard, LogOut, HandHeart, PawPrint } from "lucide-react";
+import { NotificationBell } from "@/components/notification/NotificationBell";
 
 import { APP_ROUTES } from "@/constants/routes";
 import { getPostAuthRedirectPath, useLogout } from "@/hooks/use-auth";
@@ -161,6 +162,7 @@ export default function Header() {
         <div className="hidden lg:flex items-center gap-3">
           {isLoggedIn && currentUser ? (
             <>
+              <NotificationBell />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
@@ -202,6 +204,18 @@ export default function Header() {
                       <span>Xem trang cá nhân</span>
                     </Link>
                   </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href={APP_ROUTES.MY_CASES} className="flex w-full items-center gap-2 cursor-pointer">
+                      <HandHeart className="h-4 w-4" />
+                      <span>Ca của tôi</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href={APP_ROUTES.MY_PETS} className="flex w-full items-center gap-2 cursor-pointer">
+                      <PawPrint className="h-4 w-4" />
+                      <span>Thú của tôi</span>
+                    </Link>
+                  </DropdownMenuItem>
                   {canManage ? (
                     <DropdownMenuItem asChild>
                       <Link
@@ -241,6 +255,7 @@ export default function Header() {
 
         {/* Mobile / Tablet Controls (Hamburger Menu) */}
         <div className="flex lg:hidden items-center gap-3">
+          {isLoggedIn && currentUser ? <NotificationBell /> : null}
           <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
             <SheetTrigger asChild>
               <Button
@@ -317,6 +332,20 @@ export default function Header() {
                       <Link href={APP_ROUTES.USER_SETTING} className="flex gap-2">
                         <User className="h-4 w-4" />
                         <span>Xem trang cá nhân</span>
+                      </Link>
+                    </Button>
+
+                    <Button variant="outline" asChild onClick={() => setMobileMenuOpen(false)} className="w-full justify-start rounded-xl cursor-pointer">
+                      <Link href={APP_ROUTES.MY_CASES} className="flex gap-2">
+                        <HandHeart className="h-4 w-4" />
+                        <span>Ca của tôi</span>
+                      </Link>
+                    </Button>
+
+                    <Button variant="outline" asChild onClick={() => setMobileMenuOpen(false)} className="w-full justify-start rounded-xl cursor-pointer">
+                      <Link href={APP_ROUTES.MY_PETS} className="flex gap-2">
+                        <PawPrint className="h-4 w-4" />
+                        <span>Thú của tôi</span>
                       </Link>
                     </Button>
 

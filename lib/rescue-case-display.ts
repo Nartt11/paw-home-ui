@@ -2,6 +2,9 @@ import type {
   RescueCasePriority,
   RescueCaseStatus,
   RescueCaseType,
+  RescueClaimReleaseReason,
+  RescueCompletionStatus,
+  RescueOutcome,
 } from "@/types/rescue-case.type";
 
 /** What the community screens need to show or attach a rescue case, whichever list it came from. */
@@ -35,6 +38,32 @@ export const RESCUE_CASE_TYPE_LABEL: Record<RescueCaseType, string> = {
   LOST: "Thú đi lạc",
   FOUND: "Nhặt được thú",
 };
+
+/** What happened to the animal, as the rescuer reports it. */
+export const RESCUE_OUTCOME_LABEL: Record<RescueOutcome, string> = {
+  HANDED_TO_ORG: "Đã giao cho tổ chức",
+  TEMP_HOLDING: "Đang giữ tạm",
+  KEPT_BY_RESCUER: "Tôi sẽ nuôi bé",
+  RELEASED: "Đã thả về chỗ cũ",
+  DECEASED: "Bé đã mất",
+};
+
+export const RESCUE_COMPLETION_STATUS_LABEL: Record<RescueCompletionStatus, string> = {
+  PENDING: "Chờ xác nhận",
+  APPROVED: "Đã xác nhận",
+  REJECTED: "Bị từ chối",
+  DISPUTED: "Người báo không đồng ý",
+};
+
+export const RESCUE_RELEASE_REASON_LABEL: Record<RescueClaimReleaseReason, string> = {
+  GAVE_UP: "Tôi không đi được nữa",
+  NEED_HELP: "Tôi cần người hỗ trợ",
+  NOT_FOUND: "Đến nơi nhưng không thấy bé",
+  CASE_ENDED: "Ca đã kết thúc",
+};
+
+/** The reasons a person can pick when giving a case back. */
+export const RELEASE_REASON_CHOICES: RescueClaimReleaseReason[] = ["GAVE_UP", "NEED_HELP", "NOT_FOUND"];
 
 export function rescueStatusLabel(status?: string) {
   return (status && RESCUE_STATUS_LABEL[status as RescueCaseStatus]) || "Chưa rõ";

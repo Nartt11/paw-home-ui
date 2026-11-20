@@ -45,20 +45,94 @@ export interface RescueCase extends RescueCaseSummary {
   createdAt: string;
   imageUrls: string[];
   contactPhone: string;
+  /** How many people or organizations are working on the case right now. */
+  activeClaimCount?: number;
+  /** True when the viewer reported this case. */
+  viewerIsReporter?: boolean;
+  /** True when the viewer holds an active claim on this case. */
+  viewerHasActiveClaim?: boolean;
+  /** The latest completion report, if any. */
+  completionId?: string;
+  /** PENDING, APPROVED, REJECTED or DISPUTED. */
+  completionStatus?: RescueCompletionStatus;
   /** Only in the response to a report sent with shareAsPost: the post that was published. */
   sharedPostId?: string;
   /** Only in that response: true when the case was saved but the post could not be published. */
   postShareFailed?: boolean;
 }
 
-/** One of my active claims on a rescue case. */
+export type RescueCompletionStatus = "PENDING" | "APPROVED" | "REJECTED" | "DISPUTED";
+export type RescueClaimStatus = "ACTIVE" | "RELEASED" | "EXPIRED" | "COMPLETED";
+export type RescueClaimReleaseReason = "GAVE_UP" | "NEED_HELP" | "NOT_FOUND" | "CASE_ENDED";
+/** What happened to the animal, chosen when reporting a rescue as done. */
+export type RescueOutcome = "HANDED_TO_ORG" | "TEMP_HOLDING" | "KEPT_BY_RESCUER" | "RELEASED" | "DECEASED";
+
+/** A claim on a rescue case: a person on the way, or an organization that took the case. */
 export interface RescueClaim {
   claimId: string;
   caseId: string;
   caseCode?: string;
-  status: string;
+  userId?: string;
+  username?: string;
+  /** Set when an organization holds the claim. */
+  organizationId?: string;
+  status: RescueClaimStatus;
+  releaseReason?: RescueClaimReleaseReason;
   claimedAt?: string;
+  /** Personal claims expire; organization claims do not. */
   expiresAt?: string;
+}
+
+/** A progress note on a case, newest first. */
+export interface RescueCaseUpdate {
+  updateId: string;
+  caseId: string;
+  authorId: string;
+  authorUsername: string;
+  authorAvatarUrl?: string;
+  note: string;
+  imageUrls: string[];
+  createdAt: string;
+}
+
+/** One row of an organization's rescue queue. */
+export interface RescueQueueItem {
+  caseId: string;
+  caseCode: string;
+  species?: string;
+  priority: RescueCasePriority;
+  status: RescueCaseStatus;
+  description?: string;
+  locationText?: string;
+  firstImageUrl?: string;
+  provinceName?: string;
+  wardName?: string;
+  latitude?: number;
+  longitude?: number;
+  reportedAt: string;
+  needsHelp: boolean;
+  /** A person rescued the animal and is waiting to hand it to an organization. */
+  awaitingHandover: boolean;
+  activeClaimCount: number;
+  /** The higher of the reporter's priority and the AI's. */
+  effectivePriority?: RescueCasePriority;
+  aiUrgency?: RescueCasePriority;
+  aiSummary?: string;
+  triageStatus?: string;
+  missingFields?: string[];
+}
+
+export interface FirstAidGuide {
+  code: string;
+  title: string;
+  urgentSigns?: string[];
+  steps?: string[];
+  doNot?: string[];
+}
+
+export interface FirstAidGuides {
+  disclaimer: string;
+  guides: FirstAidGuide[];
 }
 
 /** Filters of GET /rescue-cases. lat and lng together switch it to "nearest first". */
@@ -137,6 +211,7 @@ export interface CompleteRescuePayload {
   rescuedAt: string;
   locationNote?: string;
   confirmRescued: boolean;
+  outcome?: RescueOutcome;
 }
 
 export interface RescueCompletion {
@@ -145,8 +220,9 @@ export interface RescueCompletion {
   caseCode?: string;
   submittedBy?: string;
   submittedByName?: string;
-  outcome?: string;
-  status?: string;
+  outcome?: RescueOutcome;
+  status?: RescueCompletionStatus;
+  rejectReason?: string;
   rescuedAt: string;
   rescueNote: string;
   locationNote: string;

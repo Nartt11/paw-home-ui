@@ -134,7 +134,8 @@ export default function PetDetailPage() {
   const router = useRouter();
 
   const { data: currentUser } = useCurrentUser();
-  const isOrganizationUser = currentUser?.roles.includes("MEMBERSHIP") && !!currentUser?.organizationRole;
+  // Members of an organization carry an organizationRole; the backend system role is MEMBER, not MEMBERSHIP.
+  const isOrganizationUser = !!currentUser?.organizationRole && !currentUser?.roles.includes("ADMIN");
 
   const petQuery = usePetDetail(petId);
   const medicalRecordsQuery = usePetMedicalRecords(petId, {

@@ -18,6 +18,9 @@ import {
 
 import { useRescueCaseDetail, useRescueCompletionDetail, useApproveRescueCompletion } from "@/hooks/use-rescue-case";
 import { formatDateTime } from "@/lib/datetime";
+import { apiErrorMessage } from "@/lib/api-error";
+import { useDecideCompletion } from "@/hooks/use-rescue-flow";
+import { ReasonDialog } from "@/components/rescue-case/RescueFlowDialogs";
 
 interface RescueCompletionCompareDialogProps {
   open: boolean;
@@ -37,9 +40,11 @@ export function RescueCompletionCompareDialog({
   const caseQuery = useRescueCaseDetail(caseId ?? undefined);
   const completionQuery = useRescueCompletionDetail(completionId ?? undefined);
   const approveMutation = useApproveRescueCompletion();
+  const decideMutation = useDecideCompletion();
+  const [rejectOpen, setRejectOpen] = React.useState(false);
 
   const isPending = caseQuery.isPending || completionQuery.isPending;
-  const isBusy = approveMutation.isPending;
+  const isBusy = approveMutation.isPending || decideMutation.isPending;
 
   const handleApprove = async () => {
     if (!completionId) return;
@@ -49,9 +54,7 @@ export function RescueCompletionCompareDialog({
       onSuccess?.();
       onOpenChange(false);
     } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : "Có lỗi xảy ra khi duyệt.",
-      );
+      toast.error(apiErrorMessage(err));
     }
   };
 
@@ -269,6 +272,17 @@ export function RescueCompletionCompareDialog({
           {!isPending && rescueCase && completion && (
             <Button
               type="button"
+              variant="outline"
+              onClick={() => setRejectOpen(true)}
+              disabled={isBusy}
+              className="rounded-xl font-semibold"
+            >
+              Từ chối
+            </Button>
+          )}
+          {!isPending && rescueCase && completion && (
+            <Button
+              type="button"
               onClick={handleApprove}
               disabled={isBusy}
               className="bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer font-semibold rounded-xl"
@@ -284,6 +298,22 @@ export function RescueCompletionCompareDialog({
             </Button>
           )}
         </DialogFooter>
+        <ReasonDialog
+          open={rejectOpen}
+          onOpenChange={setRejectOpen}
+          title="Từ chối báo cáo"
+          description="Ca sẽ mở lại để nhận báo cáo khác. Người gửi sẽ thấy lý do."
+          placeholder="Ví dụ: ảnh không phải bé trong ca"
+          confirmLabel="Từ chối báo cáo"
+          destructive
+          onConfirm={async (reason) => {
+            if (!completionId) return;
+            await decideMutation.mutateAsync({ completionId, decision: "reject", reason });
+            toast.success("Đã từ chối báo cáo.");
+            onSuccess?.();
+            onOpenChange(false);
+          }}
+        />
       </DialogContent>
     </Dialog>
   );

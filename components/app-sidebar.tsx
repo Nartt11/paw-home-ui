@@ -16,6 +16,8 @@ import {
 } from "@/components/ui/sidebar";
 import {
   Building2Icon,
+  ClipboardCheckIcon,
+  InboxIcon,
   CommandIcon,
   HeartHandshakeIcon,
   HomeIcon,
@@ -107,6 +109,13 @@ const data = {
       ],
     },
     {
+      title: "Hàng chờ cứu hộ",
+      url: APP_ROUTES.RESCUE_QUEUE,
+      icon: <InboxIcon />,
+      allowedSystemRoles: [SYSTEM_ROLES.ADMIN],
+      allowedOrganizationRoles: [ORGANIZATION_ROLES.OWNER, ORGANIZATION_ROLES.STAFF],
+    },
+    {
       title: "Quản lý nhận nuôi",
       url: `${APP_ROUTES.ADOPTION_MANAGEMENT}`,
       icon: <HeartHandshakeIcon />,
@@ -116,6 +125,13 @@ const data = {
         ORGANIZATION_ROLES.STAFF,
         ORGANIZATION_ROLES.MEMBER,
       ],
+    },
+    {
+      title: "Việc sau nhận nuôi",
+      url: APP_ROUTES.FOLLOWUP_ALERTS,
+      icon: <ClipboardCheckIcon />,
+      allowedSystemRoles: [SYSTEM_ROLES.ADMIN],
+      allowedOrganizationRoles: [ORGANIZATION_ROLES.OWNER, ORGANIZATION_ROLES.STAFF],
     },
   ],
   navSecondary: [

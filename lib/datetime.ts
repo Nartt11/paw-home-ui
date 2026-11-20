@@ -71,6 +71,19 @@ export function formatRelativeTime(value?: string | null) {
   return formatDate(value, {}, "");
 }
 
+/** Time left until a deadline: "còn 3 giờ 50 phút", or "đã hết hạn" once it is past. */
+export function formatTimeLeft(value?: string | null) {
+  const date = valid(value);
+  if (!date) return "";
+  const minutes = Math.floor((date.getTime() - Date.now()) / 60000);
+  if (minutes <= 0) return "đã hết hạn";
+  if (minutes < 60) return `còn ${minutes} phút`;
+  const hours = Math.floor(minutes / 60);
+  const rest = minutes % 60;
+  if (hours < 24) return rest ? `còn ${hours} giờ ${rest} phút` : `còn ${hours} giờ`;
+  return `còn ${Math.floor(hours / 24)} ngày`;
+}
+
 const VN_PARTS = new Intl.DateTimeFormat("en-CA", {
   timeZone: VN_TIME_ZONE,
   year: "numeric",

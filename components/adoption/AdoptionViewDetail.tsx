@@ -1,12 +1,13 @@
 "use client";
 
 
+import { AdoptionDecisionDialog } from "@/components/adoption/AdoptionDecisionDialog";
 import { adoptionStatusBadge, adoptionStatusLabel } from "@/lib/adoption-display";
 import * as React from "react";
 import Image from "next/image";
 import { CalendarDays, Home, PawPrint, ShieldCheck, UserRound, Loader2 } from "lucide-react";
 
-import type { Adoption, AdoptionStatus } from "@/types/adoption.type";
+import type { Adoption, AdoptionApprovePayload, AdoptionRejectPayload, AdoptionStatus } from "@/types/adoption.type";
 import { toast } from "sonner";
 import {
   useApproveAdoption,
@@ -464,7 +465,26 @@ function AdoptionActionSection({
     }
   };
 
-  const confirmInfo = confirmingAction ? CONFIRM_DETAILS[confirmingAction] : null;
+  // Approving needs a pick-up date and rejecting needs a reason, so both open the decision form.
+  const decisionMode =
+    confirmingAction === "APPROVE" ? "approve" : confirmingAction === "REJECT" ? "reject" : null;
+  const confirmInfo =
+    confirmingAction && !decisionMode ? CONFIRM_DETAILS[confirmingAction] : null;
+
+  const submitDecision = async (payload: AdoptionApprovePayload | AdoptionRejectPayload) => {
+    try {
+      if (decisionMode === "approve") {
+        await approveMutation.mutateAsync({ id: adoptionId, payload: payload as AdoptionApprovePayload });
+        toast.success("Đã duyệt đơn. Người nộp sẽ được báo ngày hẹn đón.");
+      } else {
+        await rejectMutation.mutateAsync({ id: adoptionId, payload: payload as AdoptionRejectPayload });
+        toast.success("Đã từ chối đơn. Người nộp sẽ thấy lý do.");
+      }
+      setConfirmingAction(null);
+    } catch (error) {
+      toast.error(getAuthErrorMessage(error, "Thực hiện thao tác thất bại."));
+    }
+  };
 
   return (
     <>
@@ -492,6 +512,16 @@ function AdoptionActionSection({
           );
         })}
       </section>
+
+      {decisionMode ? (
+        <AdoptionDecisionDialog
+          open
+          onOpenChange={(open) => !open && setConfirmingAction(null)}
+          mode={decisionMode}
+          submitting={isSubmitting}
+          onSubmit={submitDecision}
+        />
+      ) : null}
 
       {confirmInfo && (
         <ConfirmationDialog

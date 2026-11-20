@@ -49,7 +49,8 @@ export default function PetManagementPage() {
   const [createOpen, setCreateOpen] = React.useState(false);
   
   const { data: currentUser } = useCurrentUser();
-  const isOrganizationUser = currentUser?.roles.includes("MEMBERSHIP") && !!currentUser?.organizationRole;
+  // Members of an organization carry an organizationRole; the backend system role is MEMBER, not MEMBERSHIP.
+  const isOrganizationUser = !!currentUser?.organizationRole && !currentUser?.roles.includes("ADMIN");
 
   const canCreate = React.useMemo(() => {
     if (!isOrganizationUser) return true;

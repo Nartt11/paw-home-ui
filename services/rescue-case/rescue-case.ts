@@ -114,9 +114,13 @@ const rescueService = {
     );
   },
 
-  // PATCH /api/v1/rescue-cases/{id}/status - Change rescue case status
-  async updateRescueCaseStatus(id: string, status: string): Promise<RescueCase> {
-    return await http.patch<RescueCase, string>(apiEndpoints.rescueCases.status(id), status);
+  // PATCH /api/v1/rescue-cases/{id}/status - Change rescue case status.
+  // Only admins move a case freely; others may only close it, with a reason.
+  async updateRescueCaseStatus(id: string, status: string, reason?: string): Promise<RescueCase> {
+    return await http.patch<RescueCase, { status: string; reason?: string }>(
+      apiEndpoints.rescueCases.status(id),
+      { status, reason },
+    );
   },
 
   // POST /api/v1/rescue-cases/{id}/complete - Complete rescue case
