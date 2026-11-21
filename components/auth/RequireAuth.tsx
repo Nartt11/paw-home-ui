@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { APP_ROUTES } from "@/constants/routes";
@@ -63,9 +64,6 @@ export default function RequireAuth({
       return;
     }
 
-    if (currentUserQuery.isSuccess && !hasRequiredRole) {
-      router.replace(APP_ROUTES.HOME);
-    }
   }, [
     currentUserQuery.isError,
     currentUserQuery.isSuccess,
@@ -85,8 +83,14 @@ export default function RequireAuth({
   if (!hasRequiredRole) {
     return (
       fallback ?? (
-        <div className="flex min-h-[40vh] items-center justify-center text-sm text-muted-foreground">
-          Bạn không có quyền truy cập khu vực này.
+        <div className="flex min-h-[40vh] flex-col items-center justify-center gap-3 text-center">
+          <p className="font-medium text-foreground">Bạn không có quyền mở trang này</p>
+          <p className="max-w-sm text-sm text-muted-foreground">
+            Trang này dành cho vai trò khác. Các trang bạn dùng được nằm ở thanh bên trái.
+          </p>
+          <Link href={APP_ROUTES.DASHBOARD} className="text-sm font-medium text-primary hover:underline">
+            Về trang tổng quan
+          </Link>
         </div>
       )
     );

@@ -104,6 +104,7 @@ export const organizationAccountSchema = z.object({
     .trim()
     .min(3, "Tên đăng nhập phải có ít nhất 3 ký tự")
     .max(50, "Tên đăng nhập không được vượt quá 50 ký tự"),
+  fullName: z.string().trim().min(1, "Hãy nhập tên hiển thị").max(255, "Tên hiển thị quá dài"),
   email: z.string().trim().email("Email không hợp lệ"),
   password: z
     .string()
@@ -116,6 +117,7 @@ export type OrganizationAccountValues = z.infer<typeof organizationAccountSchema
 
 export const organizationAccountDefaultValues: OrganizationAccountValues = {
   username: "",
+  fullName: "",
   email: "",
   password: "",
   organizationRole: "STAFF",

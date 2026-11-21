@@ -58,7 +58,7 @@ export default function RegisterPage() {
         email: data.email,
         username: data.username,
         password: data.password,
-        full_name: data.full_name?.trim() || undefined,
+        fullName: data.full_name.trim(),
       });
 
       setIsRegistered(true);
@@ -121,12 +121,17 @@ export default function RegisterPage() {
                 </Field>
 
                 <Field>
-                  <FieldLabel htmlFor="full_name">Họ tên</FieldLabel>
+                  <FieldLabel htmlFor="full_name">Tên hiển thị</FieldLabel>
                   <Input
                     id="full_name"
                     type="text"
+                    autoComplete="name"
+                    aria-describedby="full_name-hint"
                     {...register("full_name")}
                   />
+                  <p id="full_name-hint" className="text-xs text-muted-foreground">
+                    Mọi người thấy tên này trên bài đăng và ca cứu hộ. Tên đăng nhập luôn được giữ kín.
+                  </p>
                   {errors.full_name ? (
                     <FieldError>{errors.full_name.message}</FieldError>
                   ) : null}

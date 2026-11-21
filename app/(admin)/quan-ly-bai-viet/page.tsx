@@ -1,9 +1,8 @@
-import Page from "../quan-ly-bai-dang/page";
-import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = {
-  title: "Quản lý bài viết",
-  description: "Soạn thảo, xuất bản và quản lý các bài viết tin tức, cẩm nang chăm sóc thú cưng trên Paw Home.",
-};
+import { APP_ROUTES } from "@/constants/routes";
 
-export default Page;
+/** Old address of the post management page; kept so existing links still land somewhere. */
+export default function LegacyPostManagementPage() {
+  redirect(APP_ROUTES.POST_MANAGEMENT);
+}

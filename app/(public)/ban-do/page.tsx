@@ -25,6 +25,8 @@ import {
 } from "@/components/rescue-case/RescueCaseCreate";
 import { RescueCaseViewDetail } from "@/components/rescue-case/RescueCaseViewDetail";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { apiErrorMessage } from "@/lib/api-error";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   useOrganizationDetail,
@@ -463,6 +465,20 @@ export default function MapRescuePage() {
           onOpenChange={handleOrganizationViewOpenChange}
           organization={organizationDetailQuery.data}
         />
+      ) : organizationViewOpen ? (
+        // Answer the click right away, even before the centre loads or when it cannot be loaded.
+        <Dialog open onOpenChange={handleOrganizationViewOpenChange}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Trung tâm cứu hộ</DialogTitle>
+              <DialogDescription>
+                {organizationDetailQuery.isError
+                  ? apiErrorMessage(organizationDetailQuery.error, "Không tải được thông tin trung tâm.")
+                  : "Đang tải thông tin trung tâm..."}
+              </DialogDescription>
+            </DialogHeader>
+          </DialogContent>
+        </Dialog>
       ) : null}
     </div>
   );

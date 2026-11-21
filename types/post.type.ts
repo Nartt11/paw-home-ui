@@ -38,7 +38,8 @@ export interface PostFacets {
 export interface PostSummary {
   postId: string;
   authorId: string;
-  authorUsername: string;
+  /** Display name (full name). The backend never sends the username. */
+  authorName: string;
   authorAvatarUrl?: string;
   content: string;
   tags: string[];

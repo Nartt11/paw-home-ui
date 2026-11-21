@@ -11,7 +11,8 @@ export interface RegisterPayload {
   email: string;
   username: string;
   password: string;
-  full_name?: string;
+  /** The name shown on the platform. Required. */
+  fullName: string;
 }
 
 export interface ForgotPasswordPayload {

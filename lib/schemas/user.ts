@@ -27,7 +27,7 @@ export const createAccountSchema = z.object({
     .min(8, "Mật khẩu phải có ít nhất 8 ký tự")
     .max(100, "Mật khẩu không được vượt quá 100 ký tự"),
   systemRole: z.enum(CREATE_ACCOUNT_ROLES),
-  fullName: z.string().trim(),
+  fullName: z.string().trim().min(1, "Hãy nhập tên hiển thị").max(255, "Tên hiển thị quá dài"),
   phone: z
     .string()
     .trim()
@@ -53,7 +53,7 @@ export function toCreateAccountPayload(
     email: values.email,
     password: values.password,
     systemRole: values.systemRole,
-    fullName: values.fullName || undefined,
+    fullName: values.fullName,
     phone: values.phone || undefined,
   };
 }

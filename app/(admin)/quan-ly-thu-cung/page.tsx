@@ -1,5 +1,6 @@
 "use client";
 
+import { isOrganizationMember } from "@/lib/permission";
 import * as React from "react";
 
 import TitlePerPage from "@/components/common/admin/TitlePerPage";
@@ -49,7 +50,8 @@ export default function PetManagementPage() {
   const [createOpen, setCreateOpen] = React.useState(false);
   
   const { data: currentUser } = useCurrentUser();
-  const isOrganizationUser = currentUser?.roles.includes(SYSTEM_ROLES.MEMBER) && !!currentUser?.organizationRole;
+  // By organization role: some accounts have no MEMBER system role (production demo accounts have none).
+  const isOrganizationUser = isOrganizationMember(currentUser);
 
   const canCreate = React.useMemo(() => {
     if (!isOrganizationUser) return true;

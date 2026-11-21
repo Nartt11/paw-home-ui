@@ -71,12 +71,12 @@ const columns: ColumnDef<PostSummary>[] = [
     ),
   },
   {
-    accessorKey: "authorUsername",
+    accessorKey: "authorName",
     header: "Tác giả",
     cell: ({ row }) =>
-      row.original.authorUsername ? (
+      row.original.authorName ? (
         <Badge variant="secondary" className="rounded-full">
-          {row.original.authorUsername}
+          {row.original.authorName}
         </Badge>
       ) : (
         <span className="text-sm text-muted-foreground">

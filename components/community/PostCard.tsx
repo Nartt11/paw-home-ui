@@ -69,7 +69,7 @@ export function PostCard({
 
   const images = (post.imageUrls ?? []).slice(0, MAX_IMAGES);
   const hiddenImages = (post.imageUrls?.length ?? 0) - images.length;
-  const initial = post.authorUsername?.charAt(0).toUpperCase() || "?";
+  const initial = post.authorName?.charAt(0).toUpperCase() || "?";
   const liked = post.likedByMe === true;
   const rescueCase = post.rescueCase;
 
@@ -86,13 +86,13 @@ export function PostCard({
       <header className="flex items-center gap-3">
         <Avatar>
           {post.authorAvatarUrl ? (
-            <AvatarImage src={post.authorAvatarUrl} alt={post.authorUsername} />
+            <AvatarImage src={post.authorAvatarUrl} alt={post.authorName} />
           ) : null}
           <AvatarFallback>{initial}</AvatarFallback>
         </Avatar>
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-semibold text-foreground">
-            {post.authorUsername}
+            {post.authorName}
           </p>
           <p className="text-xs text-muted-foreground">
             {formatRelativeTime(post.createdAt)}

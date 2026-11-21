@@ -71,7 +71,7 @@ export function OrganizationAccountDialog({
   const submit = handleSubmit(async (values) => {
     try {
       await createAccount.mutateAsync(values);
-      toast.success(`Đã tạo tài khoản ${values.username}`);
+      toast.success(`Đã tạo tài khoản cho ${values.fullName}`);
       close();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Không tạo được tài khoản");
@@ -94,6 +94,13 @@ export function OrganizationAccountDialog({
               <FieldContent>
                 <Input id="org-account-username" autoComplete="off" {...register("username")} />
                 <FieldError errors={[errors.username]} />
+              </FieldContent>
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="org-account-full-name">Tên hiển thị</FieldLabel>
+              <FieldContent>
+                <Input id="org-account-full-name" autoComplete="off" {...register("fullName")} />
+                <FieldError errors={[errors.fullName]} />
               </FieldContent>
             </Field>
             <Field>
