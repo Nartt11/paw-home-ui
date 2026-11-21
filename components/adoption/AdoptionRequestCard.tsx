@@ -66,7 +66,7 @@ export default function AdoptionRequestCard({
   className,
 }: AdoptionRequestCardProps) {
   const applicationId = adoption.applicationId;
-  const applicantName = adoption.applicantUsername || "—";
+  const applicantName = adoption.applicantName || adoption.applicantUsername || "—";
   const petName = adoption.petName || "—";
 
   const status = adoption.status;

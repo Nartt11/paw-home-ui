@@ -59,7 +59,7 @@ function ClaimHistory({ claims }: { claims: RescueClaim[] }) {
       {claims.map((c) => (
         <li key={c.claimId} className="flex items-center justify-between gap-3">
           <span className="truncate">
-            {c.username ?? "—"}
+            {c.name ?? "—"}
             {c.organizationId ? " (trạm)" : ""}
           </span>
           <span className="shrink-0 text-xs text-muted-foreground">

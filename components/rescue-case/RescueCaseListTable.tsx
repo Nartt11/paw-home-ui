@@ -109,11 +109,11 @@ const columns: ColumnDef<RescueCaseSummary>[] = [
     ),
   },
   {
-    accessorKey: "reporterUsername",
+    accessorKey: "reporterName",
     header: "Người báo cáo",
     cell: ({ row }) => (
       <span className="text-slate-700">
-        {row.original.reporterUsername ?? "-"}
+        {row.original.reporterName ?? "-"}
       </span>
     ),
   },

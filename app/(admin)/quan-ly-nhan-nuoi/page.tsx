@@ -373,7 +373,7 @@ export default function AdoptionManagementPage() {
             onOpenChange={handleDecisionOpenChange}
             mode={decisionState.mode}
             submitting={isDecisionSubmitting}
-            applicantName={selectedDecisionAdoption?.applicantUsername}
+            applicantName={selectedDecisionAdoption?.applicantName ?? selectedDecisionAdoption?.applicantUsername}
             petName={selectedDecisionAdoption?.petName}
             onSubmit={handleSubmitDecision}
           />

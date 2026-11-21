@@ -289,7 +289,7 @@ function ProgressNotes({ caseId, canPost, closed }: { caseId: string; canPost: b
             <li key={update.updateId} className="relative">
               <span className="absolute -left-[21px] top-1.5 size-2.5 rounded-full bg-primary" aria-hidden />
               <div className="text-xs text-muted-foreground">
-                @{update.authorUsername} · {formatRelativeTime(update.createdAt)}
+                {update.authorName} · {formatRelativeTime(update.createdAt)}
               </div>
               <p className="whitespace-pre-wrap text-sm">{update.note}</p>
               {update.imageUrls?.length ? (
@@ -450,7 +450,7 @@ export function RescueCaseViewDetail({ rescueCase, open, onOpenChange }: RescueC
                   </span>
                 }
               />
-              <Info label="Người báo" value={rescueCase.reporterUsername ? `@${rescueCase.reporterUsername}` : null} />
+              <Info label="Người báo" value={rescueCase.reporterName} />
               <Info label="Tổ chức phụ trách" value={rescueCase.organizationName || "Chưa có"} />
               <Info label="Thời điểm báo" value={formatDateTime(rescueCase.reportedAt)} />
               {rescueCase.color ? <Info label="Màu lông" value={rescueCase.color} /> : null}
@@ -484,7 +484,7 @@ export function RescueCaseViewDetail({ rescueCase, open, onOpenChange }: RescueC
                 <ul className="space-y-1 text-sm">
                   {activeClaims.map((claim) => (
                     <li key={claim.claimId} className="flex flex-wrap justify-between gap-2">
-                      <span>{claim.organizationId ? "Trung tâm phụ trách" : `@${claim.username ?? "người giúp"}`}</span>
+                      <span>{claim.organizationId ? "Trung tâm phụ trách" : claim.name ?? "Người giúp"}</span>
                       <span className="text-muted-foreground">
                         nhận {formatRelativeTime(claim.claimedAt)}
                         {claim.expiresAt ? ` · ${formatTimeLeft(claim.expiresAt)}` : ""}

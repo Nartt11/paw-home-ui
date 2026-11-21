@@ -100,12 +100,12 @@ const columns: ColumnDef<AdoptionSummary>[] = [
     ),
   },
   {
-    accessorKey: "applicantUsername",
+    accessorKey: "applicantName",
     header: "Người nộp đơn",
     cell: ({ row }) => (
       <div className="min-w-44">
         <div className="truncate font-medium text-slate-900">
-          {row.original.applicantUsername || "-"}
+          {row.original.applicantName || row.original.applicantUsername || "-"}
         </div>
       </div>
     ),
