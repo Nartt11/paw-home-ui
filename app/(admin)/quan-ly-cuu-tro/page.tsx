@@ -1,5 +1,6 @@
 "use client";
 
+import { isOrganizationMember } from "@/lib/permission";
 import * as React from "react";
 import dynamic from "next/dynamic";
 import { Building2, MapPinned, Siren, TriangleAlert, CheckCircle2, User } from "lucide-react";
@@ -75,7 +76,8 @@ export default function RescueCaseManagementPage() {
   const [selectedCaseId, setSelectedCaseId] = React.useState<string | null>(null);
 
   const { data: currentUser } = useCurrentUser();
-  const isOrganizationUser = currentUser?.roles.includes(SYSTEM_ROLES.MEMBER) && !!currentUser?.organizationRole;
+  // By organization role: some accounts have no MEMBER system role (production demo accounts have none).
+  const isOrganizationUser = isOrganizationMember(currentUser);
   const currentOrgId = isOrganizationUser ? currentUser?.organizationId : undefined;
 
   const canCreate = React.useMemo(() => {
