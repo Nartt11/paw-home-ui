@@ -4,6 +4,8 @@ export interface AdoptionSummary {
   petName: string;
   petPrimaryImageUrl: string;
   applicantUsername: string;
+  /** The applicant's display name; show this rather than the username. */
+  applicantName?: string;
   status: AdoptionStatus;
   experience: string;
   liveCondition: string;

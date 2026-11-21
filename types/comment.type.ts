@@ -3,7 +3,8 @@ export interface PostComment {
   postId: string;
   parentCommentId?: string | null;
   authorId: string;
-  authorUsername: string;
+  /** Display name (full name). The backend never sends the username. */
+  authorName: string;
   content: string;
   likeCount: number;
   replyCount: number;

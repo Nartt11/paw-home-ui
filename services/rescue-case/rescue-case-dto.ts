@@ -6,7 +6,7 @@ export interface RescueCaseSummaryDto {
   species: string;
   priority: RescueCasePriority;
   status: RescueCaseStatus;
-  reporterUsername: string;
+  reporterName: string;
   locationText: string;
   reportedAt: string;
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { isOrganizationMember } from "@/lib/permission";
 import * as React from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
@@ -135,7 +136,8 @@ export default function PetDetailPage() {
   const router = useRouter();
 
   const { data: currentUser } = useCurrentUser();
-  const isOrganizationUser = currentUser?.roles.includes(SYSTEM_ROLES.MEMBER) && !!currentUser?.organizationRole;
+  // By organization role: some accounts have no MEMBER system role (production demo accounts have none).
+  const isOrganizationUser = isOrganizationMember(currentUser);
 
   const petQuery = usePetDetail(petId);
   const medicalRecordsQuery = usePetMedicalRecords(petId, {

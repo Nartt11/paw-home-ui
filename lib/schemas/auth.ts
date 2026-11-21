@@ -25,9 +25,8 @@ export const registerSchema = z
     full_name: z
       .string()
       .trim()
-      .max(100, "Họ tên không được quá 100 ký tự")
-      .optional()
-      .or(z.literal("")),
+      .min(1, "Hãy nhập tên hiển thị")
+      .max(100, "Tên hiển thị không được quá 100 ký tự"),
     password: z
       .string()
       .min(8, "Mật khẩu phải có ít nhất 8 ký tự")

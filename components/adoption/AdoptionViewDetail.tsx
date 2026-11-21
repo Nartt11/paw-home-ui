@@ -102,7 +102,7 @@ export function AdoptionViewDetail({
               </div>
               <DialogDescription>
                 {adoption
-                  ? `${adoption.applicantUsername || "—"} -> ${adoption.petName || "—"}`
+                  ? `${adoption.applicantName || adoption.applicantUsername || "—"} -> ${adoption.petName || "—"}`
                   : ""}
               </DialogDescription>
             </div>
@@ -147,7 +147,7 @@ export function AdoptionViewDetail({
                     <SummaryCard
                       icon={<UserRound className="size-4 text-sky-600" />}
                       label="Người nộp đơn"
-                      value={adoption.applicantUsername || "—"}
+                      value={adoption.applicantName || adoption.applicantUsername || "—"}
                     />
                     <SummaryCard
                       icon={<Home className="size-4 text-emerald-600" />}

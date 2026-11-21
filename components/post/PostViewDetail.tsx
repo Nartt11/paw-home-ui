@@ -77,7 +77,7 @@ export function PostViewDetail({
               <Card>
                 <CardHeader>
                   <CardTitle className="flex flex-wrap items-center gap-2">
-                    <span>Bài đăng của {post.authorUsername ? `@${post.authorUsername}` : "người dùng"}</span>
+                    <span>Bài đăng của {post.authorName || "thành viên"}</span>
                     {post.rescueCase?.caseCode ? (
                       <Badge variant="outline">Ca {post.rescueCase.caseCode}</Badge>
                     ) : null}

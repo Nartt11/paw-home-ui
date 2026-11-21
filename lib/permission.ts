@@ -52,3 +52,13 @@ export function canAccessByRoles({
     hasOrganizationRole(userOrganizationRole, allowedOrganizationRoles)
   );
 }
+
+/**
+ * Whether the user works for an organization (owner, staff, vet...) rather than as an admin.
+ * Decided by the organization role alone: the system role is not reliable for this, since some
+ * accounts carry no system role at all (and older ones carried MEMBERSHIP instead of MEMBER).
+ */
+export function isOrganizationMember(user?: { roles?: string[] | null; organizationRole?: string | null } | null) {
+  if (!user?.organizationRole) return false;
+  return !hasAnySystemRole(user.roles ?? [], ["ADMIN"]);
+}

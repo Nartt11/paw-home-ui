@@ -1,5 +1,6 @@
 "use client";
 
+import { isOrganizationMember } from "@/lib/permission";
 import * as React from "react";
 
 import { AdoptionDecisionDialog } from "@/components/adoption/AdoptionDecisionDialog";
@@ -50,7 +51,8 @@ export default function AdoptionManagementPage() {
   const [pendingTab, setPendingTab] = React.useState<"ALL" | "PENDING" | "APPROVED">("ALL");
 
   const { data: currentUser } = useCurrentUser();
-  const isOrganizationUser = currentUser?.roles.includes(SYSTEM_ROLES.MEMBER) && !!currentUser?.organizationRole;
+  // By organization role: some accounts have no MEMBER system role (production demo accounts have none).
+  const isOrganizationUser = isOrganizationMember(currentUser);
   const currentOrgId = isOrganizationUser ? currentUser?.organizationId : undefined;
 
   const canManage = React.useMemo(() => {
@@ -373,7 +375,7 @@ export default function AdoptionManagementPage() {
             onOpenChange={handleDecisionOpenChange}
             mode={decisionState.mode}
             submitting={isDecisionSubmitting}
-            applicantName={selectedDecisionAdoption?.applicantUsername}
+            applicantName={selectedDecisionAdoption?.applicantName ?? selectedDecisionAdoption?.applicantUsername}
             petName={selectedDecisionAdoption?.petName}
             onSubmit={handleSubmitDecision}
           />

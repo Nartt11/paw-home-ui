@@ -161,13 +161,14 @@ export function UserCreateDialog({
             </Field>
 
             <Field>
-              <FieldLabel htmlFor="user-full-name">Họ tên (tùy chọn)</FieldLabel>
+              <FieldLabel htmlFor="user-full-name">Tên hiển thị</FieldLabel>
               <FieldContent>
                 <Input
                   id="user-full-name"
                   disabled={isBusy}
                   {...register("fullName")}
                 />
+                <FieldError errors={[errors.fullName]} />
               </FieldContent>
             </Field>
 

@@ -9,7 +9,7 @@ export interface PostMediaDto {
 export interface PostSummaryDto {
   postId: string;
   authorId: string;
-  authorUsername?: string;
+  authorName?: string;
   content: string;
   tags: string[];
   likeCount: number;

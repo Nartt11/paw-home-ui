@@ -17,7 +17,8 @@ export interface RescueCaseSummary {
   species: string;
   priority: RescueCasePriority;
   status: RescueCaseStatus;
-  reporterUsername: string;
+  /** The reporter's display name. */
+  reporterName: string;
   locationText: string;
   reportedAt: string;
   firstImageUrl: string;
@@ -29,7 +30,8 @@ export interface RescueCase extends RescueCaseSummary {
   petId: string;
   petName: string;
   reportedBy: string;
-  reporterUsername: string;
+  /** The reporter's display name. */
+  reporterName: string;
   organizationId: string;
   organizationName: string;
   color: string;
@@ -73,7 +75,8 @@ export interface RescueClaim {
   caseId: string;
   caseCode?: string;
   userId?: string;
-  username?: string;
+  /** The helper's display name. */
+  name?: string;
   /** Set when an organization holds the claim. */
   organizationId?: string;
   status: RescueClaimStatus;
@@ -88,7 +91,7 @@ export interface RescueCaseUpdate {
   updateId: string;
   caseId: string;
   authorId: string;
-  authorUsername: string;
+  authorName: string;
   authorAvatarUrl?: string;
   note: string;
   imageUrls: string[];
