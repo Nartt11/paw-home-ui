@@ -18,8 +18,14 @@ import {
   useOrganizationDetail,
   useOrganizations,
   useUpdateOrganization,
+  useUpdateOrganizationStatus,
 } from "@/hooks/use-organization";
-import type { OrganizationCreatePayload } from "@/types/organization.type";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ORGANIZATION_STATUS_LABEL } from "@/lib/organization-display";
+import type { OrganizationCreatePayload, OrganizationStatus } from "@/types/organization.type";
+
+/** Pending first: it is the queue an admin works through. */
+const STATUS_TABS: OrganizationStatus[] = ["PENDING", "ACTIVE", "INACTIVE", "REJECTED"];
 import { SearchIcon } from "lucide-react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
@@ -40,6 +46,7 @@ export default function CenterManagementPage() {
   const [openCreate, setOpenCreate] = useState(false);
   const [openUpdate, setOpenUpdate] = useState(false);
   const [accountOrgId, setAccountOrgId] = useState<string | null>(null);
+  const [rejectId, setRejectId] = useState<string | null>(null);
 
   const organizationsQuery = useOrganizations({
     page,
@@ -52,6 +59,33 @@ export default function CenterManagementPage() {
   const createOrganizationMutation = useCreateOrganization();
   const updateOrganizationMutation = useUpdateOrganization();
   const deactivateOrganizationMutation = useDeactivateOrganization();
+  const statusMutation = useUpdateOrganizationStatus();
+
+  const nameOf = (id: string) => data?.content.find((o) => o.organizationId === id)?.name ?? "Trung tâm";
+
+  const handleApprove = (id: string) => {
+    statusMutation.mutate(
+      { id, status: "ACTIVE" },
+      {
+        onSuccess: () => toast.success(`Đã duyệt ${nameOf(id)}. Người đăng ký trở thành chủ sở hữu.`),
+        onError: (error) => toast.error(error.message),
+      },
+    );
+  };
+
+  const handleConfirmReject = () => {
+    if (!rejectId) return;
+    statusMutation.mutate(
+      { id: rejectId, status: "REJECTED" },
+      {
+        onSuccess: () => {
+          toast.success(`Đã từ chối đăng ký của ${nameOf(rejectId)}`);
+          setRejectId(null);
+        },
+        onError: (error) => toast.error(error.message),
+      },
+    );
+  };
 
   const data = organizationsQuery.data;
   const selectedOrganization = organizationDetailQuery.data ?? null;
@@ -96,9 +130,11 @@ export default function CenterManagementPage() {
 
     deactivateOrganizationMutation.mutate(deleteId, {
       onSuccess: () => {
+        toast.success("Đã ngừng hoạt động trung tâm");
         setOpenDelete(false);
         setDeleteId(null);
       },
+      onError: (error) => toast.error(error.message),
     });
   }, [deactivateOrganizationMutation, deleteId]);
 
@@ -110,6 +146,22 @@ export default function CenterManagementPage() {
         buttonText="Thêm trung tâm"
         handleOpenModal={() => setOpenCreate(true)}
       />
+
+      <Tabs
+        value={statusParam ?? "ALL"}
+        onValueChange={(value) => setParams({ status: value === "ALL" ? undefined : value, page: 0 })}
+      >
+        <div className="-mx-4 overflow-x-auto overflow-y-hidden px-4 sm:mx-0 sm:px-0">
+          <TabsList>
+            <TabsTrigger value="ALL">Tất cả</TabsTrigger>
+            {STATUS_TABS.map((value) => (
+              <TabsTrigger key={value} value={value}>
+                {ORGANIZATION_STATUS_LABEL[value]}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </div>
+      </Tabs>
 
       <div className="relative w-full md:max-w-sm">
         <SearchIcon className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
@@ -125,6 +177,8 @@ export default function CenterManagementPage() {
       <OrganizationListTable
         data={data?.content ?? []}
         loading={organizationsQuery.isPending}
+        onApprove={handleApprove}
+        onReject={setRejectId}
         onCreateAccount={(organizationId) => setAccountOrgId(organizationId)}
         onViewDetail={(organizationId) => {
           setSelectedId(organizationId);
@@ -205,13 +259,23 @@ export default function CenterManagementPage() {
             setDeleteId(null);
           }
         }}
-        title="Xóa trung tâm"
-        description="Bạn có chắc chắn muốn xóa trung tâm này? Hành động này không thể hoàn tác."
-        warningText="Lưu ý: Đây là xóa mềm (deactivate)."
-        confirmText="Xóa"
+        title="Ngừng hoạt động trung tâm"
+        description="Trung tâm sẽ không còn hiện trên bản đồ và danh sách công khai. Dữ liệu thú cưng, đơn và thành viên vẫn được giữ lại."
+        confirmText="Ngừng hoạt động"
         confirming={deactivateOrganizationMutation.isPending}
         confirmDisabled={!deleteId}
         onConfirm={handleConfirmDelete}
+      />
+
+      <DeleteModal
+        open={!!rejectId}
+        onOpenChange={(open) => !open && setRejectId(null)}
+        title="Từ chối đăng ký trung tâm"
+        description={rejectId ? `Từ chối đăng ký của "${nameOf(rejectId)}"? Người đăng ký sẽ không trở thành chủ sở hữu.` : undefined}
+        confirmText="Từ chối"
+        confirming={statusMutation.isPending}
+        confirmDisabled={!rejectId}
+        onConfirm={handleConfirmReject}
       />
     </div>
   );

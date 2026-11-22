@@ -6,6 +6,7 @@ import type {
   FollowupSeverity,
   ReturnReasonCode,
 } from "@/types/followup.type";
+import { STATUS_TONE_SOFT } from "@/lib/status-tone";
 
 export const FOLLOWUP_MILESTONE_LABEL: Record<FollowupMilestone, string> = {
   DAY_2: "Ngày 2",
@@ -21,9 +22,9 @@ export const FOLLOWUP_SEVERITY_LABEL: Record<FollowupSeverity, string> = {
 };
 
 export const FOLLOWUP_SEVERITY_BADGE: Record<FollowupSeverity, string> = {
-  RED: "border-red-200 bg-red-50 text-red-800",
-  YELLOW: "border-amber-200 bg-amber-50 text-amber-800",
-  GREEN: "border-emerald-200 bg-emerald-50 text-emerald-800",
+  RED: STATUS_TONE_SOFT.danger,
+  YELLOW: STATUS_TONE_SOFT.warning,
+  GREEN: STATUS_TONE_SOFT.success,
 };
 
 export const FOLLOWUP_ALERT_STATUS_LABEL: Record<FollowupAlertStatus, string> = {

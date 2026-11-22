@@ -34,6 +34,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { parseApiDate, VN_TIME_ZONE } from "@/lib/datetime";
+import { clickableRowProps } from "@/components/common/admin/clickable-row";
 
 export interface BannerListTableProps {
   data: Banner[];
@@ -139,43 +140,26 @@ export function BannerListTable({
         id: "actions",
         header: "",
         cell: ({ row }) => {
-          const { active, bannerId } = row.original;
+          // Showing or hiding is the switch on the row; the menu keeps editing and deleting.
+          const { bannerId } = row.original;
+          if (!onEdit && !onDelete) return null;
 
           return (
             <div className="flex justify-end">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-8 w-8">
-                    <EllipsisVerticalIcon className="h-4 w-4" />
+                  <Button variant="ghost" size="icon" className="size-8" aria-label="Thao tác khác">
+                    <EllipsisVerticalIcon className="size-4" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="min-w-44">
-                  <DropdownMenuItem
-                    onClick={() => onViewDetail?.(bannerId)}
-                    disabled={!onViewDetail}
-                  >
-                    Xem chi tiết
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => onEdit?.(bannerId)}
-                    disabled={!onEdit}
-                  >
-                    Chỉnh sửa
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => onToggleActive?.(bannerId)}
-                    disabled={!onToggleActive}
-                  >
-                    {active ? "Tắt hiển thị" : "Bật hiển thị"}
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    className="text-destructive focus:text-destructive"
-                    onClick={() => onDelete?.(bannerId)}
-                    disabled={!onDelete}
-                  >
-                    Xóa
-                  </DropdownMenuItem>
+                <DropdownMenuContent align="end" className="min-w-40">
+                  {onEdit ? <DropdownMenuItem onClick={() => onEdit(bannerId)}>Chỉnh sửa</DropdownMenuItem> : null}
+                  {onEdit && onDelete ? <DropdownMenuSeparator /> : null}
+                  {onDelete ? (
+                    <DropdownMenuItem variant="destructive" onClick={() => onDelete(bannerId)}>
+                      Xóa banner
+                    </DropdownMenuItem>
+                  ) : null}
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -183,7 +167,7 @@ export function BannerListTable({
         },
       }),
     ],
-    [onDelete, onEdit, onToggleActive, onViewDetail],
+    [onDelete, onEdit, onToggleActive],
   );
 
   const table = useReactTable({
@@ -230,7 +214,10 @@ export function BannerListTable({
               />
             ) : (
               table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id} className="hover:bg-muted/50">
+                <TableRow
+                  key={row.id}
+                  {...clickableRowProps(onViewDetail && (() => onViewDetail(row.original.bannerId)))}
+                >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
                       {flexRender(

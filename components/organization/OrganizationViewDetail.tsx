@@ -14,6 +14,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
+import { organizationStatusBadge, organizationStatusLabel } from "@/lib/organization-display";
 
 const LocationPickerMap = dynamic(
   () => import("@/components/map/LocationPickerMap"),
@@ -48,33 +49,11 @@ function typeLabel(type?: string) {
 }
 
 function statusToBadge(status?: string) {
-  const s = (status ?? "").toUpperCase();
-
-  if (s === "ACTIVE") {
-    return (
-      <Badge className="bg-emerald-50 text-emerald-700 hover:bg-emerald-50">
-        Đang hoạt động
-      </Badge>
-    );
-  }
-
-  if (s === "PENDING") {
-    return (
-      <Badge className="bg-amber-50 text-amber-700 hover:bg-amber-50">
-        Chờ duyệt
-      </Badge>
-    );
-  }
-
-  if (s === "INACTIVE") {
-    return <Badge variant="secondary">Ngừng hoạt động</Badge>;
-  }
-
-  if (s === "REJECTED") {
-    return <Badge className="bg-rose-50 text-rose-700 hover:bg-rose-50">Bị từ chối</Badge>;
-  }
-
-  return <Badge variant="secondary">{status || "-"}</Badge>;
+  return (
+    <Badge variant="outline" className={organizationStatusBadge(status)}>
+      {organizationStatusLabel(status)}
+    </Badge>
+  );
 }
 
 function FieldRow({

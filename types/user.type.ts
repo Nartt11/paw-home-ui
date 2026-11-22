@@ -8,6 +8,8 @@ export interface UserSummary {
   userId: string;
   userCode: string;
   username: string;
+  /** Display name. Older backends leave it out. */
+  fullName?: string;
   email: string;
   status: UserStatus;
 }

@@ -9,7 +9,9 @@ import {
 } from "@tanstack/react-table";
 import { EllipsisVerticalIcon } from "lucide-react";
 
-import type { UserSummary, UserStatus } from "@/types/user.type";
+import type { UserSummary } from "@/types/user.type";
+import { clickableRowProps } from "@/components/common/admin/clickable-row";
+import { userStatusBadge, userStatusLabel } from "@/lib/user-display";
 
 import {
   AdminTableEmptyRow,
@@ -21,7 +23,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -42,46 +43,10 @@ export interface UserListTableProps {
   onToggleLock?: (user: UserSummary) => void;
 }
 
-function getStatusLabel(status?: UserStatus | string) {
-  const s = status ?? "";
-  switch (s) {
-    case "ACTIVE":
-      return {
-        label: "Hoạt động",
-        className: "bg-emerald-50 text-emerald-700 hover:bg-emerald-50",
-      };
-    case "LOCKED":
-      return {
-        label: "Đã khóa",
-        className: "bg-rose-50 text-rose-700 hover:bg-rose-50",
-      };
-    case "BANNED":
-      return {
-        label: "Bị cấm",
-        className: "bg-rose-50 text-rose-700 hover:bg-rose-50",
-      };
-    case "INACTIVE":
-      return {
-        label: "Ngừng hoạt động",
-        className: "bg-slate-100 text-slate-700 hover:bg-slate-100",
-      };
-    case "PENDING_VERIFICATION":
-      return {
-        label: "Chờ xác minh",
-        className: "bg-amber-50 text-amber-700 hover:bg-amber-50",
-      };
-    default:
-      return {
-        label: s || "Không rõ",
-        className: "bg-slate-100 text-slate-700 hover:bg-slate-100",
-      };
-  }
-}
-
 function getColumns(
-  props: Pick<UserListTableProps, "onViewDetail" | "onToggleLock">,
+  props: Pick<UserListTableProps, "onToggleLock">,
 ): ColumnDef<UserSummary>[] {
-  const { onViewDetail, onToggleLock } = props;
+  const { onToggleLock } = props;
 
   return [
     {
@@ -89,11 +54,12 @@ function getColumns(
       header: "Người dùng",
       cell: ({ row }) => (
         <div className="min-w-52">
-          <div className="truncate font-medium text-slate-900">
-            {row.original.username || "-"}
+          <div className="truncate font-medium text-foreground">
+            {row.original.fullName?.trim() || row.original.username || "—"}
           </div>
-          <div className="truncate font-mono text-xs text-slate-500">
-            {row.original.userCode || row.original.userId}
+          <div className="truncate text-xs text-muted-foreground">
+            {row.original.username}
+            {row.original.userCode ? ` · ${row.original.userCode}` : ""}
           </div>
         </div>
       ),
@@ -111,10 +77,9 @@ function getColumns(
       accessorKey: "status",
       header: "Trạng thái",
       cell: ({ row }) => {
-        const status = getStatusLabel(row.original.status);
         return (
-          <Badge className={status.className} variant="secondary">
-            {status.label}
+          <Badge variant="outline" className={userStatusBadge(row.original.status)}>
+            {userStatusLabel(row.original.status)}
           </Badge>
         );
       },
@@ -123,39 +88,24 @@ function getColumns(
       id: "actions",
       header: "",
       cell: ({ row }) => {
-        const id = row.original.userId;
+        if (!onToggleLock) return null;
+        const locked = row.original.status === "LOCKED";
 
         return (
           <div className="flex justify-end">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="size-8">
+                <Button variant="ghost" size="icon" className="size-8" aria-label="Thao tác khác">
                   <EllipsisVerticalIcon className="size-4" />
                 </Button>
               </DropdownMenuTrigger>
 
               <DropdownMenuContent align="end" className="min-w-44">
                 <DropdownMenuItem
-                  onClick={() => onViewDetail?.(id)}
-                  disabled={!onViewDetail}
+                  variant={locked ? "default" : "destructive"}
+                  onClick={() => onToggleLock(row.original)}
                 >
-                  Xem chi tiết
-                </DropdownMenuItem>
-
-                <DropdownMenuSeparator />
-
-                <DropdownMenuItem
-                  className={
-                    row.original.status === "LOCKED"
-                      ? undefined
-                      : "text-rose-600 focus:text-rose-600"
-                  }
-                  onClick={() => onToggleLock?.(row.original)}
-                  disabled={!onToggleLock}
-                >
-                  {row.original.status === "LOCKED"
-                    ? "Mở khóa tài khoản"
-                    : "Khóa tài khoản"}
+                  {locked ? "Mở khóa tài khoản" : "Khóa tài khoản"}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -188,8 +138,8 @@ export function UserListTable({
   }, [data, keyword]);
 
   const columns = React.useMemo(
-    () => getColumns({ onViewDetail, onToggleLock }),
-    [onViewDetail, onToggleLock],
+    () => getColumns({ onToggleLock }),
+    [onToggleLock],
   );
 
   const table = useReactTable({
@@ -236,7 +186,10 @@ export function UserListTable({
               />
             ) : (
               table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id} className="hover:bg-muted/50">
+                <TableRow
+                  key={row.id}
+                  {...clickableRowProps(onViewDetail && (() => onViewDetail(row.original.userId)))}
+                >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
                       {flexRender(

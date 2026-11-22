@@ -15,6 +15,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { parseApiDate, VN_TIME_ZONE } from "@/lib/datetime";
+import { userStatusBadge, userStatusLabel } from "@/lib/user-display";
 
 function FieldRow({
   label,
@@ -40,28 +41,11 @@ export interface UserViewDetailProps {
 }
 
 function statusToBadge(status?: User["status"] | string) {
-  switch (status) {
-    case "ACTIVE":
-      return (
-        <Badge className="bg-emerald-50 text-emerald-700 hover:bg-emerald-50">
-          Hoạt động
-        </Badge>
-      );
-    case "DISABLED":
-      return (
-        <Badge className="bg-rose-50 text-rose-700 hover:bg-rose-50">
-          Vô hiệu
-        </Badge>
-      );
-    case "PENDING_VERIFICATION":
-      return (
-        <Badge className="bg-amber-50 text-amber-700 hover:bg-amber-50">
-          Chờ xác minh
-        </Badge>
-      );
-    default:
-      return <Badge variant="secondary">{status || "Không rõ"}</Badge>;
-  }
+  return (
+    <Badge variant="outline" className={userStatusBadge(status)}>
+      {userStatusLabel(status)}
+    </Badge>
+  );
 }
 
 function formatDateTimeVi(value?: string) {

@@ -19,17 +19,10 @@ import { useClaimCase, useOrganizationRescueQueue } from "@/hooks/use-rescue-flo
 import { apiErrorMessage } from "@/lib/api-error";
 import { formatDateTime, formatRelativeTime } from "@/lib/datetime";
 import { speciesLabel } from "@/lib/pet-display";
-import { rescuePriorityLabel } from "@/lib/rescue-case-display";
+import { rescuePriorityBadge, rescuePriorityLabel } from "@/lib/rescue-case-display";
 import type { RescueCasePriority, RescueQueueItem } from "@/types/rescue-case.type";
 
 const PRIORITY_RANK: Record<RescueCasePriority, number> = { LOW: 0, NORMAL: 1, HIGH: 2, CRITICAL: 3 };
-
-const PRIORITY_TONE: Record<RescueCasePriority, string> = {
-  CRITICAL: "border-red-200 bg-red-50 text-red-800",
-  HIGH: "border-rose-200 bg-rose-50 text-rose-800",
-  NORMAL: "border-slate-200 bg-slate-50 text-slate-700",
-  LOW: "border-slate-200 bg-white text-slate-600",
-};
 
 /** Reported facts the AI found missing, in plain words. */
 const MISSING_LABEL: Record<string, string> = {
@@ -77,7 +70,7 @@ function QueueRow({
         </div>
         <div className="min-w-0 space-y-1.5">
           <div className="flex flex-wrap items-center gap-2">
-            <Badge variant="outline" className={PRIORITY_TONE[effective]}>
+            <Badge variant="outline" className={rescuePriorityBadge(effective)}>
               {rescuePriorityLabel(effective)}
               {raisedByAi ? <span className="ml-1 font-semibold">· AI ↑</span> : null}
             </Badge>
