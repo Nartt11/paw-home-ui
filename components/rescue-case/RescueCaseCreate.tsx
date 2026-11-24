@@ -4,7 +4,7 @@ import { FirstAidTips, PossibleDuplicates } from "@/components/rescue-case/Repor
 import * as React from "react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
-import { Upload, X, Loader2 } from "lucide-react";
+import { Upload, X, Loader2, LocateFixedIcon } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -28,7 +28,9 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 
+import { useGeolocation } from "@/hooks/use-geolocation";
 import { useResolveLocation } from "@/hooks/use-location";
+import { usePetTaxonomy } from "@/hooks/use-pet";
 import { useUploadTempMedia } from "@/hooks/use-media";
 import type { RescueCasePayload, RescueCasePriority } from "@/types/rescue-case.type";
 
@@ -59,6 +61,30 @@ const PRIORITIES: Array<{ value: RescueCasePriority; label: string }> = [
   { value: "HIGH", label: "Cao" },
   { value: "CRITICAL", label: "Khẩn cấp" },
 ];
+
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+
+/** A number a rescuer can call in Vietnam: 0 or +84, then 9–10 digits; spaces, dots and dashes are fine. */
+function isCallablePhone(value: string) {
+  return /^(?:\+84|0)\d{9,10}$/.test(value.replace(/[\s().-]+/g, ""));
+}
+const UNKNOWN_SPECIES = "__unknown";
+
+type FieldKey = "location" | "contactPhone" | "images";
+
+/** Errors for the fields people fill; empty means the field is fine. Shown under the field it is about. */
+function validate(values: RescueCaseCreateValues): Partial<Record<FieldKey, string>> {
+  const errors: Partial<Record<FieldKey, string>> = {};
+  const hasPoint = Boolean(values.latitude) && Boolean(values.longitude);
+  if (!hasPoint && !values.locationText.trim()) {
+    errors.location = "Cho biết bé đang ở đâu: chọn trên bản đồ, bấm \"Dùng vị trí của tôi\" hoặc nhập địa chỉ.";
+  }
+  const phone = values.contactPhone?.trim() ?? "";
+  if (phone && !isCallablePhone(phone)) {
+    errors.contactPhone = "Số điện thoại chưa đúng: bắt đầu bằng 0 hoặc +84, ví dụ 0901234567.";
+  }
+  return errors;
+}
 
 const DEFAULT_VALUES: RescueCaseCreateValues = {
   species: "",
@@ -96,11 +122,46 @@ export function RescueCaseCreate({
 
   const uploadMediaMutation = useUploadTempMedia();
   const resolveLocation = useResolveLocation();
+  const geolocation = useGeolocation();
+  const taxonomy = usePetTaxonomy();
+  // A field shows its error once the person has left it, or after they tried to send.
+  const [touched, setTouched] = React.useState<Partial<Record<FieldKey, boolean>>>({});
+  const [imageError, setImageError] = React.useState<string | null>(null);
+  const errors = validate(values);
+  const shown = (key: FieldKey) => (touched[key] ? errors[key] : undefined);
+  const touch = (key: FieldKey) => setTouched((t) => ({ ...t, [key]: true }));
+
+  /** A point from the map or the device: fill the ward and province the same way. */
+  const pickPoint = React.useCallback(
+    async (latitude: number, longitude: number) => {
+      setValues((prev) => ({ ...prev, latitude, longitude }));
+      setTouched((t) => ({ ...t, location: true }));
+      try {
+        const location = await resolveLocation(latitude, longitude);
+        setValues((prev) => ({
+          ...prev,
+          latitude,
+          longitude,
+          wardName: location.wardName,
+          wardCode: location.wardCode,
+          provinceName: location.provinceName,
+          provinceCode: location.provinceCode,
+          locationText: location.displayName || prev.locationText,
+        }));
+      } catch (err) {
+        console.error("Reverse geocoding failed", err);
+      }
+    },
+    [resolveLocation],
+  );
+
 
   const handleOpenChange = React.useCallback(
     (nextOpen: boolean) => {
       if (!nextOpen) {
         setValues(DEFAULT_VALUES);
+        setTouched({});
+        setImageError(null);
         previewUrls.forEach((url) => URL.revokeObjectURL(url));
         setPreviewUrls([]);
         setSelectedFiles([]);
@@ -124,7 +185,16 @@ export function RescueCaseCreate({
   );
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selected = Array.from(e.target.files || []);
+    const all = Array.from(e.target.files || []);
+    if (!all.length) return;
+    // Tell people at once which photos cannot go, instead of failing on send.
+    const rejected = all.filter((file) => !file.type.startsWith("image/") || file.size > MAX_IMAGE_BYTES);
+    const selected = all.filter((file) => !rejected.includes(file));
+    setImageError(
+      rejected.length
+        ? `Bỏ qua ${rejected.length} ảnh không dùng được (chỉ nhận JPG, PNG, WebP, tối đa 5 MB): ${rejected.map((f) => f.name).join(", ")}`
+        : null,
+    );
     if (!selected.length) return;
 
     setSelectedFiles((prev) => [...prev, ...selected]);
@@ -150,6 +220,13 @@ export function RescueCaseCreate({
   }, [previewUrls]);
 
   const handleFormSubmit = async () => {
+    // Show every problem at its field and take the person to the first one.
+    if (Object.keys(errors).length > 0) {
+      setTouched({ location: true, contactPhone: true });
+      const first = errors.location ? "create-rescue-location" : "create-rescue-phone";
+      document.getElementById(first)?.focus();
+      return;
+    }
     setUploading(true);
     try {
       let mediaIds: string[] = [];
@@ -177,9 +254,7 @@ export function RescueCaseCreate({
     }
   };
 
-  // Only the place is required: an urgent report should not wait for a photo.
-  const hasLocation = Boolean(values.locationText.trim()) || (Boolean(values.latitude) && Boolean(values.longitude));
-  const canSubmit = hasLocation;
+  const busy = Boolean(submitting) || uploading;
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -221,6 +296,12 @@ export function RescueCaseCreate({
                 </Button>
               </div>
 
+              {imageError ? (
+                <p id="create-rescue-images-error" className="text-sm text-destructive" role="alert">
+                  {imageError}
+                </p>
+              ) : null}
+
               {previewUrls.length > 0 && (
                 <div className="mt-3 grid grid-cols-4 gap-3">
                   {previewUrls.map((url, index) => (
@@ -239,7 +320,8 @@ export function RescueCaseCreate({
                         type="button"
                         onClick={() => handleRemoveImage(index)}
                         disabled={Boolean(submitting) || uploading}
-                        className="absolute top-1.5 right-1.5 p-1 rounded-full bg-black/60 text-white hover:bg-black/85 transition opacity-0 group-hover:opacity-100 focus:opacity-100 disabled:opacity-50 cursor-pointer"
+                        aria-label={`Bỏ ảnh ${index + 1}`}
+                        className="absolute top-1.5 right-1.5 p-1 rounded-full bg-black/60 text-white hover:bg-black/85 transition opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100 disabled:opacity-50 cursor-pointer"
                       >
                         <X className="h-3.5 w-3.5" />
                       </button>
@@ -250,13 +332,54 @@ export function RescueCaseCreate({
             </div>
 
             <div className="space-y-2">
-              <Label className="font-semibold text-gray-700">Địa điểm *</Label>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <Label htmlFor="create-rescue-location" className="font-semibold text-gray-700">
+                  Bé đang ở đâu? <span aria-hidden>*</span>
+                  <span className="sr-only">(bắt buộc)</span>
+                </Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => geolocation.locateThen((c) => void pickPoint(c.lat, c.lng))}
+                  disabled={busy || geolocation.status === "locating"}
+                >
+                  {geolocation.status === "locating" ? (
+                    <Loader2 className="size-4 animate-spin" aria-hidden />
+                  ) : (
+                    <LocateFixedIcon className="size-4" aria-hidden />
+                  )}
+                  Dùng vị trí của tôi
+                </Button>
+              </div>
               <Input
-                placeholder="Ví dụ: 12 Nguyễn Trãi, Q.1"
+                id="create-rescue-location"
+                placeholder="Ví dụ: hẻm 12 Nguyễn Trãi, gần chợ Bến Thành"
                 value={values.locationText}
                 onChange={(e) => update("locationText", e.target.value)}
-                disabled={Boolean(submitting) || uploading}
+                onBlur={() => touch("location")}
+                disabled={busy}
+                aria-invalid={Boolean(shown("location"))}
+                aria-describedby={shown("location") ? "create-rescue-location-error" : "create-rescue-location-hint"}
               />
+              {shown("location") ? (
+                <p id="create-rescue-location-error" className="text-sm text-destructive">
+                  {shown("location")}
+                </p>
+              ) : (
+                <p id="create-rescue-location-hint" className="text-xs text-muted-foreground">
+                  {values.provinceName
+                    ? `Đã nhận vị trí: ${[values.wardName, values.provinceName].filter(Boolean).join(", ")}`
+                    : "Chỉ cần vị trí là gửi được."}
+                </p>
+              )}
+              {geolocation.status === "denied" || geolocation.status === "unavailable" ? (
+                <p className="text-sm text-amber-800" role="status">
+                  {geolocation.status === "denied"
+                    ? "Trình duyệt chưa cho phép lấy vị trí. Bạn có thể chọn trên bản đồ hoặc nhập địa chỉ."
+                    : "Không lấy được vị trí lúc này. Hãy chọn trên bản đồ hoặc nhập địa chỉ."}
+                </p>
+              ) : null}
             </div>
 
             <div className="space-y-2">
@@ -266,27 +389,7 @@ export function RescueCaseCreate({
                   latitude={values.latitude || undefined}
                   longitude={values.longitude || undefined}
                   disabled={Boolean(submitting) || uploading}
-                  onChange={async ({ latitude, longitude }) => {
-                    update("latitude", latitude);
-                    update("longitude", longitude);
-                    
-                    try {
-                      const location = await resolveLocation(latitude, longitude);
-
-                      setValues((prev) => ({
-                        ...prev,
-                        latitude,
-                        longitude,
-                        wardName: location.wardName,
-                        wardCode: location.wardCode,
-                        provinceName: location.provinceName,
-                        provinceCode: location.provinceCode,
-                        locationText: location.displayName || prev.locationText,
-                      }));
-                    } catch (err) {
-                      console.error("Reverse geocoding failed", err);
-                    }
-                  }}
+                  onChange={({ latitude, longitude }) => void pickPoint(latitude, longitude)}
                 />
               </div>
               <p className="text-xs text-muted-foreground">
@@ -306,13 +409,25 @@ export function RescueCaseCreate({
             
             <div className="grid gap-5 md:grid-cols-2">
               <div className="space-y-2">
-                <Label>Loài</Label>
-                <Input
-                  placeholder="Chó / Mèo..."
-                  value={values.species}
-                  onChange={(e) => update("species", e.target.value)}
-                  disabled={Boolean(submitting) || uploading}
-                />
+                <Label htmlFor="create-rescue-species">Loài</Label>
+                {/* From the catalogue, so the backend never has to guess what was typed. */}
+                <Select
+                  value={values.species || UNKNOWN_SPECIES}
+                  onValueChange={(v) => update("species", v === UNKNOWN_SPECIES ? "" : v)}
+                  disabled={busy}
+                >
+                  <SelectTrigger id="create-rescue-species">
+                    <SelectValue placeholder="Chọn loài" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={UNKNOWN_SPECIES}>Chưa rõ</SelectItem>
+                    {(taxonomy.data ?? []).map((species) => (
+                      <SelectItem key={species.speciesId} value={species.name}>
+                        {species.nameVi || species.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">
@@ -358,13 +473,29 @@ export function RescueCaseCreate({
               </div>
 
               <div className="space-y-2 md:col-span-2">
-                <Label>Số điện thoại liên hệ</Label>
+                <Label htmlFor="create-rescue-phone">Số điện thoại liên hệ</Label>
                 <Input
-                  placeholder="09xxxxxxxx"
+                  id="create-rescue-phone"
+                  type="tel"
+                  inputMode="tel"
+                  autoComplete="tel"
+                  placeholder="0901234567"
                   value={values.contactPhone}
                   onChange={(e) => update("contactPhone", e.target.value)}
-                  disabled={Boolean(submitting) || uploading}
+                  onBlur={() => touch("contactPhone")}
+                  disabled={busy}
+                  aria-invalid={Boolean(shown("contactPhone"))}
+                  aria-describedby={shown("contactPhone") ? "create-rescue-phone-error" : "create-rescue-phone-hint"}
                 />
+                {shown("contactPhone") ? (
+                  <p id="create-rescue-phone-error" className="text-sm text-destructive">
+                    {shown("contactPhone")}
+                  </p>
+                ) : (
+                  <p id="create-rescue-phone-hint" className="text-xs text-muted-foreground">
+                    Chỉ người nhận ca, trạm và quản trị viên thấy số này.
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2 md:col-span-2">
@@ -416,9 +547,6 @@ export function RescueCaseCreate({
         </div>
 
         <DialogFooter className="px-6 pb-6 bg-gray-50/50 py-4 border-t rounded-b-lg">
-          {!hasLocation ? (
-            <p className="mr-auto self-center text-sm text-muted-foreground">Chọn vị trí trên bản đồ để gửi.</p>
-          ) : null}
           <Button
             variant="secondary"
             type="button"
@@ -430,7 +558,7 @@ export function RescueCaseCreate({
           <Button
             type="button"
             onClick={handleFormSubmit}
-            disabled={Boolean(submitting) || uploading || !canSubmit}
+            disabled={busy}
           >
             {submitting || uploading ? (
               <>

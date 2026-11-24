@@ -19,7 +19,8 @@ type GeolocationState =
 export function useGeolocation() {
   const [state, setState] = useState<GeolocationState>({ status: "idle" });
 
-  const locate = useCallback(() => {
+  /** Asks for the position; `onReady` also gets it, for callers that act on it at once. */
+  const locateThen = useCallback((onReady?: (coordinates: Coordinates) => void) => {
     if (typeof navigator === "undefined" || !navigator.geolocation) {
       setState({ status: "unavailable" });
       return;
@@ -27,14 +28,11 @@ export function useGeolocation() {
 
     setState({ status: "locating" });
     navigator.geolocation.getCurrentPosition(
-      (position) =>
-        setState({
-          status: "ready",
-          coordinates: {
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-          },
-        }),
+      (position) => {
+        const coordinates = { lat: position.coords.latitude, lng: position.coords.longitude };
+        setState({ status: "ready", coordinates });
+        onReady?.(coordinates);
+      },
       (error) =>
         setState({
           status:
@@ -44,9 +42,13 @@ export function useGeolocation() {
     );
   }, []);
 
+  // Safe as an onClick handler: it ignores the event.
+  const locate = useCallback(() => locateThen(), [locateThen]);
+
   return {
     status: state.status,
     coordinates: state.status === "ready" ? state.coordinates : undefined,
     locate,
+    locateThen,
   };
 }
