@@ -29,21 +29,12 @@ export function DonateSuccessCard({
               Cảm ơn bạn!
             </h2>
             <p className="mt-3 text-sm leading-7 text-muted-foreground">
-              Khoản ủng hộ{" "}
-              <span className="font-bold text-primary">{amountLabel}</span> của
-              bạn đã được ghi nhận. Chúng tôi sẽ gửi email xác nhận đến{" "}
-              <span className="font-semibold text-foreground">
-                {email || "email của bạn"}
-              </span>{" "}
-              trong vòng 24 giờ.
+              Cảm ơn bạn đã muốn ủng hộ <span className="font-bold text-primary">{amountLabel}</span>. Đây là bản mẫu: chưa có
+              khoản tiền nào được chuyển và chưa có email nào được gửi.
             </p>
-
-            <div className="mt-5 rounded-2xl bg-muted p-4 ring-1 ring-border">
-              <div className="text-xs text-muted-foreground">Mã giao dịch</div>
-              <div className="mt-1 text-lg font-extrabold tracking-widest text-foreground">
-                {transactionId}
-              </div>
-            </div>
+            <p className="mt-2 text-sm leading-7 text-muted-foreground">
+              Muốn giúp ngay, hãy liên hệ trực tiếp một trạm cứu hộ trên bản đồ.
+            </p>
 
             <div className="mt-5 flex justify-center gap-1">
               {Array.from({ length: 5 }).map((_, i) => (

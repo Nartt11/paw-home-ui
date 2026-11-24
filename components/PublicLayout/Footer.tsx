@@ -4,8 +4,6 @@ import { ChevronRight, MapPin, Phone, Mail, Smartphone } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { APP_ROUTES } from "@/constants/routes";
 
-const SOCIAL_ICONS = ["📘", "▶️", "📷"];
-
 export default function Footer() {
   const path = usePathname();
   return (
@@ -31,21 +29,10 @@ export default function Footer() {
             </div>
 
             <p className="text-[13px] text-white/60 leading-relaxed mb-4">
-              Tổ chức phi lợi nhuận chuyên cứu hộ, chăm sóc và kết nối thú cưng
-              cần mái ấm tại Hà Nội từ năm 2018.
+              Nền tảng kết nối người báo ca, người cứu hộ, các trạm và gia đình
+              nhận nuôi, để mỗi bé thú gặp nạn có đường về một mái nhà.
             </p>
 
-            <div className="flex gap-2">
-              {SOCIAL_ICONS.map((icon) => (
-                <button
-                  key={icon}
-                  className="w-[34px] h-[34px] rounded-lg bg-white/10 flex items-center justify-center text-[15px]
-                             hover:bg-white/20 transition"
-                >
-                  {icon}
-                </button>
-              ))}
-            </div>
           </div>
 
           {/* EXPLORE */}
@@ -60,10 +47,6 @@ export default function Footer() {
                 href: `${APP_ROUTES.ADOPTION}`,
               },
               { label: "Bản đồ cứu hộ", href: `${APP_ROUTES.MAP}` },
-              {
-                label: "Đăng ký TNV",
-                href: `#`,
-              },
               // ponytail: hidden until BE has a news source
               // {
               //   label: "Tin tức & Sự kiện",
@@ -99,16 +82,16 @@ export default function Footer() {
             </h4>
 
             {[
-              { Icon: MapPin, text: "15 Phố Duy Tân, Cầu Giấy, Hà Nội" },
-              { Icon: Phone, text: "1800-HPA (miễn phí)" },
-              { Icon: Mail, text: "admin@pawhome.vn" },
-            ].map(({ Icon, text }) => (
-              <div key={text} className="flex gap-2.5 mb-2.5 items-start">
-                <Icon size={13} className="text-ph-orange mt-0.5 shrink-0" />
-                <span className="text-[12px] text-white/60 leading-relaxed">
+              { Icon: MapPin, text: "Tìm trạm cứu hộ gần bạn", href: APP_ROUTES.MAP },
+              { Icon: Phone, text: "Báo một ca cần cứu", href: APP_ROUTES.MAP },
+              { Icon: Mail, text: "Hỏi cộng đồng", href: APP_ROUTES.COMMUNITY },
+            ].map(({ Icon, text, href }) => (
+              <Link key={text} href={href} className="flex gap-2.5 mb-2.5 items-start group">
+                <Icon size={13} className="text-ph-orange mt-0.5 shrink-0" aria-hidden />
+                <span className="text-[12px] text-white/60 leading-relaxed group-hover:text-white transition">
                   {text}
                 </span>
-              </div>
+              </Link>
             ))}
           </div>
 
@@ -146,21 +129,6 @@ export default function Footer() {
             © 2026 PawHome. Made with ❤️ for animals.
           </span>
 
-          <div className="flex gap-4">
-            {[
-              { label: "Điều khoản", href: "/terms" },
-              { label: "Bảo mật", href: "/privacy" },
-              { label: "Cookie", href: "/cookie" },
-            ].map((item) => (
-              <Link
-                key={item.label}
-                href={item.href}
-                className="text-[11px] text-white/40 hover:text-white transition"
-              >
-                {item.label}
-              </Link>
-            ))}
-          </div>
         </div>
       </div>
     </footer>

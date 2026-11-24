@@ -17,7 +17,14 @@ function toneToTextClass(tone: string | undefined) {
   }
 }
 
-export function DonateHero({ data }: { data: DonateData["hero"] }) {
+export function DonateHero({
+  data,
+  stats,
+}: {
+  data: DonateData["hero"];
+  /** Live figures; omitted while loading. */
+  stats?: Array<{ value: string; label: string; tone?: string }>;
+}) {
   return (
     <section className="bg-primary px-6 py-14 text-center text-primary-foreground md:py-20">
       <div className="mx-auto max-w-xl">
@@ -30,7 +37,7 @@ export function DonateHero({ data }: { data: DonateData["hero"] }) {
         </p>
 
         <div className="mt-8 grid grid-cols-3 gap-4">
-          {data.stats.map((s) => (
+          {(stats ?? []).map((s) => (
             <div key={s.label} className="text-center">
               <div className={"text-2xl font-black " + toneToTextClass(s.tone)}>
                 {s.value}
