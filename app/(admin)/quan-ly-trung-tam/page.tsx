@@ -39,8 +39,10 @@ export default function CenterManagementPage() {
   const keyword = getOptionalSearchParam(searchParams.get("keyword")) ?? "";
   const status = statusParam ? [statusParam] : undefined;
 
-  const [openDetail, setOpenDetail] = useState(false);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  // ?open=<id> (from the dashboard's pending tasks) opens that centre straight away.
+  const openParam = getOptionalSearchParam(searchParams.get("open"));
+  const [openDetail, setOpenDetail] = useState(Boolean(openParam));
+  const [selectedId, setSelectedId] = useState<string | null>(openParam ?? null);
   const [openDelete, setOpenDelete] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [openCreate, setOpenCreate] = useState(false);
@@ -211,6 +213,7 @@ export default function CenterManagementPage() {
             setOpenDetail(open);
             if (!open) {
               setSelectedId(null);
+              if (openParam) setParams({ open: undefined });
             }
           }}
           organization={selectedOrganization}

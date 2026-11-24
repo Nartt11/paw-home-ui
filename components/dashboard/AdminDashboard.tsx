@@ -91,6 +91,12 @@ const adoptionChartConfig = {
   },
 } satisfies ChartConfig;
 
+/** "/quan-ly-nhan-nuoi/<id>" becomes "/quan-ly-nhan-nuoi?open=<id>", which opens that application. */
+function taskHref(actionUrl: string) {
+  const [, page, id] = actionUrl.split("/");
+  return id ? `/${page}?open=${encodeURIComponent(id)}` : `/${page ?? ""}`;
+}
+
 function SectionMessage({ children }: { children: React.ReactNode }) {
   return (
     <p className="py-8 text-center text-sm text-muted-foreground">{children}</p>
@@ -473,9 +479,9 @@ export function AdminDashboard() {
                     key={task.taskId}
                     className="flex items-center justify-between gap-3 py-2 text-sm"
                   >
-                    {/* actionUrl trỏ tới /<trang>/<id>, FE chỉ có trang danh sách */}
+                    {/* actionUrl is /<list page>/<id>; the list page opens that item from ?open=<id> */}
                     <Link
-                      href={`/${task.actionUrl.split("/")[1] ?? ""}`}
+                      href={taskHref(task.actionUrl)}
                       className="min-w-0 truncate hover:underline"
                     >
                       {task.title}

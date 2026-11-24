@@ -2,6 +2,7 @@
 
 import { isOrganizationMember } from "@/lib/permission";
 import * as React from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { AdoptionDecisionDialog } from "@/components/adoption/AdoptionDecisionDialog";
 import { AdoptionListTable } from "@/components/adoption/AdoptionListTable";
@@ -45,8 +46,12 @@ const PENDING_PREVIEW_SIZE = 6;
 export default function AdoptionManagementPage() {
   const [page, setPage] = React.useState(0);
   const [pageSize, setPageSize] = React.useState(DEFAULT_PAGE_SIZE);
-  const [openDetail, setOpenDetail] = React.useState(false);
-  const [selectedId, setSelectedId] = React.useState<string | null>(null);
+  // ?open=<id> (from the dashboard's pending tasks) opens that application straight away.
+  const router = useRouter();
+  const pathname = usePathname();
+  const openParam = useSearchParams().get("open");
+  const [openDetail, setOpenDetail] = React.useState(Boolean(openParam));
+  const [selectedId, setSelectedId] = React.useState<string | null>(openParam);
   const [decisionState, setDecisionState] = React.useState<DecisionState>(null);
   const [pendingTab, setPendingTab] = React.useState<"ALL" | "PENDING" | "APPROVED">("ALL");
 
@@ -359,6 +364,7 @@ export default function AdoptionManagementPage() {
             setOpenDetail(nextOpen);
             if (!nextOpen) {
               setSelectedId(null);
+              if (openParam) router.replace(pathname);
             }
           }}
           adoption={adoptionDetailQuery.isFetching ? null : adoptionDetail}
