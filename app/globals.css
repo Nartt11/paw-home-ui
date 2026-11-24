@@ -66,7 +66,8 @@
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.922 0.005 34.3);
   --input: oklch(0.922 0.005 34.3);
-  --ring: oklch(0.714 0.014 41.2);
+  /* brand teal: a focus outline must reach 3:1 against the page (WCAG 1.4.11) */
+  --ring: oklch(0.511 0.096 186.391);
   --chart-1: oklch(0.868 0.007 39.5);
   --chart-2: oklch(0.547 0.021 43.1);
   --chart-3: oklch(0.438 0.017 39.3);
@@ -101,7 +102,7 @@
   --destructive: oklch(0.704 0.191 22.216);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.547 0.021 43.1);
+  --ring: oklch(0.78 0.1 186);
   --chart-1: oklch(0.868 0.007 39.5);
   --chart-2: oklch(0.547 0.021 43.1);
   --chart-3: oklch(0.438 0.017 39.3);
@@ -127,4 +128,17 @@
   html {
     @apply font-sans;
   }
+}
+
+/* One visible focus for keyboard users everywhere (WCAG 2.4.7, 1.4.11). Unlayered so it is not
+   overridden by component utilities like outline-none. */
+:where(a, button, input, select, textarea, summary, [tabindex]:not([tabindex="-1"]), [role="button"],
+  [role="tab"], [role="menuitem"], [role="option"], [role="checkbox"], [role="switch"], [role="link"]):focus-visible {
+  outline: 2px solid var(--ring) !important;
+  outline-offset: 2px !important;
+}
+
+/* The skip link target only needs to receive focus, not show it. */
+#main-content:focus {
+  outline: none;
 }
