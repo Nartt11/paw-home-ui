@@ -58,14 +58,14 @@ function Figure({ value, label, icon: Icon }: { value?: number; label: string; i
   );
 }
 
-/** One piece of work waiting at the centre; links to where it is done, coloured only when there is some. */
-function WorkItem({ value, label, href, tone }: { value: number; label: string; href: string; tone: StatusTone }) {
+/** One piece of work waiting at the centre; links to where it is done, coloured only when there is some to do. */
+function WorkItem({ value, label, href, tone }: { value: number; label: string; href: string; tone?: StatusTone }) {
   return (
     <Link
       href={href}
       className={cn(
         "group flex items-center justify-between gap-3 rounded-lg border px-3 py-2.5 text-sm transition-colors hover:bg-muted/50",
-        value > 0 && STATUS_TONE_SOFT[tone],
+        tone && value > 0 && STATUS_TONE_SOFT[tone],
       )}
     >
       <span>{label}</span>
@@ -87,7 +87,7 @@ function Operations({ operations }: { operations: NonNullable<OrganizationOvervi
         <WorkItem value={operations.activeRescueClaims} label="Ca cứu hộ đang nhận" href={APP_ROUTES.RESCUE_CASE_MANAGEMENT} tone="info" />
         <WorkItem value={operations.petsUnderTreatment} label="Bé đang điều trị" href={APP_ROUTES.PET_MANAGEMENT} tone="warning" />
         <WorkItem value={operations.openFollowupAlerts} label="Việc sau nhận nuôi chưa xong" href={APP_ROUTES.FOLLOWUP_ALERTS} tone="serious" />
-        <WorkItem value={operations.activeMembers} label="Thành viên" href={APP_ROUTES.ORGANIZATION_MEMBER_MANAGEMENT} tone="neutral" />
+        <WorkItem value={operations.activeMembers} label="Thành viên" href={APP_ROUTES.ORGANIZATION_MEMBER_MANAGEMENT} />
       </div>
     </section>
   );
