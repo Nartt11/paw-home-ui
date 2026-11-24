@@ -52,7 +52,15 @@ export interface CreateAccountPayload {
   phone?: string;
 }
 
+/** PUT /users/me/profile. A field left out stays as it is; "" clears it (except the display name). */
 export interface ProfileUpdatePayload {
-  username: string;
-  avatarUrl: string;
+  fullName?: string;
+  avatarUrl?: string;
+  phone?: string;
+  gender?: "MALE" | "FEMALE" | "UNKNOWN";
+  streetAddress?: string;
+  wardCode?: string;
+  wardName?: string;
+  provinceCode?: string;
+  provinceName?: string;
 }
