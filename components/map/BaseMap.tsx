@@ -47,6 +47,8 @@ export interface BaseMapProps {
   onClick?: (event: MapLayerMouseEvent) => void;
   /** Called once the map can be moved (fitBounds, flyTo). */
   onLoad?: () => void;
+  /** After every pan or zoom, with the map to read bounds and zoom from. */
+  onMoveEnd?: (map: MapRef) => void;
   ref?: Ref<MapRef>;
 }
 
@@ -65,6 +67,7 @@ export default function BaseMap({
   showStyleSwitcher = true,
   onClick,
   onLoad,
+  onMoveEnd,
   ref,
 }: BaseMapProps) {
   const [style] = useMapStyle();
@@ -96,6 +99,7 @@ export default function BaseMap({
         // Credit stays one tap away (OpenFreeMap, OpenMapTiles, OpenStreetMap) without covering buttons.
         attributionControl={{ compact: true }}
         onClick={onClick}
+        onMoveEnd={() => innerRef.current && onMoveEnd?.(innerRef.current)}
         onLoad={(event) => {
           const map = event.target;
           applyVietnameseLabels(map);
