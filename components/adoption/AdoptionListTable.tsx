@@ -73,7 +73,7 @@ const columns: ColumnDef<AdoptionSummary>[] = [
     accessorKey: "adoptionCode",
     header: "Mã đơn",
     cell: ({ row }) => (
-      <span className="font-mono text-xs text-slate-600">
+      <span className="text-xs tabular-nums text-muted-foreground">
         {row.original.adoptionCode || "-"}
       </span>
     ),

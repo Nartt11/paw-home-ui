@@ -5,13 +5,13 @@ import * as React from "react";
 
 import TitlePerPage from "@/components/common/admin/TitlePerPage";
 import { PageControls } from "@/components/common/PageControl";
-import KPICardPet from "@/components/pet/KPICardPet";
+import { KpiCard } from "@/components/common/admin/KpiCard";
 import { PetCreateNew } from "@/components/pet/PetCreateNew";
 import { PetListTable } from "@/components/pet/PetListTable";
 import { useListUrlState } from "@/hooks/use-list-url-state";
 import { useOrganizations } from "@/hooks/use-organization";
 import { useCreatePet, usePets, usePetsByOrganization } from "@/hooks/use-pet";
-import type { PetCreatePayload, PetStatus, PetSummary } from "@/types/pet.type";
+import type { PetCreatePayload, PetStatus } from "@/types/pet.type";
 import {
   AlertTriangle,
   CheckCircle2,
@@ -28,18 +28,23 @@ function getErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : "Có lỗi xảy ra";
 }
 
-/** Health has no filter on the API, so this one counts the rows on screen only. */
-function countHealthAlerts(pets: PetSummary[]) {
-  return pets.filter((pet) => pet.healthStatus && pet.healthStatus !== "HEALTHY").length;
-}
-
 /**
  * How many pets have a status, across every page: one tiny request (pageSize 1) whose
  * totalElements is the count. Statuses other than AVAILABLE need an admin or a member.
  */
-function usePetCount(status: PetStatus, organizationId: string | undefined, enabled: boolean) {
+function usePetCount(
+  filter: { status?: PetStatus; healthStatus?: string },
+  organizationId: string | undefined,
+  enabled: boolean,
+) {
   const query = usePets(
-    { page: 0, pageSize: 1, status: [status], ...(organizationId ? { organizationId } : {}) },
+    {
+      page: 0,
+      pageSize: 1,
+      ...(filter.status ? { status: [filter.status] } : {}),
+      ...(filter.healthStatus ? { healthStatus: filter.healthStatus } : {}),
+      ...(organizationId ? { organizationId } : {}),
+    },
     { enabled },
   );
   return query.data?.totalElements;
@@ -83,27 +88,24 @@ export default function PetManagementPage() {
   const countsEnabled = !isOrganizationUser || !!currentUser?.organizationId;
   const kpis = {
     total: data?.totalElements,
-    pending: usePetCount("AVAILABLE", countScope, countsEnabled),
-    adopted: usePetCount("ADOPTED", countScope, countsEnabled),
-    fostered: usePetCount("FOSTERING", countScope, countsEnabled),
-    healthAlert: listQuery.isPending ? undefined : countHealthAlerts(pets),
+    pending: usePetCount({ status: "AVAILABLE" }, countScope, countsEnabled),
+    adopted: usePetCount({ status: "ADOPTED" }, countScope, countsEnabled),
+    fostered: usePetCount({ status: "FOSTERING" }, countScope, countsEnabled),
+    // every page, not just the rows on screen (GET /pets?healthStatus=)
+    healthAlert: usePetCount({ healthStatus: "UNDER_TREATMENT" }, countScope, countsEnabled),
   };
 
+  const ownOrganizationId = isOrganizationUser ? currentUser?.organizationId : undefined;
   const filteredOrganizations = React.useMemo(() => {
     const orgs = organizationsQuery.data?.content ?? [];
-    if (isOrganizationUser && currentUser?.organizationId) {
-      return orgs.filter(o => o.organizationId === currentUser.organizationId);
-    }
-    return orgs;
-  }, [organizationsQuery.data?.content, isOrganizationUser, currentUser?.organizationId]);
+    return ownOrganizationId ? orgs.filter((o) => o.organizationId === ownOrganizationId) : orgs;
+  }, [organizationsQuery.data?.content, ownOrganizationId]);
 
   const handleCreatePet = React.useCallback(
     async (payload: Partial<PetCreatePayload>) => {
       try {
-        const finalPayload = { ...payload };
-        if (isOrganizationUser && currentUser?.organizationId) {
-          finalPayload.shelterId = currentUser.organizationId;
-        }
+        // a centre's staff always add pets to their own centre
+        const finalPayload = ownOrganizationId ? { ...payload, shelterId: ownOrganizationId } : { ...payload };
         await createPetMutation.mutateAsync(finalPayload);
         setCreateOpen(false);
         toast.success("Tạo thú cưng thành công");
@@ -111,7 +113,7 @@ export default function PetManagementPage() {
         toast.error(getErrorMessage(error));
       }
     },
-    [createPetMutation, isOrganizationUser, currentUser?.organizationId],
+    [createPetMutation, ownOrganizationId],
   );
 
   return (
@@ -131,37 +133,12 @@ export default function PetManagementPage() {
           handleOpenModal={() => setCreateOpen(true)}
         />
 
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-5">
-          <KPICardPet
-            title="Tổng số thú cưng"
-            value={kpis.total}
-            icon={PawPrint}
-            color="text-blue-600 bg-blue-50"
-          />
-          <KPICardPet
-            title="Chờ nhận nuôi"
-            value={kpis.pending}
-            icon={Heart}
-            color="text-primary bg-primary/5"
-          />
-          <KPICardPet
-            title="Đã có chủ"
-            value={kpis.adopted}
-            icon={CheckCircle2}
-            color="text-green-600 bg-green-50"
-          />
-          <KPICardPet
-            title="Đang cứu trợ"
-            value={kpis.fostered}
-            icon={ShieldAlert}
-            color="text-amber-600 bg-amber-50"
-          />
-          <KPICardPet
-            title="Cảnh báo sức khỏe"
-            value={kpis.healthAlert}
-            icon={AlertTriangle}
-            color="text-red-600 bg-red-50"
-          />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
+          <KpiCard label="Tổng số thú cưng" value={kpis.total} icon={PawPrint} />
+          <KpiCard label="Chờ nhận nuôi" value={kpis.pending} icon={Heart} />
+          <KpiCard label="Đã có chủ" value={kpis.adopted} icon={CheckCircle2} />
+          <KpiCard label="Đang chăm sóc" value={kpis.fostered} icon={ShieldAlert} />
+          <KpiCard label="Đang điều trị" value={kpis.healthAlert} icon={AlertTriangle} tone="warning" />
         </div>
 
         <PetListTable data={pets} loading={listQuery.isPending} />

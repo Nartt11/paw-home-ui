@@ -105,6 +105,8 @@ export interface PetListParams extends ListParams {
   organizationId?: string;
   /** Province code or name. */
   province?: string;
+  /** Comma-separated health statuses, e.g. "UNDER_TREATMENT,RECOVERING". */
+  healthStatus?: string;
 }
 
 export interface PetBreed {

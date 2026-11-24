@@ -35,15 +35,14 @@ function useCounter(target: number, duration = 1800, start = false): number {
 }
 
 function StatItem({ config, started }: StatItemProps) {
-  const count = useCounter(config.value, 1600, started);
+  const count = useCounter(config.value ?? 0, 1600, started && config.value !== undefined);
 
   return (
     <MetricCard
-      value={`${count.toLocaleString()}${config.suffix ?? ""}`}
+      value={config.value === undefined ? "—" : count.toLocaleString("vi-VN")}
       label={config.label}
-      valueClassName="text-white text-[28px] font-black md:text-[34px]"
-      labelClassName="text-white/70"
-      style={{ color: config.color }}
+      valueClassName="text-white text-[28px] font-black tabular-nums md:text-[34px]"
+      labelClassName="text-white/85"
     />
   );
 }
@@ -73,7 +72,7 @@ export default function StatsSection({ stats }: StatsSectionProps) {
     <section className="bg-primary px-6 py-4">
       <div
         ref={ref}
-        className="mx-auto grid max-w-7xl grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5"
+        className="mx-auto grid max-w-7xl grid-cols-1 gap-2 sm:grid-cols-3"
       >
         {stats.map((item) => (
           <StatItem key={item.label} config={item} started={visible} />

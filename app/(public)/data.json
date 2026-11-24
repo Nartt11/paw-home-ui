@@ -5,38 +5,6 @@
     "description": "PawHome kết nối hàng trăm thú cưng cần được cứu hộ với những gia đình yêu thương tại Hà Nội. Cùng chúng tôi tạo nên sự thay đổi.",
     "searchPlaceholder": "Tìm chó, mèo, tên thú cưng..."
   },
-  "stats": [
-    {
-      "value": 1240,
-      "suffix": "+",
-      "label": "Thú cưng được cứu",
-      "color": "#F7DB47"
-    },
-    {
-      "value": 860,
-      "suffix": "+",
-      "label": "Ca nhận nuôi thành công",
-      "color": "#2AC789"
-    },
-    {
-      "value": 3,
-      "suffix": "",
-      "label": "Trạm cứu hộ đang hoạt động",
-      "color": "#06A7E7"
-    },
-    {
-      "value": 180,
-      "suffix": "+",
-      "label": "Tình nguyện viên",
-      "color": "#FF9132"
-    },
-    {
-      "value": 92,
-      "suffix": "%",
-      "label": "Tỉ lệ nhận nuôi thành công",
-      "color": "#FF584F"
-    }
-  ],
   "howItWorksSteps": [
     {
       "step": "01",
@@ -68,9 +36,21 @@
     }
   ],
   "rescueMapStats": [
-    { "val": "3", "label": "Ca khẩn cấp", "color": "#FF584F" },
-    { "val": "3", "label": "Trung tâm", "color": "#06A7E7" },
-    { "val": "2", "label": "Sự kiện", "color": "#F7DB47" }
+    {
+      "val": "3",
+      "label": "Ca khẩn cấp",
+      "color": "#FF584F"
+    },
+    {
+      "val": "3",
+      "label": "Trung tâm",
+      "color": "#06A7E7"
+    },
+    {
+      "val": "2",
+      "label": "Sự kiện",
+      "color": "#F7DB47"
+    }
   ],
   "stories": [
     {

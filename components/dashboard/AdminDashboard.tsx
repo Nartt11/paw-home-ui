@@ -6,6 +6,7 @@ import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { MinusIcon, TrendingDownIcon, TrendingUpIcon } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import { KpiCard } from "@/components/common/admin/KpiCard";
 import {
   Card,
   CardContent,
@@ -103,46 +104,13 @@ function SectionMessage({ children }: { children: React.ReactNode }) {
   );
 }
 
-function KpiCard({
-  label,
-  item,
-  loading,
-}: {
-  label: string;
-  item?: KpiItem;
-  loading: boolean;
-}) {
-  const TrendIcon =
-    item?.trend === "up"
-      ? TrendingUpIcon
-      : item?.trend === "down"
-        ? TrendingDownIcon
-        : MinusIcon;
-
+function KpiTrend({ item }: { item: KpiItem }) {
+  const TrendIcon = item.trend === "up" ? TrendingUpIcon : item.trend === "down" ? TrendingDownIcon : MinusIcon;
   return (
-    <Card size="sm">
-      <CardHeader>
-        <CardDescription>{label}</CardDescription>
-        {loading ? (
-          <Skeleton className="h-8 w-16" />
-        ) : (
-          // The small card shrinks its title through a group variant, so the
-          // number has to override that same variant to stay the largest text.
-          <CardTitle className="text-3xl leading-tight font-semibold tabular-nums group-data-[size=sm]/card:text-3xl">
-            {item?.value.toLocaleString("vi-VN") ?? "—"}
-          </CardTitle>
-        )}
-      </CardHeader>
-      {item ? (
-        <CardContent className="flex items-center gap-1 text-xs text-muted-foreground">
-          <TrendIcon className="size-3.5" />
-          {item.changePercent.toLocaleString("vi-VN", {
-            maximumFractionDigits: 1,
-          })}
-          % so với tháng trước
-        </CardContent>
-      ) : null}
-    </Card>
+    <span className="flex items-center gap-1">
+      <TrendIcon className="size-3.5" aria-hidden />
+      {item.changePercent.toLocaleString("vi-VN", { maximumFractionDigits: 1 })}% so với tháng trước
+    </span>
   );
 }
 
@@ -391,8 +359,8 @@ export function AdminDashboard() {
             <KpiCard
               key={key}
               label={label}
-              item={overviewQuery.data?.kpis[key]}
-              loading={overviewQuery.isPending}
+              value={overviewQuery.isPending ? undefined : (overviewQuery.data?.kpis[key]?.value ?? null)}
+              hint={overviewQuery.data?.kpis[key] ? <KpiTrend item={overviewQuery.data.kpis[key]} /> : undefined}
             />
           ))}
         </div>
