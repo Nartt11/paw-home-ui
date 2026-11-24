@@ -3,6 +3,7 @@ import apiEndpoints from "@/services/endpoint";
 import { PaginatedResponse } from "@/types/api.type";
 import type {
   Organization,
+  OrganizationOverview,
   OrganizationListParams,
   OrganizationCreatePayload,
   OrganizationUpdatePayload,
@@ -29,6 +30,11 @@ const organizationService = {
   // GET /api/v1/organizations/{id} - Get organization by ID
   async getOrganizationById(id: string): Promise<Organization> {
     return await http.get<Organization>(apiEndpoints.organizations.byId(id));
+  },
+
+  // GET /api/v1/organizations/{id}/overview - public figures, plus the work for admins and members
+  async getOrganizationOverview(id: string): Promise<OrganizationOverview> {
+    return await http.get<OrganizationOverview>(apiEndpoints.organizations.overview(id));
   },
 
   // GET /api/v1/organizations/{id}/members - List members of an organization (paginated)

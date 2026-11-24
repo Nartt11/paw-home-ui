@@ -41,6 +41,27 @@ export interface Organization extends OrganizationSummary {
   updatedAt: string;
 }
 
+/** GET /organizations/{id}/overview. `operations` only for admins and the centre's members. */
+export interface OrganizationOverview {
+  organizationId: string;
+  availablePets: number;
+  petsInCare: number;
+  adoptedPets: number;
+  rescuedCases: number;
+  operations?: {
+    organizationCode?: string | null;
+    /** Display name of whoever registered the centre; null when an admin created it. */
+    requestedByName?: string | null;
+    createdAt?: string | null;
+    pendingAdoptions: number;
+    awaitingPickup: number;
+    activeRescueClaims: number;
+    petsUnderTreatment: number;
+    openFollowupAlerts: number;
+    activeMembers: number;
+  } | null;
+}
+
 export interface OrganizationMember {
   organization_id: string;
   user_id: string;

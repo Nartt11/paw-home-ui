@@ -26,6 +26,7 @@ export const apiEndpoints = {
   organizations: {
     root: "/organizations",
     byId: (id: string) => byId("/organizations", id),
+    overview: (id: string) => `/organizations/${id}/overview`,
     me: "/organizations/me",
     myRescueQueue: "/organizations/me/rescue-queue",
     myFollowupAlerts: "/organizations/me/followup-alerts",

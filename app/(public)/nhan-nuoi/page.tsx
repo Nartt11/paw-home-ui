@@ -74,6 +74,9 @@ export default function AdoptionPage() {
       : "ALL";
   // Province code; people adopt close to home, so this is the first filter that matters.
   const province = getOptionalSearchParam(searchParams.get("province")) ?? "ALL";
+  // Opened from a centre's page: only that centre's pets, with its name to show what is filtered.
+  const organizationId = getOptionalSearchParam(searchParams.get("organizationId"));
+  const organizationName = getOptionalSearchParam(searchParams.get("orgName"));
   const provincesQuery = useProvinces();
 
   const form = useForm<AdoptionSearchSchema>({
@@ -102,7 +105,7 @@ export default function AdoptionPage() {
   }, [form, normalizedGender, searchName, province]);
 
   const availablePetsQuery = useQuery({
-    queryKey: ["available-pets", { page, size, searchName, gender, province }],
+    queryKey: ["available-pets", { page, size, searchName, gender, province, organizationId }],
     queryFn: () =>
       petService.getAvailablePets({
         page: Math.max(page - 1, 0),
@@ -110,6 +113,7 @@ export default function AdoptionPage() {
         search: searchName || undefined,
         gender: normalizedGender === "ALL" ? undefined : normalizedGender,
         province: province === "ALL" ? undefined : province,
+        organizationId,
       }),
     placeholderData: (previousData) => previousData,
   });
@@ -192,6 +196,8 @@ export default function AdoptionPage() {
       q: undefined,
       gender: undefined,
       province: undefined,
+      organizationId: undefined,
+      orgName: undefined,
     });
   };
 
@@ -370,6 +376,20 @@ export default function AdoptionPage() {
                 Tìm theo tên hoặc lọc theo giới tính, rồi mở hồ sơ để gửi đơn
                 nhận nuôi.
               </p>
+              {organizationId ? (
+                <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-orange-200 bg-orange-50 py-1 pl-3 pr-1 text-sm text-orange-900">
+                  <span>
+                    Các bé của <strong>{organizationName ?? "một trung tâm"}</strong>
+                  </span>
+                  <button
+                    type="button"
+                    className="rounded-full px-2 py-0.5 text-orange-800 hover:bg-orange-100 focus-visible:outline-2 focus-visible:outline-orange-600"
+                    onClick={() => setParams({ page: 1, organizationId: undefined, orgName: undefined })}
+                  >
+                    Xem tất cả
+                  </button>
+                </div>
+              ) : null}
             </div>
             <div className="rounded-2xl bg-orange-50 px-4 py-3 text-sm text-orange-700">
               Hiện có{" "}

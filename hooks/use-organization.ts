@@ -19,6 +19,7 @@ export const organizationKeys = {
 
   details: () => [...organizationKeys.all, "detail"] as const,
   detail: (id: string) => [...organizationKeys.details(), id] as const,
+  overview: (id: string) => [...organizationKeys.details(), id, "overview"] as const,
 
   me: () => [...organizationKeys.all, "me"] as const,
 
@@ -46,6 +47,14 @@ export function useOrganizationDetail(id?: string) {
   return useQuery({
     queryKey: organizationKeys.detail(id ?? ""),
     queryFn: () => organizationService.getOrganizationById(id as string),
+    enabled: !!id,
+  });
+}
+
+export function useOrganizationOverview(id?: string) {
+  return useQuery({
+    queryKey: organizationKeys.overview(id ?? ""),
+    queryFn: () => organizationService.getOrganizationOverview(id as string),
     enabled: !!id,
   });
 }
