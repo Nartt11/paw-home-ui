@@ -1,4 +1,4 @@
-export type AboutUsTabKey = "story" | "team" | "timeline";
+export type AboutUsTabKey = "story" | "timeline";
 
 export interface AboutUsStatItem {
   value: string;
@@ -35,7 +35,6 @@ export interface AboutUsData {
     description: string;
     image_url: string;
   };
-  stats: AboutUsStatItem[];
   tabs: Array<{ key: AboutUsTabKey; label: string }>;
   story: {
     heading: string;
@@ -49,18 +48,6 @@ export interface AboutUsData {
       primary_image_url: string;
       secondary_image_url: string;
       highlights: Array<{ emoji: string; text: string }>;
-    };
-  };
-  team: {
-    title: string;
-    description: string;
-    members: AboutUsTeamMember[];
-    volunteerCta: {
-      title: string;
-      description: string;
-      chips: string[];
-      href: string;
-      label: string;
     };
   };
   timeline: {

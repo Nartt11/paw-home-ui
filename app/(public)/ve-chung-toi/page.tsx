@@ -15,6 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { AboutUsData, AboutUsTabKey } from "@/types/about-us.type";
 
 import rawData from "./data.json";
+import { usePublicStats } from "@/hooks/use-public-stats";
 
 const DATA = rawData as AboutUsData;
 
@@ -95,11 +96,20 @@ function HeroSection() {
   );
 }
 
+/** Real figures from the platform; nothing typed in by hand. */
 function StatsStrip() {
+  const live = usePublicStats().data;
+  const format = (value?: number) => (value == null ? "—" : value.toLocaleString("vi-VN"));
+  const stats = [
+    { label: "Trạm đang hoạt động", value: format(live?.activeCentres), tone: "sun" },
+    { label: "Bé đang chờ nhà", value: format(live?.petsWaiting), tone: "emerald" },
+    { label: "Ca cứu hộ đã báo", value: format(live?.casesReported), tone: "orange" },
+    { label: "Ca đã cứu", value: format(live?.casesRescued), tone: "sky" },
+  ];
   return (
-    <section className="bg-linear-to-br from-slate-900 to-slate-800">
-      <div className="mx-auto grid w-full max-w-6xl grid-cols-2 gap-6 px-6 py-8 sm:grid-cols-3 lg:grid-cols-5">
-        {DATA.stats.map((stat) => (
+    <section className="bg-linear-to-br from-slate-900 to-slate-800" aria-label="Số liệu PawHome" aria-busy={!live}>
+      <div className="mx-auto grid w-full max-w-6xl grid-cols-2 gap-6 px-6 py-8 sm:grid-cols-4">
+        {stats.map((stat) => (
           <MetricCard
             key={stat.label}
             value={stat.value}
@@ -192,88 +202,6 @@ function StoryTab() {
   );
 }
 
-function TeamTab() {
-  return (
-    <div>
-      <div className="mx-auto max-w-2xl text-center">
-        <h2 className="text-2xl font-black text-slate-900 md:text-4xl">
-          {DATA.team.title}
-        </h2>
-        <p className="mt-3 text-sm leading-7 text-slate-600">
-          {DATA.team.description}
-        </p>
-      </div>
-
-      <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        {DATA.team.members.map((member) => (
-          <MarketingCard key={member.name} className="text-center">
-            <CardContent className="p-6">
-              <div
-                className={
-                  "mx-auto grid h-18 w-18 place-items-center rounded-full ring-2 " +
-                  toneToRingBg(member.tone)
-                }
-              >
-                <span className="text-3xl">{member.avatar_emoji}</span>
-              </div>
-
-              <div className="mt-4 text-base font-extrabold text-slate-900">
-                {member.name}
-              </div>
-              <div className="mt-1 text-xs text-slate-500">{member.role}</div>
-
-              <div className="mt-4 flex flex-wrap justify-center gap-2">
-                <Badge
-                  variant="secondary"
-                  className="rounded-full bg-slate-100 text-[10px] font-semibold text-slate-700 hover:bg-slate-100"
-                >
-                  {member.badge}
-                </Badge>
-                <Badge
-                  variant="outline"
-                  className="rounded-full bg-slate-50 text-[10px] font-semibold text-slate-500"
-                >
-                  â± {member.years}
-                </Badge>
-              </div>
-            </CardContent>
-          </MarketingCard>
-        ))}
-      </div>
-
-      <MarketingCard variant="dark" className="mt-12 text-center">
-        <CardContent className="px-6 py-10 md:px-12">
-          <div className="text-4xl">ðŸ¤</div>
-          <h3 className="mt-4 text-2xl font-black">{DATA.team.volunteerCta.title}</h3>
-          <p className="mx-auto mt-3 max-w-xl text-sm leading-7 text-white/75">
-            {DATA.team.volunteerCta.description}
-          </p>
-
-          <div className="mx-auto mt-6 flex max-w-3xl flex-wrap justify-center gap-2">
-            {DATA.team.volunteerCta.chips.map((chip) => (
-              <Badge
-                key={chip}
-                variant="outline"
-                className="rounded-full border-white/20 bg-white/10 px-4 py-1.5 text-xs text-white hover:bg-white/10"
-              >
-                {chip}
-              </Badge>
-            ))}
-          </div>
-
-          <div className="mt-7">
-            <PrimaryCta href={DATA.team.volunteerCta.href} variant="mint">
-              <Users className="h-4 w-4" />
-              {DATA.team.volunteerCta.label}
-              <ArrowRight className="h-4 w-4" />
-            </PrimaryCta>
-          </div>
-        </CardContent>
-      </MarketingCard>
-    </div>
-  );
-}
-
 function TimelineTab() {
   return (
     <div className="mx-auto max-w-2xl">
@@ -345,9 +273,6 @@ export default function AboutUsPage() {
 
           <TabsContent value="story">
             <StoryTab />
-          </TabsContent>
-          <TabsContent value="team">
-            <TeamTab />
           </TabsContent>
           <TabsContent value="timeline">
             <TimelineTab />

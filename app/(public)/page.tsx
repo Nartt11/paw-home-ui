@@ -28,15 +28,12 @@ function useLiveStats() {
   const centres = useOrganizationMapMarkers(VIETNAM_BOUNDS);
 
   return useMemo(() => {
-    const live = [
-      rescued.data?.totalElements,
-      adopted.data?.totalElements,
-      centres.data?.length,
+    // Only figures with a public source; nothing typed in by hand.
+    return [
+      { label: "Ca cứu hộ đã xong", value: rescued.data?.totalElements },
+      { label: "Bé đã có nhà", value: adopted.data?.totalElements },
+      { label: "Trạm cứu hộ đang hoạt động", value: centres.data?.length },
     ];
-    // Volunteers have no public source, so that card keeps its copy.
-    return DATA.stats.map((stat, i) =>
-      live[i] == null ? stat : { ...stat, value: live[i]!, suffix: "" },
-    );
   }, [rescued.data, adopted.data, centres.data]);
 }
 

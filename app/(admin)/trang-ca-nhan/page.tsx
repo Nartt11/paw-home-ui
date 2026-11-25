@@ -1,273 +1,98 @@
 "use client";
 
-import * as React from "react";
+import { CheckCircle2Icon, MailWarningIcon } from "lucide-react";
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
-import { toast } from "sonner";
-import { CheckCircle2, ShieldCheck, UserRound } from "lucide-react";
-
-import { useCurrentUser } from "@/hooks/use-current-user";
-import {
-  profileDefaultValues,
-  profileSchema,
-  type ProfileFormValues,
-} from "@/lib/schemas/profile";
-import { queryKeys } from "@/lib/query-keys";
-import userService from "@/services/user/user";
-
+import { ProfileForm } from "@/components/user/ProfileForm";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Field,
-  FieldContent,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
-
-function statusToLabel(status?: string) {
-  switch (status) {
-    case "ACTIVE":
-      return "Hoạt động";
-    case "DISABLED":
-      return "Vô hiệu";
-    case "PENDING_VERIFICATION":
-      return "Chờ xác minh";
-    default:
-      return status || "Không rõ";
-  }
-}
-
-function getInitials(name?: string, fallback = "U") {
-  const parts = (name || "").trim().split(/\s+/).filter(Boolean);
-  return ((parts[0]?.[0] ?? fallback) + (parts[1]?.[0] ?? "")).toUpperCase();
-}
-
-function readOnlyValue(value?: string) {
-  return value?.trim() ? value : "Chưa cập nhật";
-}
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useCurrentUser } from "@/hooks/use-current-user";
+import { organizationRoleLabel } from "@/lib/organization-display";
+import { userStatusBadge, userStatusLabel } from "@/lib/user-display";
 
 const SYSTEM_ROLE_LABEL: Record<string, string> = {
   ADMIN: "Quản trị viên",
   USER: "Người dùng",
   MEMBER: "Thành viên tổ chức",
-  MEMBERSHIP: "Thành viên tổ chức",
 };
 
-const ORG_ROLE_LABEL: Record<string, string> = {
-  OWNER: "Chủ trung tâm",
-  STAFF: "Nhân viên",
-  VET: "Bác sĩ thú y",
-  MEMBER: "Thành viên",
-};
+function initials(name?: string) {
+  return ((name ?? "").trim().split(/\s+/).at(-1)?.[0] ?? "?").toUpperCase();
+}
 
-const GENDER_LABEL: Record<string, string> = { MALE: "Nam", FEMALE: "Nữ", OTHER: "Khác" };
-
+/** The staff member's own account: edit the profile on the left, see roles and organization on the right. */
 export default function ProfilePage() {
-  const queryClient = useQueryClient();
-  const currentUserQuery = useCurrentUser();
-  const currentUser = currentUserQuery.data;
-
-  const form = useForm<ProfileFormValues>({
-    resolver: zodResolver(profileSchema),
-    defaultValues: profileDefaultValues,
-  });
-
-  const {
-    formState: { errors, isDirty },
-    handleSubmit,
-    register,
-    reset,
-  } = form;
-
-  React.useEffect(() => {
-    if (!currentUser) return;
-
-    reset({
-      userName: currentUser.username ?? "",
-      avatarUrl: "",
-    });
-  }, [currentUser, reset]);
-
-  if (currentUserQuery.isPending) {
-    return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Trang cá nhân</h1>
-          <p className="font-medium text-muted-foreground">
-            Đang tải thông tin tài khoản...
-          </p>
-        </div>
-        <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-          <div className="h-96 rounded-xl border border-border bg-card animate-pulse" />
-          <div className="h-96 rounded-xl border border-border bg-card animate-pulse" />
-        </div>
-      </div>
-    );
-  }
-
-  if (!currentUser) {
-    return (
-      <div className="space-y-4">
-        <h1 className="text-3xl font-bold text-foreground">Trang cá nhân</h1>
-        <div className="rounded-xl border border-dashed border-border bg-card px-6 py-12 text-center text-sm text-muted-foreground">
-          Không tải được thông tin người dùng hiện tại.
-        </div>
-      </div>
-    );
-  }
-
-  const rolesText =
-    Array.isArray(currentUser.roles) && currentUser.roles.length > 0
-      ? currentUser.roles.map((role) => SYSTEM_ROLE_LABEL[role.toUpperCase()] ?? role).join(", ")
-      : "Chưa có vai trò";
-
-  const avatarFallback = getInitials(
-    currentUser.fullName || currentUser.username,
-    "U",
-  );
+  const { data: user, isPending } = useCurrentUser();
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-foreground">Trang cá nhân</h1>
-        <p className="font-medium text-muted-foreground">
-          Thông tin tài khoản bạn đang dùng để quản lý hệ thống.
-        </p>
+        <p className="text-muted-foreground">Tên hiển thị, ảnh và cách liên hệ với bạn.</p>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
-        <Card className="overflow-hidden">
-          <CardHeader className="border-b border-border bg-gradient-to-br from-slate-50 via-white to-emerald-50">
-            <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-              <Avatar size="lg" className="h-20 w-20">
-                <AvatarImage src="" alt={currentUser.username} />
-                <AvatarFallback className="text-lg font-semibold">
-                  {avatarFallback}
-                </AvatarFallback>
-              </Avatar>
-
-              <div className="space-y-3">
-                <div>
-                  <CardTitle className="text-2xl">
-                    {currentUser.fullName || currentUser.username}
-                  </CardTitle>
-                  <CardDescription className="mt-1 text-sm">
-                    @{currentUser.username} • {currentUser.email}
-                  </CardDescription>
-                </div>
-
-                <div className="flex flex-wrap gap-2">
-                  <Badge className="bg-emerald-50 text-emerald-700 hover:bg-emerald-50">
-                    <ShieldCheck className="mr-1 h-3.5 w-3.5" />
-                    {statusToLabel(currentUser.status)}
-                  </Badge>
-                  <Badge variant="secondary">
-                    <UserRound className="mr-1 h-3.5 w-3.5" />
-                    {currentUser.organizationRole
-                      ? ORG_ROLE_LABEL[currentUser.organizationRole] ?? currentUser.organizationRole
-                      : "Không thuộc tổ chức nào"}
-                  </Badge>
-                  <Badge
-                    variant={currentUser.emailVerified ? "default" : "outline"}
-                  >
-                    <CheckCircle2 className="mr-1 h-3.5 w-3.5" />
-                    {currentUser.emailVerified
-                      ? "Đã xác minh email"
-                      : "Chưa xác minh email"}
-                  </Badge>
-                </div>
-              </div>
-            </div>
+      <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+        <Card>
+          <CardHeader>
+            <CardTitle>Hồ sơ</CardTitle>
+            <CardDescription>Mọi người thấy tên hiển thị, không thấy tên đăng nhập của bạn.</CardDescription>
           </CardHeader>
+          <CardContent>
+            <ProfileForm />
+          </CardContent>
+        </Card>
 
-          <CardContent className="space-y-6 pt-6">
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="rounded-xl border border-border p-4">
-                <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  Tên đăng nhập
+        <Card className="h-fit">
+          <CardContent className="space-y-4 pt-6">
+            {isPending || !user ? (
+              <Skeleton className="h-32 w-full" />
+            ) : (
+              <>
+                <div className="flex items-center gap-3">
+                  <Avatar className="size-14">
+                    {user.avatarUrl ? <AvatarImage src={user.avatarUrl} alt="" /> : null}
+                    <AvatarFallback className="font-semibold">{initials(user.fullName)}</AvatarFallback>
+                  </Avatar>
+                  <div className="min-w-0">
+                    <div className="truncate font-semibold">{user.fullName}</div>
+                    <div className="truncate text-sm text-muted-foreground">{user.email}</div>
+                  </div>
                 </div>
-                <div className="mt-2 break-all text-sm">
-                  @{currentUser.username}
-                </div>
-              </div>
-              <div className="rounded-xl border border-border p-4">
-                <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  Vai trò hệ thống
-                </div>
-                <div className="mt-2 text-sm">{rolesText}</div>
-              </div>
-            </div>
-
-            <Separator />
-
-            <div className="grid gap-4 md:grid-cols-2">
-              <div>
-                <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  Số điện thoại
-                </div>
-                <div className="mt-2 text-sm">
-                  {readOnlyValue(currentUser.phone)}
-                </div>
-              </div>
-              <div>
-                <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  Giới tính
-                </div>
-                <div className="mt-2 text-sm">
-                  {currentUser.gender ? GENDER_LABEL[currentUser.gender] ?? currentUser.gender : readOnlyValue(currentUser.gender)}
-                </div>
-              </div>
-              <div>
-                <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  Tổ chức
-                </div>
-                <div className="mt-2 text-sm">
-                  {readOnlyValue(currentUser.organizationName)}
-                </div>
-              </div>
-            </div>
-
-            <Separator />
-
-            <div className="grid gap-4 md:grid-cols-3">
-              <div>
-                <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  Địa chỉ
-                </div>
-                <div className="mt-2 text-sm">
-                  {readOnlyValue(currentUser.streetAddress)}
-                </div>
-              </div>
-              <div>
-                <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  Phường / Xã
-                </div>
-                <div className="mt-2 text-sm">
-                  {readOnlyValue(currentUser.wardName)}
-                </div>
-              </div>
-              <div>
-                <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  Tỉnh / Thành
-                </div>
-                <div className="mt-2 text-sm">
-                  {readOnlyValue(currentUser.provinceName)}
-                </div>
-              </div>
-            </div>
+                <dl className="space-y-3 text-sm">
+                  <div>
+                    <dt className="text-muted-foreground">Trạng thái</dt>
+                    <dd className="mt-1">
+                      <Badge variant="outline" className={userStatusBadge(user.status)}>{userStatusLabel(user.status)}</Badge>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-muted-foreground">Vai trò hệ thống</dt>
+                    <dd className="mt-1">
+                      {user.roles?.length ? user.roles.map((r) => SYSTEM_ROLE_LABEL[r] ?? r).join(", ") : "Chưa có vai trò"}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-muted-foreground">Tổ chức</dt>
+                    <dd className="mt-1">
+                      {user.organizationName
+                        ? `${user.organizationName} · ${organizationRoleLabel(user.organizationRole)}`
+                        : "Không thuộc tổ chức nào"}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-muted-foreground">Email</dt>
+                    <dd className="mt-1 flex items-center gap-1.5">
+                      {user.emailVerified ? (
+                        <><CheckCircle2Icon className="size-4 text-emerald-700" aria-hidden /> Đã xác minh</>
+                      ) : (
+                        <><MailWarningIcon className="size-4 text-amber-700" aria-hidden /> Chưa xác minh</>
+                      )}
+                    </dd>
+                  </div>
+                </dl>
+              </>
+            )}
           </CardContent>
         </Card>
       </div>

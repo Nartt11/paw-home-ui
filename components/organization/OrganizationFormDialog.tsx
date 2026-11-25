@@ -33,6 +33,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { useProvinceDetail, useProvinces } from "@/hooks/use-location";
+import { OrganizationImageField } from "@/components/organization/OrganizationImageField";
 import {
   organizationFormDefaultValues,
   organizationFormSchema,
@@ -192,6 +193,26 @@ export function OrganizationFormDialog({
                       )}
                     />
                   </FieldContent>
+                </Field>
+
+                <Field className="md:col-span-2">
+                  <FieldLabel htmlFor="organization-image">Ảnh đại diện</FieldLabel>
+                  <Controller
+                    control={control}
+                    name="imageUrl"
+                    render={({ field }) => (
+                      <OrganizationImageField
+                        id="organization-image"
+                        value={field.value ?? ""}
+                        onChange={field.onChange}
+                        disabled={isBusy}
+                        describedById="organization-image-hint"
+                      />
+                    )}
+                  />
+                  <p id="organization-image-hint" className="text-xs text-muted-foreground">
+                    Ảnh thật của trạm hoặc các bé ở trạm, ngang (16:9). Ảnh hiện trên bản đồ và trang trung tâm để mọi người nhận ra.
+                  </p>
                 </Field>
 
                 <Field className="md:col-span-2">

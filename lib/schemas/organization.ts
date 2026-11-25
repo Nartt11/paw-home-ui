@@ -30,6 +30,8 @@ export const organizationFormSchema = z.object({
     .string()
     .trim()
     .max(500, "Liên kết không được vượt quá 500 ký tự"),
+  /** Public photo of the centre; empty means none yet. */
+  imageUrl: z.string().trim().max(1000),
   streetAddress: z
     .string()
     .trim()
@@ -53,6 +55,7 @@ export const organizationFormDefaultValues: Partial<OrganizationFormInput> = {
   email: "",
   phone: "",
   officialLink: "",
+  imageUrl: "",
   streetAddress: "",
   provinceCode: "",
   provinceName: "",
@@ -72,6 +75,7 @@ export function toOrganizationFormValues(
     email: organization.email ?? "",
     phone: organization.phone ?? "",
     officialLink: organization.officialLink ?? "",
+    imageUrl: organization.imageUrl ?? "",
     streetAddress: organization.streetAddress ?? "",
     provinceCode: organization.provinceCode ?? "",
     provinceName: organization.provinceName ?? "",

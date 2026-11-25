@@ -47,12 +47,8 @@ export interface DonateData {
   hero: {
     title: string;
     description: string;
-    stats: Array<{ value: string; label: string; tone?: string }>;
   };
   tiers: DonateTier[];
   impactBars: DonateImpactBar[];
   impacts: DonateImpactItem[];
-  trustBadges: DonateTrustBadge[];
-  donors: DonateDonor[];
-  bankInfo: DonateBankInfo;
 }

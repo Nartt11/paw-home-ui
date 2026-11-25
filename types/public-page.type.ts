@@ -7,11 +7,10 @@ export interface HeroContent {
   searchPlaceholder: string;
 }
 
+/** A live figure on the home page; value is undefined while it loads. */
 export interface StatItemConfig {
-  value: number;
-  suffix?: string;
+  value?: number;
   label: string;
-  color: string;
 }
 
 export interface HowItWorksStep {
@@ -63,7 +62,6 @@ export interface PublicPet {
 
 export interface PublicPageData {
   hero: HeroContent;
-  stats: StatItemConfig[];
   howItWorksSteps: HowItWorksStep[];
   rescueMapStats: RescueMapStat[];
   stories: StoryItem[];

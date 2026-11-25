@@ -2,10 +2,12 @@
 
 import { isOrganizationMember } from "@/lib/permission";
 import * as React from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { AdoptionDecisionDialog } from "@/components/adoption/AdoptionDecisionDialog";
 import { AdoptionListTable } from "@/components/adoption/AdoptionListTable";
-import AdoptionRequestList from "@/components/adoption/AdoptionRequestList";
+import { ConfirmDialog } from "@/components/common/ConfirmDialog";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AdoptionViewDetail } from "@/components/adoption/AdoptionViewDetail";
 import { ReclaimLogTable } from "@/components/adoption/ReclaimLogTable";
 import TitlePerPage from "@/components/common/admin/TitlePerPage";
@@ -20,13 +22,13 @@ import {
 } from "@/hooks/use-adoption";
 import { getAuthErrorMessage } from "@/hooks/use-auth";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
 import type {
   Adoption,
   AdoptionApprovePayload,
   AdoptionRejectPayload,
   AdoptionSummary,
   AdoptionListParams,
+  AdoptionStatus,
 } from "@/types/adoption.type";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import RequireAuth from "@/components/auth/RequireAuth";
@@ -40,15 +42,36 @@ type DecisionState =
   | null;
 
 const DEFAULT_PAGE_SIZE = 10;
-const PENDING_PREVIEW_SIZE = 6;
+type Tab = "PENDING" | "APPROVED" | "DONE" | "ALL";
+
+/** Queues first; each tab says what is in it. */
+const TABS: Array<{ value: Tab; label: string; hint: string }> = [
+  { value: "PENDING", label: "Chờ duyệt", hint: "Đơn mới đang chờ trạm quyết định." },
+  { value: "APPROVED", label: "Chờ đón", hint: "Đã duyệt, chờ người nhận nuôi đến đón bé." },
+  { value: "DONE", label: "Đã xong", hint: "Đã đón về, bị từ chối hoặc đã huỷ." },
+  { value: "ALL", label: "Tất cả", hint: "Mọi đơn nhận nuôi." },
+];
+
+const TAB_STATUSES: Record<Tab, AdoptionStatus[] | undefined> = {
+  PENDING: ["PENDING"],
+  APPROVED: ["APPROVED"],
+  DONE: ["COMPLETED", "REJECTED", "CANCELED"],
+  ALL: undefined,
+};
 
 export default function AdoptionManagementPage() {
   const [page, setPage] = React.useState(0);
   const [pageSize, setPageSize] = React.useState(DEFAULT_PAGE_SIZE);
-  const [openDetail, setOpenDetail] = React.useState(false);
-  const [selectedId, setSelectedId] = React.useState<string | null>(null);
+  // ?open=<id> (from the dashboard's pending tasks) opens that application straight away.
+  const router = useRouter();
+  const pathname = usePathname();
+  const openParam = useSearchParams().get("open");
+  const [openDetail, setOpenDetail] = React.useState(Boolean(openParam));
+  const [selectedId, setSelectedId] = React.useState<string | null>(openParam);
   const [decisionState, setDecisionState] = React.useState<DecisionState>(null);
-  const [pendingTab, setPendingTab] = React.useState<"ALL" | "PENDING" | "APPROVED">("ALL");
+  const [tab, setTab] = React.useState<Tab>("PENDING");
+  // Completing hands the pet over and cancelling ends the application: both ask first.
+  const [confirmState, setConfirmState] = React.useState<{ mode: "complete" | "cancel"; applicationId: string } | null>(null);
 
   const { data: currentUser } = useCurrentUser();
   // By organization role: some accounts have no MEMBER system role (production demo accounts have none).
@@ -64,12 +87,13 @@ export default function AdoptionManagementPage() {
     const params: AdoptionListParams = {
       page,
       pageSize,
+      status: TAB_STATUSES[tab],
     };
     if (isOrganizationUser && currentOrgId) {
       params.organizationId = currentOrgId;
     }
     return params;
-  }, [page, pageSize, isOrganizationUser, currentOrgId]);
+  }, [page, pageSize, tab, isOrganizationUser, currentOrgId]);
 
   const pendingParams = React.useMemo(() => {
     const params: AdoptionListParams = {
@@ -103,17 +127,8 @@ export default function AdoptionManagementPage() {
   );
   const adoptionDetail = adoptionDetailQuery.data ?? null;
 
-  const filteredPendingAdoptions = React.useMemo(() => {
-    if (pendingTab === "ALL") return pendingAdoptions;
-    return pendingAdoptions.filter((item) => item.status === pendingTab);
-  }, [pendingAdoptions, pendingTab]);
-
   const pendingCounts = React.useMemo(() => {
-    const counts = {
-      ALL: pendingAdoptions.length,
-      PENDING: 0,
-      APPROVED: 0,
-    };
+    const counts = { PENDING: 0, APPROVED: 0 };
     pendingAdoptions.forEach((item) => {
       if (item.status === "PENDING") counts.PENDING++;
       if (item.status === "APPROVED") counts.APPROVED++;
@@ -242,92 +257,21 @@ export default function AdoptionManagementPage() {
         />
 
         <section className="space-y-4">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h2 className="text-xl font-semibold text-foreground">
-                Đơn đang xử lý
-              </h2>
-              <p className="text-sm text-muted-foreground">
-                Đơn chờ xét duyệt và đơn đã duyệt đang chờ người nhận đến đón.
-              </p>
+          <Tabs value={tab} onValueChange={(value) => { setTab(value as Tab); setPage(0); }}>
+            <div className="-mx-4 overflow-x-auto overflow-y-hidden px-4 sm:mx-0 sm:px-0">
+              <TabsList>
+                {TABS.map((item) => (
+                  <TabsTrigger key={item.value} value={item.value}>
+                    {item.label}
+                    {item.value === "PENDING" || item.value === "APPROVED" ? (
+                      <span className="ml-1.5 rounded-full bg-muted px-1.5 text-xs tabular-nums">{pendingCounts[item.value]}</span>
+                    ) : null}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
             </div>
-
-            <div className="flex items-center gap-1.5 bg-muted/50 p-1.5 rounded-2xl border border-border/40 w-fit shrink-0">
-              <button
-                type="button"
-                onClick={() => setPendingTab("ALL")}
-                className={cn(
-                  "px-3.5 py-1.5 text-xs font-semibold rounded-xl transition cursor-pointer select-none border border-transparent",
-                  pendingTab === "ALL"
-                    ? "bg-white text-slate-900 shadow-xs border-border/10"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                Tất cả ({pendingCounts.ALL})
-              </button>
-              <button
-                type="button"
-                onClick={() => setPendingTab("PENDING")}
-                className={cn(
-                  "px-3.5 py-1.5 text-xs font-semibold rounded-xl transition cursor-pointer select-none border border-transparent",
-                  pendingTab === "PENDING"
-                    ? "bg-white text-slate-900 shadow-xs border-border/10"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                Chờ xét duyệt ({pendingCounts.PENDING})
-              </button>
-              <button
-                type="button"
-                onClick={() => setPendingTab("APPROVED")}
-                className={cn(
-                  "px-3.5 py-1.5 text-xs font-semibold rounded-xl transition cursor-pointer select-none border border-transparent",
-                  pendingTab === "APPROVED"
-                    ? "bg-white text-slate-900 shadow-xs border-border/10"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                Chờ đón về ({pendingCounts.APPROVED})
-              </button>
-            </div>
-          </div>
-
-          {pendingAdoptionsQuery.isPending ? (
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {Array.from({ length: 3 }).map((_, index) => (
-                <div
-                  key={index}
-                  className="h-72 animate-pulse rounded-3xl border bg-muted/40"
-                />
-              ))}
-            </div>
-          ) : pendingAdoptions.length === 0 ? (
-            <div className="rounded-3xl border border-dashed px-6 py-10 text-center text-sm text-muted-foreground">
-              Không có đơn nào đang chờ xét duyệt.
-            </div>
-          ) : filteredPendingAdoptions.length === 0 ? (
-            <div className="rounded-3xl border border-dashed px-6 py-10 text-center text-sm text-muted-foreground">
-              Không có đơn nào ở trạng thái này.
-            </div>
-          ) : (
-            <AdoptionRequestList
-              adoptionsList={filteredPendingAdoptions}
-              onViewDetail={handleViewDetail}
-              onApprove={canManage ? handleOpenApprove : undefined}
-              onReject={canManage ? handleOpenReject : undefined}
-            />
-          )}
-        </section>
-
-        <section className="space-y-4">
-          <div>
-            <h2 className="text-xl font-semibold text-foreground">
-              Tất cả đơn nhận nuôi
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              Danh sách tổng hợp hồ sơ nhận nuôi, kể cả đơn đã đón về, bị từ chối hoặc đã huỷ.
-            </p>
-          </div>
+          </Tabs>
+          <p className="text-sm text-muted-foreground">{TABS.find((item) => item.value === tab)?.hint}</p>
 
           <AdoptionListTable
             data={adoptions}
@@ -335,6 +279,8 @@ export default function AdoptionManagementPage() {
             onViewDetail={handleViewDetail}
             onApprove={canManage ? handleOpenApprove : undefined}
             onReject={canManage ? handleOpenReject : undefined}
+            onComplete={canManage ? (id) => setConfirmState({ mode: "complete", applicationId: id }) : undefined}
+            onCancel={canManage ? (id) => setConfirmState({ mode: "cancel", applicationId: id }) : undefined}
           />
 
           <PageControls
@@ -351,6 +297,26 @@ export default function AdoptionManagementPage() {
           />
         </section>
 
+        <ConfirmDialog
+          open={Boolean(confirmState)}
+          onOpenChange={(open) => !open && setConfirmState(null)}
+          title={confirmState?.mode === "complete" ? "Xác nhận đã đón" : "Huỷ đơn nhận nuôi"}
+          description={
+            confirmState?.mode === "complete"
+              ? "Người nhận nuôi đã đến đón bé? Bé sẽ chuyển sang gia đình mới và lịch hỏi thăm bắt đầu."
+              : "Đơn sẽ bị huỷ và bé trở lại danh sách chờ nhà."
+          }
+          confirmText={confirmState?.mode === "complete" ? "Đã đón" : "Huỷ đơn"}
+          destructive={confirmState?.mode === "cancel"}
+          confirming={completeMutation.isPending || cancelMutation.isPending}
+          onConfirm={async () => {
+            if (!confirmState) return;
+            if (confirmState.mode === "complete") await handleCompleteAdoption(confirmState.applicationId);
+            else await handleCancelAdoption(confirmState.applicationId);
+            setConfirmState(null);
+          }}
+        />
+
         <ReclaimLogTable organizationId={currentOrgId} />
 
         <AdoptionViewDetail
@@ -359,6 +325,7 @@ export default function AdoptionManagementPage() {
             setOpenDetail(nextOpen);
             if (!nextOpen) {
               setSelectedId(null);
+              if (openParam) router.replace(pathname);
             }
           }}
           adoption={adoptionDetailQuery.isFetching ? null : adoptionDetail}

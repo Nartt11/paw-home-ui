@@ -40,6 +40,71 @@ interface MapProps {
   onRescueMarkerClick?: (caseId: string) => void;
   onOrganizationMarkerClick?: (organizationId: string) => void;
   zoomToLocation?: { latitude: number; longitude: number; zoom?: number } | null;
+  /** The part of the map on screen, after every pan or zoom. */
+  onBoundsChange?: (bounds: MapBounds) => void;
+  /** Group nearby rescue markers when zoomed out (default on). */
+  cluster?: boolean;
+  /** Colour key in the corner (default on). */
+  legend?: boolean;
+}
+
+export interface MapBounds {
+  minLat: number;
+  maxLat: number;
+  minLng: number;
+  maxLng: number;
+}
+
+type Cluster = { key: string; latitude: number; longitude: number; markers: RescueMapMarker[] };
+
+const LEVEL_RANK: Record<RescueLevel, number> = { low: 0, medium: 1, high: 2 };
+const LEVEL_BG: Record<RescueLevel, string> = { high: "bg-red-600", medium: "bg-amber-500", low: "bg-emerald-600" };
+
+/**
+ * Groups markers that would overlap on screen: one cell is about 64px at this zoom.
+ * Above zoom 12 every marker stands alone.
+ */
+function clusterMarkers(markers: RescueMapMarker[], zoom: number): Cluster[] {
+  if (zoom >= 12) {
+    return markers.map((m) => ({ key: m.caseId, latitude: m.latitude, longitude: m.longitude, markers: [m] }));
+  }
+  const cell = 90 / 2 ** zoom; // 64px in degrees of longitude at this zoom
+  const groups = new globalThis.Map<string, RescueMapMarker[]>();
+  for (const m of markers) {
+    const key = `${Math.floor(m.longitude / cell)}:${Math.floor(m.latitude / cell)}`;
+    groups.set(key, [...(groups.get(key) ?? []), m]);
+  }
+  return [...groups.entries()].map(([key, group]) => ({
+    key,
+    latitude: group.reduce((s, m) => s + m.latitude, 0) / group.length,
+    longitude: group.reduce((s, m) => s + m.longitude, 0) / group.length,
+    markers: group,
+  }));
+}
+
+function Legend() {
+  const items: Array<[string, string]> = [
+    ["bg-red-600", "Khẩn cấp, cao"],
+    ["bg-amber-500", "Bình thường"],
+    ["bg-emerald-600", "Thấp"],
+    ["bg-primary", "Trung tâm"],
+  ];
+  return (
+    <div className="pointer-events-none absolute bottom-4 left-4 z-10 rounded-lg bg-white/95 p-3 text-xs shadow-md" aria-label="Chú giải bản đồ">
+      <ul className="space-y-1.5">
+        {items.map(([bg, label]) => (
+          <li key={label} className="flex items-center gap-2">
+            <span className={`size-3 rounded-full border-2 border-white shadow ${bg}`} aria-hidden />
+            {label}
+          </li>
+        ))}
+        <li className="flex items-center gap-2">
+          <span className="grid size-4 place-items-center rounded-full bg-slate-700 text-[9px] font-bold text-white" aria-hidden>3</span>
+          Nhiều ca gần nhau
+        </li>
+      </ul>
+    </div>
+  );
 }
 
 const DEFAULT_CENTER: [number, number] = [10.8702, 106.8029];
@@ -71,9 +136,20 @@ export default function MapRescue({
   onRescueMarkerClick,
   onOrganizationMarkerClick,
   zoomToLocation,
+  onBoundsChange,
+  cluster = true,
+  legend = true,
 }: MapProps) {
   const mapRef = useRef<MapRef | null>(null);
   const [ready, setReady] = useState(false);
+  const [zoom, setZoom] = useState(initialZoom);
+
+  /** Reads the view after load and after every pan or zoom. */
+  const readView = (map: MapRef) => {
+    setZoom(map.getZoom());
+    const b = map.getBounds();
+    onBoundsChange?.({ minLat: b.getSouth(), maxLat: b.getNorth(), minLng: b.getWest(), maxLng: b.getEast() });
+  };
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
   const [showUserPopup, setShowUserPopup] = useState(false);
 
@@ -133,7 +209,11 @@ export default function MapRescue({
         longitude={initialCenter[1]}
         zoom={initialZoom}
         className="h-full w-full"
-        onLoad={() => setReady(true)}
+        onLoad={() => {
+          setReady(true);
+          if (mapRef.current) readView(mapRef.current);
+        }}
+        onMoveEnd={readView}
       >
         {userLocation ? (
           <Marker
@@ -182,24 +262,61 @@ export default function MapRescue({
           ))}
 
         {!loading &&
-          validRescueMarkers.map((marker) => (
-            <Marker
-              key={marker.caseId}
-              latitude={marker.latitude}
-              longitude={marker.longitude}
-              onClick={(event) => {
-                event.originalEvent.stopPropagation();
-                onRescueMarkerClick?.(marker.caseId);
-              }}
-              style={{ cursor: "pointer" }}
-            >
-              <RescuePin level={getPriorityLevel(marker.priority)} />
-            </Marker>
-          ))}
+          (cluster ? clusterMarkers(validRescueMarkers, zoom) : clusterMarkers(validRescueMarkers, 99)).map((group) => {
+            if (group.markers.length === 1) {
+              const marker = group.markers[0];
+              return (
+                <Marker
+                  key={marker.caseId}
+                  latitude={marker.latitude}
+                  longitude={marker.longitude}
+                  onClick={(event) => {
+                    event.originalEvent.stopPropagation();
+                    onRescueMarkerClick?.(marker.caseId);
+                  }}
+                  style={{ cursor: "pointer" }}
+                >
+                  <RescuePin level={getPriorityLevel(marker.priority)} />
+                </Marker>
+              );
+            }
+            // A group takes the colour of its most urgent case; a click zooms in on it.
+            const level = group.markers
+              .map((m) => getPriorityLevel(m.priority))
+              .reduce((a, b) => (LEVEL_RANK[b] > LEVEL_RANK[a] ? b : a), "low" as RescueLevel);
+            const size = group.markers.length < 10 ? "size-9" : "size-11";
+            return (
+              <Marker
+                key={`cluster-${group.key}`}
+                latitude={group.latitude}
+                longitude={group.longitude}
+                onClick={(event) => {
+                  event.originalEvent.stopPropagation();
+                  const lngs = group.markers.map((m) => m.longitude);
+                  const lats = group.markers.map((m) => m.latitude);
+                  mapRef.current?.fitBounds(
+                    [[Math.min(...lngs), Math.min(...lats)], [Math.max(...lngs), Math.max(...lats)]],
+                    { padding: 80, maxZoom: 16, duration: 600 },
+                  );
+                }}
+                style={{ cursor: "pointer" }}
+              >
+                <span
+                  role="img"
+                  aria-label={`${group.markers.length} ca cứu hộ ở gần nhau`}
+                  className={`grid ${size} place-items-center rounded-full border-2 border-white text-sm font-bold text-white shadow-md ${LEVEL_BG[level]}`}
+                >
+                  {group.markers.length}
+                </span>
+              </Marker>
+            );
+          })}
       </BaseMap>
 
+      {legend && !loading ? <Legend /> : null}
+
       {loading ? (
-        <div className="pointer-events-none absolute bottom-4 left-4 z-10 rounded-lg bg-white p-3 shadow-lg">
+        <div className="pointer-events-none absolute bottom-4 left-4 z-20 rounded-lg bg-white p-3 shadow-lg">
           <p className="text-sm text-gray-600">Đang tải dữ liệu...</p>
         </div>
       ) : null}

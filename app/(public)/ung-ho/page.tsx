@@ -4,6 +4,9 @@ import * as React from "react";
 import { ArrowRight, Heart } from "lucide-react";
 
 import rawData from "./data.json";
+import Link from "next/link";
+import { usePublicStats } from "@/hooks/use-public-stats";
+import { APP_ROUTES } from "@/constants/routes";
 import type { DonateData, DonateMethod, DonateStep } from "@/types/donate.type";
 
 import { Button } from "@/components/ui/button";
@@ -25,6 +28,14 @@ import {
 const DATA = rawData as DonateData;
 
 export default function DonatePage() {
+  const live = usePublicStats().data;
+  const heroStats = live
+    ? [
+        { value: live.casesRescued.toLocaleString("vi-VN"), label: "Ca đã cứu", tone: "sun" },
+        { value: live.petsWaiting.toLocaleString("vi-VN"), label: "Bé đang chờ nhà", tone: "emerald" },
+        { value: live.activeCentres.toLocaleString("vi-VN"), label: "Trạm đang hoạt động", tone: "orange" },
+      ]
+    : undefined;
   const [step, setStep] = React.useState<DonateStep>("choose");
   const [method, setMethod] = React.useState<DonateMethod>("transfer");
 
@@ -75,9 +86,17 @@ export default function DonatePage() {
 
   return (
     <div className="min-h-screen bg-muted">
-      <DonateHero data={DATA.hero} />
+      <DonateHero data={DATA.hero} stats={heroStats} />
 
       <main className="mx-auto w-full max-w-6xl px-6 py-10 md:py-14">
+        <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900" role="note">
+          <strong>Ủng hộ trực tuyến đang được phát triển.</strong> Trang này là bản mẫu: không có giao dịch nào được thực hiện và
+          không thu tiền. Muốn giúp ngay, hãy{" "}
+          <Link href={APP_ROUTES.MAP} className="font-semibold underline underline-offset-4">
+            liên hệ một trạm cứu hộ trên bản đồ
+          </Link>
+          .
+        </div>
         <div className="grid gap-8 lg:grid-cols-[1fr_380px]">
           <section className="space-y-5">
             {step === "choose" ? (
@@ -133,7 +152,6 @@ export default function DonatePage() {
                 method={method}
                 name={showName ? name : ""}
                 email={email}
-                bankInfo={DATA.bankInfo}
                 onBack={() => setStep("choose")}
                 onConfirm={() => setStep("success")}
               />
@@ -143,8 +161,6 @@ export default function DonatePage() {
           <DonateSidebar
             impactBars={DATA.impactBars}
             impacts={DATA.impacts}
-            trustBadges={DATA.trustBadges}
-            donors={DATA.donors}
           />
         </div>
 

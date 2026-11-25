@@ -34,6 +34,8 @@ import { speciesLabel } from "@/lib/pet-display";
 import { RESCUE_CASE_TYPE_LABEL, rescuePriorityLabel, rescueStatusLabel } from "@/lib/rescue-case-display";
 import { formatDate } from "@/lib/datetime";
 
+import type { MapBounds } from "@/components/map-rescue/MapRescue";
+
 const Map = dynamic(() => import("@/components/map-rescue/MapRescue"), {
   ssr: false,
   loading: () => (
@@ -74,6 +76,8 @@ export default function RescueCaseManagementPage() {
   const [compareOpen, setCompareOpen] = React.useState(false);
   const [selectedCompletionCaseId, setSelectedCompletionCaseId] = React.useState<string | null>(null);
   const [selectedCaseId, setSelectedCaseId] = React.useState<string | null>(null);
+  // The part of the map on screen: the side list shows only what is in it.
+  const [view, setView] = React.useState<MapBounds | null>(null);
 
   const { data: currentUser } = useCurrentUser();
   // By organization role: some accounts have no MEMBER system role (production demo accounts have none).
@@ -162,11 +166,30 @@ export default function RescueCaseManagementPage() {
     }
     return markers;
   }, [organizationMarkersQuery.data, isOrganizationUser, currentOrgId]);
-  const totalRescueCases = rescueBoundingBoxQuery.data?.totalElements ?? 0;
+  const inView = React.useCallback(
+    (lat: number, lng: number) =>
+      !view || (lat >= view.minLat && lat <= view.maxLat && lng >= view.minLng && lng <= view.maxLng),
+    [view],
+  );
+  const caseIdsInView = React.useMemo(
+    () => new Set(rescueMarkers.filter((m) => inView(m.latitude, m.longitude)).map((m) => m.caseId)),
+    [rescueMarkers, inView],
+  );
+  const orgIdsInView = React.useMemo(
+    () => new Set(organizationMarkers.filter((m) => inView(m.latitude, m.longitude)).map((m) => m.organizationId)),
+    [organizationMarkers, inView],
+  );
+  const rescueCasesInView = React.useMemo(
+    () => rescueCases.filter((c) => caseIdsInView.has(c.caseId)),
+    [rescueCases, caseIdsInView],
+  );
+  const organizationsInView = React.useMemo(
+    () => organizations.filter((o) => orgIdsInView.has(o.organizationId)),
+    [organizations, orgIdsInView],
+  );
+  const totalRescueCases = rescueCasesInView.length;
   const totalOrganizations =
-    organizationBoundingBoxQuery.data?.totalElements ??
-    organizationMarkersQuery.data?.length ??
-    0;
+    organizationsInView.length;
   const criticalCases = rescueCases.filter(
     (item) => item.priority === "CRITICAL" || item.priority === "HIGH",
   ).length;
@@ -458,14 +481,19 @@ export default function RescueCaseManagementPage() {
                     setSelectedCaseId(item.caseId);
                     setCompareOpen(true);
                   }}
-                  className="w-full text-left rounded-xl border p-4 hover:border-primary hover:bg-muted/40 transition-all flex flex-col justify-between h-28 bg-white shadow-sm"
+                  className="w-full text-left rounded-xl border p-4 hover:border-primary hover:bg-muted/40 transition-all flex flex-col justify-between gap-2 bg-white shadow-sm"
                 >
+                  {item.verificationImagesUrl?.[0] ? (
+                    // the reviewer sees the proof before opening the report
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={item.verificationImagesUrl[0]} alt="" className="aspect-video w-full rounded-lg object-cover" loading="lazy" />
+                  ) : null}
                   <div className="flex items-start justify-between gap-3 w-full">
                     <div className="min-w-0">
                       <p className="text-xs font-medium text-muted-foreground tabular-nums">
                         Ca {item.caseCode ?? "chưa có mã"}
                       </p>
-                      <p className="mt-1 font-semibold text-foreground text-sm line-clamp-1">
+                      <p className="mt-1 font-semibold text-foreground text-sm line-clamp-2">
                         {item.rescueNote || "Không có ghi chú"}
                       </p>
                     </div>
@@ -504,6 +532,7 @@ export default function RescueCaseManagementPage() {
               onRescueMarkerClick={handleOpenDetail}
               onOrganizationMarkerClick={handleOpenOrganizationDetail}
               zoomToLocation={zoomToLocation}
+              onBoundsChange={setView}
             />
           </div>
 
@@ -535,7 +564,7 @@ export default function RescueCaseManagementPage() {
                     </div>
                     <div className="space-y-3">
                       {renderRescueList(
-                        rescueCases,
+                        rescueCasesInView,
                         "Chưa có ca cứu trợ trong vùng hiển thị.",
                       )}
                     </div>
@@ -551,7 +580,7 @@ export default function RescueCaseManagementPage() {
                       </span>
                     </div>
                     <div className="space-y-3">
-                      {renderOrganizationList(organizations)}
+                      {renderOrganizationList(organizationsInView)}
                     </div>
                   </section>
                 </div>

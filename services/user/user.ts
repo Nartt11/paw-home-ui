@@ -37,9 +37,10 @@ const userService = {
     return await http.get<User>(apiEndpoints.users.me);
   },
 
-  // PATCH /api/v1/users/me/profile - Update current user profile
+  // PUT /api/v1/users/me/profile - the backend's PATCH reads query parameters, so a JSON body sent
+  // with PATCH was silently ignored; PUT takes the body.
   async updateMyProfile(payload: ProfileUpdatePayload): Promise<User> {
-    return await http.patch<User, ProfileUpdatePayload>(
+    return await http.put<User, ProfileUpdatePayload>(
       apiEndpoints.users.profile,
       payload,
     );

@@ -61,11 +61,8 @@ export default function HowItWorksSection({ steps }: HowItWorksSectionProps) {
             >
               {step.icon}
             </div>
-            <div
-              className="mb-2 text-[10px] font-bold tracking-[0.2em]"
-              style={{ color: step.color }}
-            >
-              BƯỚC {step.step}
+            <div className="mb-2 text-xs font-semibold tracking-wide text-slate-600">
+              Bước {step.step}
             </div>
             <h3 className="mb-2 text-[18px] font-extrabold text-slate-900">
               {step.title}

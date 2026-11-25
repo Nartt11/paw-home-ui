@@ -43,6 +43,9 @@ export interface AdoptionListTableProps {
   onViewDetail?: (applicationId: string) => void;
   onApprove?: (applicationId: string) => void;
   onReject?: (applicationId: string) => void;
+  /** Approved and waiting for pick-up: the adopter came and took the pet. */
+  onComplete?: (applicationId: string) => void;
+  onCancel?: (applicationId: string) => void;
 }
 
 function formatDateVi(value?: string) {
@@ -70,7 +73,7 @@ const columns: ColumnDef<AdoptionSummary>[] = [
     accessorKey: "adoptionCode",
     header: "Mã đơn",
     cell: ({ row }) => (
-      <span className="font-mono text-xs text-slate-600">
+      <span className="text-xs tabular-nums text-muted-foreground">
         {row.original.adoptionCode || "-"}
       </span>
     ),
@@ -141,6 +144,8 @@ export function AdoptionListTable({
   onViewDetail,
   onApprove,
   onReject,
+  onComplete,
+  onCancel,
 }: AdoptionListTableProps) {
   const columnsWithActions = React.useMemo<ColumnDef<AdoptionSummary>[]>(() => {
     return columns.map((column) => {
@@ -152,19 +157,31 @@ export function AdoptionListTable({
         ...column,
         cell: ({ row }) => {
           const applicationId = row.original.applicationId;
-          // A queue: the one decision people make most sits on the row; refusing waits in ⋮.
-          const canDecide = row.original.status === "PENDING";
-          if (!canDecide || (!onApprove && !onReject)) return null;
+          const status = row.original.status;
+          // Each application shows its one next step; refusing or cancelling waits in ⋮.
+          const step =
+            status === "PENDING" && onApprove
+              ? { label: "Duyệt", icon: true, run: () => onApprove(applicationId) }
+              : status === "APPROVED" && onComplete
+                ? { label: "Xác nhận đã đón", icon: true, run: () => onComplete(applicationId) }
+                : null;
+          const stop =
+            status === "PENDING" && onReject
+              ? { label: "Từ chối đơn", run: () => onReject(applicationId) }
+              : status === "APPROVED" && onCancel
+                ? { label: "Huỷ đơn", run: () => onCancel(applicationId) }
+                : null;
+          if (!step && !stop) return null;
 
           return (
             <div className="flex items-center justify-end gap-1">
-              {onApprove ? (
-                <Button type="button" size="sm" onClick={() => onApprove(applicationId)}>
+              {step ? (
+                <Button type="button" size="sm" onClick={step.run}>
                   <Check className="size-4" />
-                  Duyệt
+                  {step.label}
                 </Button>
               ) : null}
-              {onReject ? (
+              {stop ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon" className="size-8" aria-label="Thao tác khác">
@@ -172,8 +189,8 @@ export function AdoptionListTable({
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem variant="destructive" onClick={() => onReject(applicationId)}>
-                      Từ chối đơn
+                    <DropdownMenuItem variant="destructive" onClick={stop.run}>
+                      {stop.label}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -183,7 +200,7 @@ export function AdoptionListTable({
         },
       } satisfies ColumnDef<AdoptionSummary>;
     });
-  }, [onApprove, onReject]);
+  }, [onApprove, onReject, onComplete, onCancel]);
 
   // TanStack Table uses function-returning APIs that React Compiler warns about.
   // eslint-disable-next-line react-hooks/incompatible-library
