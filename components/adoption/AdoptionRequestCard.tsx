@@ -8,10 +8,10 @@ import {
   Check,
   MapPin,
   MoreVertical,
-  X,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { clickableRowProps } from "@/components/common/admin/clickable-row";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -80,10 +80,15 @@ export default function AdoptionRequestCard({
   const st = statusMeta(status);
   const canDecide = (status ?? "PENDING") === "PENDING";
 
+  const open = clickableRowProps(onViewDetail && (() => onViewDetail(applicationId)));
+
   return (
     <article
+      {...open}
+      aria-label={`Đơn nhận nuôi ${petName} của ${applicantName}`}
       className={cn(
-        "relative w-full overflow-hidden rounded-3xl border border-border bg-card p-5 shadow-sm",
+        open.className,
+        "relative w-full overflow-hidden rounded-3xl border border-border bg-card p-5 shadow-sm transition-colors hover:border-primary/40",
         className,
       )}
     >
@@ -122,39 +127,20 @@ export default function AdoptionRequestCard({
               </div>
             </div>
 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-9 w-9 rounded-full"
-                  aria-label="Thao tác khác"
-                  title="Thao tác khác"
-                >
-                  <MoreVertical className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="min-w-44">
-                <DropdownMenuItem
-                  onClick={() => onViewDetail?.(applicationId)}
-                  disabled={!onViewDetail}
-                >
-                  Xem chi tiết
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => onApprove?.(applicationId)}
-                  disabled={!onApprove || !canDecide}
-                >
-                  Duyệt
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => onReject?.(applicationId)}
-                  disabled={!onReject || !canDecide}
-                >
-                  Từ chối
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {onReject && canDecide ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="size-9 rounded-full" aria-label="Thao tác khác">
+                    <MoreVertical className="size-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="min-w-40">
+                  <DropdownMenuItem variant="destructive" onClick={() => onReject(applicationId)}>
+                    Từ chối đơn
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : null}
           </div>
 
           <div className="mt-4 grid gap-2 text-sm text-muted-foreground">
@@ -184,38 +170,14 @@ export default function AdoptionRequestCard({
             </>
           ) : null}
 
-          <div className="mt-5 flex items-center gap-3">
-            <Button
-              className="h-11 flex-1 rounded-full"
-              variant="outline"
-              onClick={() => onViewDetail?.(applicationId)}
-              disabled={!onViewDetail}
-            >
-              Xem chi tiết
-            </Button>
-
-            <Button
-              className="h-11 w-11 rounded-full"
-              variant="default"
-              onClick={() => onApprove?.(applicationId)}
-              disabled={!onApprove || !canDecide}
-              aria-label="Duyệt đơn"
-              title="Duyệt đơn"
-            >
-              <Check className="h-5 w-5" />
-            </Button>
-
-            <Button
-              className="h-11 w-11 rounded-full"
-              variant="destructive"
-              onClick={() => onReject?.(applicationId)}
-              disabled={!onReject || !canDecide}
-              aria-label="Từ chối đơn"
-              title="Từ chối đơn"
-            >
-              <X className="h-5 w-5" />
-            </Button>
-          </div>
+          {onApprove && canDecide ? (
+            <div className="mt-5">
+              <Button className="h-11 w-full rounded-full" onClick={() => onApprove(applicationId)}>
+                <Check className="size-5" />
+                Duyệt đơn
+              </Button>
+            </div>
+          ) : null}
         </div>
       </div>
     </article>

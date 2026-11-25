@@ -68,9 +68,9 @@ const organizationService = {
     id: string,
     status: OrganizationStatus,
   ): Promise<Organization> {
-    return await http.patch<Organization, OrganizationStatus>(
-      apiEndpoints.organizations.status(id),
-      status,
+    // the backend reads the new status from the query string, not the body
+    return await http.patch<Organization>(
+      `${apiEndpoints.organizations.status(id)}?status=${encodeURIComponent(status)}`,
     );
   },
 

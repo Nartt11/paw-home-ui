@@ -3,6 +3,7 @@ import type {
   PetHealthStatus,
   PetStatus,
 } from "@/types/pet.type";
+import { STATUS_TONE_SOFT, STATUS_TONE_SOLID, type StatusTone } from "@/lib/status-tone";
 
 /** Vietnamese labels for the pet enums the backend sends. Every screen reads them from here. */
 export const PET_STATUS_LABEL: Record<PetStatus, string> = {
@@ -13,23 +14,32 @@ export const PET_STATUS_LABEL: Record<PetStatus, string> = {
   DECEASED: "Đã mất",
 };
 
-/** Soft badge for light backgrounds; text stays at 4.5:1 or more on its tint. */
-export const PET_STATUS_BADGE: Record<PetStatus, string> = {
-  AVAILABLE: "bg-emerald-50 text-emerald-800 hover:bg-emerald-50",
-  FOSTERING: "bg-violet-50 text-violet-800 hover:bg-violet-50",
-  ADOPTED: "bg-sky-50 text-sky-800 hover:bg-sky-50",
-  LOST: "bg-amber-50 text-amber-800 hover:bg-amber-50",
-  DECEASED: "bg-slate-100 text-slate-700 hover:bg-slate-100",
+export const PET_STATUS_TONE: Record<PetStatus, StatusTone> = {
+  AVAILABLE: "success",
+  FOSTERING: "accent",
+  ADOPTED: "info",
+  LOST: "warning",
+  DECEASED: "neutral",
 };
 
+const byTone = <K extends string>(tones: Record<K, StatusTone>, classes: Record<StatusTone, string>) =>
+  Object.fromEntries(Object.entries(tones).map(([key, tone]) => [key, classes[tone as StatusTone]])) as Record<K, string>;
+
+/** Soft badge for light backgrounds; text stays at 4.5:1 or more on its tint. */
+export const PET_STATUS_BADGE = byTone(PET_STATUS_TONE, STATUS_TONE_SOFT);
+
 /** Solid badge for photos and dark backgrounds; white text stays at 4.5:1 or more. */
-export const PET_STATUS_BADGE_SOLID: Record<PetStatus, string> = {
-  AVAILABLE: "bg-emerald-700 text-white",
-  FOSTERING: "bg-violet-700 text-white",
-  ADOPTED: "bg-sky-700 text-white",
-  LOST: "bg-amber-700 text-white",
-  DECEASED: "bg-slate-700 text-white",
+export const PET_STATUS_BADGE_SOLID = byTone(PET_STATUS_TONE, STATUS_TONE_SOLID);
+
+/** Under treatment needs attention; recovering is in hand; special needs is a trait, not an alarm. */
+export const PET_HEALTH_TONE: Record<PetHealthStatus, StatusTone> = {
+  HEALTHY: "success",
+  UNDER_TREATMENT: "warning",
+  RECOVERING: "info",
+  SPECIAL_NEEDS: "accent",
 };
+
+export const PET_HEALTH_BADGE = byTone(PET_HEALTH_TONE, STATUS_TONE_SOFT);
 
 export const PET_STATUS_OPTIONS = (
   Object.keys(PET_STATUS_LABEL) as PetStatus[]

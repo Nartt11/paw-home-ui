@@ -48,6 +48,8 @@ import {
   RESCUE_STATUS_LABEL,
   isOpenRescueStatus,
   rescuePriorityLabel,
+  rescuePriorityBadge,
+  rescueStatusBadge,
   rescueStatusLabel,
 } from "@/lib/rescue-case-display";
 import type { RescueCase, RescueCaseStatus, RescueCompletion } from "@/types/rescue-case.type";
@@ -60,20 +62,6 @@ const MapPicker = dynamic(() => import("@/components/map/MapPicker"), {
     </div>
   ),
 });
-
-const STATUS_BADGE: Record<RescueCaseStatus, string> = {
-  REPORTED: "border-amber-200 bg-amber-50 text-amber-800",
-  IN_PROGRESS: "border-sky-200 bg-sky-50 text-sky-800",
-  RESCUED: "border-emerald-200 bg-emerald-50 text-emerald-800",
-  CLOSED: "border-slate-200 bg-slate-100 text-slate-700",
-};
-
-const PRIORITY_BADGE: Record<string, string> = {
-  CRITICAL: "border-red-200 bg-red-50 text-red-800",
-  HIGH: "border-rose-200 bg-rose-50 text-rose-800",
-  NORMAL: "border-slate-200 bg-slate-50 text-slate-700",
-  LOW: "border-slate-200 bg-white text-slate-600",
-};
 
 const HANDLER_ROLES = ["OWNER", "STAFF"];
 
@@ -388,10 +376,10 @@ export function RescueCaseViewDetail({ rescueCase, open, onOpenChange }: RescueC
               <DialogTitle className="text-lg">
                 {speciesLabel({ species: rescueCase.species })} cần giúp
               </DialogTitle>
-              <Badge variant="outline" className={STATUS_BADGE[status]}>
+              <Badge variant="outline" className={rescueStatusBadge(status)}>
                 {RESCUE_STATUS_LABEL[status]}
               </Badge>
-              <Badge variant="outline" className={PRIORITY_BADGE[rescueCase.priority] ?? ""}>
+              <Badge variant="outline" className={rescuePriorityBadge(rescueCase.priority)}>
                 {rescuePriorityLabel(rescueCase.priority)}
               </Badge>
               {rescueCase.caseType && rescueCase.caseType !== "RESCUE" ? (

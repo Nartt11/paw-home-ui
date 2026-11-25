@@ -22,13 +22,18 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { clickableRowProps } from "@/components/common/admin/clickable-row";
 import {
+  PET_HEALTH_BADGE,
+  PET_HEALTH_LABEL,
   PET_STATUS_BADGE,
   breedLabel,
   formatPetAge,
   petStatusLabel,
   speciesLabel,
 } from "@/lib/pet-display";
+import { STATUS_TONE_SOFT } from "@/lib/status-tone";
+import type { PetHealthStatus } from "@/types/pet.type";
 import type { PetSummary } from "@/types/pet.type";
 
 export interface PetListTableProps {
@@ -37,40 +42,19 @@ export interface PetListTableProps {
 }
 
 function petStatusBadge(status: PetSummary["status"]) {
-  const className = PET_STATUS_BADGE[status];
-  return className ? (
-    <Badge className={className}>{petStatusLabel(status)}</Badge>
-  ) : (
-    <Badge variant="secondary">{petStatusLabel(status)}</Badge>
+  return (
+    <Badge variant="outline" className={PET_STATUS_BADGE[status] ?? STATUS_TONE_SOFT.neutral}>
+      {petStatusLabel(status)}
+    </Badge>
   );
 }
 
+/** Same colours as the pet's own page: they come from one map. */
 function petHealthStatusBadge(status: string) {
-  const map: Record<string, { label: string; className?: string }> = {
-    HEALTHY: {
-      label: "Khỏe mạnh",
-      className: "bg-green-50 text-green-700 hover:bg-green-50",
-    },
-    UNDER_TREATMENT: {
-      label: "Đang điều trị",
-      className: "bg-red-50 text-red-700 hover:bg-red-50",
-    },
-    RECOVERING: {
-      label: "Đang hồi phục",
-      className: "bg-yellow-50 text-yellow-700 hover:bg-yellow-50",
-    },
-    SPECIAL_NEEDS: {
-      label: "Chăm sóc đặc biệt",
-      className: "bg-orange-50 text-orange-700 hover:bg-orange-50",
-    },
-  };
-
-  const item = map[status] ?? { label: status };
-
-  return item.className ? (
-    <Badge className={item.className}>{item.label}</Badge>
-  ) : (
-    <Badge variant="secondary">{item.label}</Badge>
+  return (
+    <Badge variant="outline" className={PET_HEALTH_BADGE[status as PetHealthStatus] ?? STATUS_TONE_SOFT.neutral}>
+      {PET_HEALTH_LABEL[status as PetHealthStatus] ?? status}
+    </Badge>
   );
 }
 
@@ -123,11 +107,13 @@ const columns: ColumnDef<PetSummary>[] = [
     header: "Tiêm",
     cell: ({ row }) =>
       row.original.vaccinated ? (
-        <Badge className="bg-emerald-50 text-emerald-700 hover:bg-emerald-50">
+        <Badge variant="outline" className={STATUS_TONE_SOFT.success}>
           Đã tiêm
         </Badge>
       ) : (
-        <Badge variant="secondary">Chưa tiêm</Badge>
+        <Badge variant="outline" className={STATUS_TONE_SOFT.neutral}>
+          Chưa tiêm
+        </Badge>
       ),
   },
   {
@@ -205,16 +191,8 @@ export function PetListTable({ data, loading = false }: PetListTableProps) {
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
-                  onClick={() =>
-                    router.push(`/quan-ly-thu-cung/${row.original.petId}`)
-                  }
-                  // The whole row opens the pet; Enter does the same from the keyboard.
-                  tabIndex={0}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter") router.push(`/quan-ly-thu-cung/${row.original.petId}`);
-                  }}
+                  {...clickableRowProps(() => router.push(`/quan-ly-thu-cung/${row.original.petId}`))}
                   aria-label={`Mở hồ sơ ${row.original.name}`}
-                  className="cursor-pointer hover:bg-muted/50 focus-visible:bg-muted/50 focus-visible:outline-2 focus-visible:outline-primary"
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>

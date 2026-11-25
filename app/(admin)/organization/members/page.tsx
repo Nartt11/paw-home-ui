@@ -70,6 +70,8 @@ import {
 } from "@/hooks/use-organization";
 import RequireAuth from "@/components/auth/RequireAuth";
 import { ORGANIZATION_ROLES } from "@/constants/roles";
+import { DeleteModal } from "@/components/common/admin/DeleteModal";
+import { organizationRoleBadge, organizationRoleLabel } from "@/lib/organization-display";
 
 // Form schemas
 const addMemberSchema = z.object({
@@ -87,29 +89,15 @@ function getErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : "Có lỗi xảy ra";
 }
 
-function roleBadge(role?: string) {
-  const r = role?.toUpperCase();
-  const map: Record<string, { label: string; className: string }> = {
-    OWNER: {
-      label: "Chủ sở hữu",
-      className: "bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-50",
-    },
-    STAFF: {
-      label: "Nhân viên",
-      className: "bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-50",
-    },
-    VET: {
-      label: "Bác sĩ thú y",
-      className: "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-50",
-    },
-    MEMBER: {
-      label: "Thành viên",
-      className: "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-50",
-    },
-  };
+/** What removing a member needs from a row; older rows spell the id user_id. */
+type MemberToRemove = { userId?: string; user_id?: string; fullName?: string; username?: string };
 
-  const item = map[r || ""] ?? { label: role || "MEMBER", className: "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-50" };
-  return <Badge variant="outline" className={item.className}>{item.label}</Badge>;
+function roleBadge(role?: string) {
+  return (
+    <Badge variant="outline" className={organizationRoleBadge(role)}>
+      {organizationRoleLabel(role)}
+    </Badge>
+  );
 }
 
 export default function OrganizationMembersPage() {
@@ -121,6 +109,7 @@ export default function OrganizationMembersPage() {
   const [addOpen, setAddOpen] = React.useState(false);
   const [editRoleOpen, setEditRoleOpen] = React.useState(false);
   const [selectedMember, setSelectedMember] = React.useState<any | null>(null);
+  const [removeTarget, setRemoveTarget] = React.useState<MemberToRemove | null>(null);
 
   // Auth Context
   const { data: currentUser } = useCurrentUser();
@@ -210,22 +199,20 @@ export default function OrganizationMembersPage() {
     }
   });
 
-  const handleRemoveMember = React.useCallback(async (member: any) => {
-    if (!activeOrgId) return;
-    const targetUserId = member.userId || member.user_id;
-    const confirmed = window.confirm(`Bạn có chắc chắn muốn xóa thành viên khỏi tổ chức?`);
-    if (!confirmed) return;
+  // Same confirmation dialog as every other destructive action in the admin.
+  const handleRemoveMember = React.useCallback((member: MemberToRemove) => setRemoveTarget(member), []);
 
+  const handleConfirmRemove = React.useCallback(async () => {
+    const userId = removeTarget?.userId || removeTarget?.user_id;
+    if (!activeOrgId || !userId) return;
     try {
-      await removeMemberMutation.mutateAsync({
-        id: activeOrgId,
-        userId: targetUserId,
-      });
+      await removeMemberMutation.mutateAsync({ id: activeOrgId, userId });
       toast.success("Đã xóa thành viên khỏi tổ chức");
+      setRemoveTarget(null);
     } catch (error) {
       toast.error(getErrorMessage(error));
     }
-  }, [activeOrgId, removeMemberMutation]);
+  }, [activeOrgId, removeMemberMutation, removeTarget]);
 
   const members = React.useMemo(() => {
     return membersQuery.data?.content ?? [];
@@ -506,6 +493,21 @@ export default function OrganizationMembersPage() {
             </form>
           </DialogContent>
         </Dialog>
+
+        <DeleteModal
+          open={!!removeTarget}
+          onOpenChange={(open) => !open && setRemoveTarget(null)}
+          title="Xóa thành viên"
+          description={
+            <>
+              <strong className="text-foreground">{removeTarget?.fullName || removeTarget?.username || "Thành viên này"}</strong>{" "}
+              sẽ rời tổ chức và mất quyền truy cập các trang quản lý của trung tâm.
+            </>
+          }
+          confirmText="Xóa thành viên"
+          confirming={removeMemberMutation.isPending}
+          onConfirm={handleConfirmRemove}
+        />
       </div>
     </RequireAuth>
   );

@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { CommentSection } from "@/components/community/CommentSection";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { POST_CATEGORY_LABEL } from "@/constants/post";
 import { Button } from "@/components/ui/button";
 import { APP_ROUTES } from "@/constants/routes";
 import { useTogglePostLike } from "@/hooks/use-post-interactions";
@@ -18,14 +19,6 @@ import {
 } from "@/lib/rescue-case-display";
 import { cn } from "@/lib/utils";
 import type { PostCategory, PostSummary } from "@/types/post.type";
-
-const CATEGORY_LABEL: Record<PostCategory, string> = {
-  RESCUE: "Cứu hộ",
-  ADOPTION: "Nhận nuôi",
-  LOST: "Thú lạc",
-  FOUND: "Tìm thấy",
-  GENERAL: "Chia sẻ",
-};
 
 const MAX_IMAGES = 4;
 
@@ -99,7 +92,7 @@ export function PostCard({
           </p>
         </div>
         {post.facets ? (
-          <Badge variant="outline">{CATEGORY_LABEL[post.facets.category]}</Badge>
+          <Badge variant="outline">{POST_CATEGORY_LABEL[post.facets.category]}</Badge>
         ) : null}
       </header>
 

@@ -6,6 +6,7 @@ import type {
   RescueCompletionStatus,
   RescueOutcome,
 } from "@/types/rescue-case.type";
+import { STATUS_TONE_SOFT, type StatusTone } from "@/lib/status-tone";
 
 /** What the community screens need to show or attach a rescue case, whichever list it came from. */
 export interface RescueCaseBrief {
@@ -25,6 +26,30 @@ export const RESCUE_STATUS_LABEL: Record<RescueCaseStatus, string> = {
   RESCUED: "Đã cứu",
   CLOSED: "Đã đóng",
 };
+
+/** waiting for help, someone on it, done, closed */
+export const RESCUE_STATUS_TONE: Record<RescueCaseStatus, StatusTone> = {
+  REPORTED: "warning",
+  IN_PROGRESS: "info",
+  RESCUED: "success",
+  CLOSED: "neutral",
+};
+
+/** Only the two urgent levels get a colour; the ordinary ones stay quiet. */
+export const RESCUE_PRIORITY_TONE: Record<RescueCasePriority, StatusTone> = {
+  CRITICAL: "danger",
+  HIGH: "serious",
+  NORMAL: "neutral",
+  LOW: "neutral",
+};
+
+export function rescueStatusBadge(status?: string) {
+  return STATUS_TONE_SOFT[(status && RESCUE_STATUS_TONE[status as RescueCaseStatus]) || "neutral"];
+}
+
+export function rescuePriorityBadge(priority?: string) {
+  return STATUS_TONE_SOFT[(priority && RESCUE_PRIORITY_TONE[priority as RescueCasePriority]) || "neutral"];
+}
 
 export const RESCUE_PRIORITY_LABEL: Record<RescueCasePriority, string> = {
   CRITICAL: "Khẩn cấp",
@@ -53,6 +78,13 @@ export const RESCUE_COMPLETION_STATUS_LABEL: Record<RescueCompletionStatus, stri
   APPROVED: "Đã xác nhận",
   REJECTED: "Bị từ chối",
   DISPUTED: "Người báo không đồng ý",
+};
+
+export const RESCUE_COMPLETION_STATUS_TONE: Record<RescueCompletionStatus, StatusTone> = {
+  PENDING: "warning",
+  APPROVED: "success",
+  REJECTED: "danger",
+  DISPUTED: "serious",
 };
 
 export const RESCUE_RELEASE_REASON_LABEL: Record<RescueClaimReleaseReason, string> = {

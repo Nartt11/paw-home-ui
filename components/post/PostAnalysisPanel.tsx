@@ -1,6 +1,7 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
+import { POST_CATEGORY_LABEL } from "@/constants/post";
 import { usePostAnalysis } from "@/hooks/use-post-analysis";
 import type { PostAnalysisStatus, PostCategory } from "@/types/post.type";
 
@@ -11,14 +12,6 @@ const STATUS_LABEL: Record<PostAnalysisStatus, string> = {
   CONFIRMED: "Tác giả đã xác nhận",
   REJECTED: "Tác giả đã từ chối",
   FAILED: "Phân tích lỗi",
-};
-
-const CATEGORY_LABEL: Record<PostCategory, string> = {
-  RESCUE: "Cứu hộ",
-  ADOPTION: "Nhận nuôi",
-  LOST: "Thất lạc",
-  FOUND: "Tìm thấy",
-  GENERAL: "Chung",
 };
 
 function pct(value?: number | null) {
@@ -37,7 +30,7 @@ export function PostAnalysisPanel({ postId }: { postId: string }) {
   const s = data.suggestion;
   const rows: [string, string][] = s
     ? [
-        ["Chủ đề", s.category ? CATEGORY_LABEL[s.category] + pct(s.categoryConfidence) : "—"],
+        ["Chủ đề", s.category ? POST_CATEGORY_LABEL[s.category] + pct(s.categoryConfidence) : "—"],
         ["Loài", (s.species ?? "—") + pct(s.speciesConfidence)],
         [
           "Khu vực",

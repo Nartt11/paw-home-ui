@@ -47,6 +47,7 @@ import {
   useDashboardTopOrganizations,
 } from "@/hooks/use-admin";
 import { useCurrentUser } from "@/hooks/use-current-user";
+import { STATUS_TONE_SOFT, statusDisplay, type StatusDisplay } from "@/lib/status-tone";
 import type {
   AdoptionTrendItem,
   KpiItem,
@@ -65,25 +66,28 @@ const KPI_LABELS: Array<{ key: keyof SystemKpis; label: string }> = [
   { key: "completedAdoptions", label: "Nhận nuôi hoàn tất" },
 ];
 
-const ADOPTION_SERIES = ["pending", "approved", "rejected", "completed"] as const;
+// Stacked bottom-up in the order an application moves: done, approved, waiting, refused.
+// Red and green never touch, so the stack still reads for red-green colour blindness.
+const ADOPTION_SERIES = ["completed", "approved", "pending", "rejected"] as const;
 
-// Bảng màu đã kiểm tra bằng validate_palette ở cả hai chế độ sáng và tối
+// Each status keeps its meaning everywhere in the app: green done, blue approved (in hand),
+// amber waiting, red refused. Checked with validate_palette in light and dark mode.
 const adoptionChartConfig = {
-  pending: {
-    label: "Chờ duyệt",
-    theme: { light: "#2a78d6", dark: "#3987e5" },
+  completed: {
+    label: "Hoàn tất",
+    theme: { light: "#0ca30c", dark: "#0ca30c" },
   },
   approved: {
     label: "Đã duyệt",
-    theme: { light: "#eb6834", dark: "#d95926" },
+    theme: { light: "#2a78d6", dark: "#3987e5" },
+  },
+  pending: {
+    label: "Chờ duyệt",
+    theme: { light: "#d99a00", dark: "#c98500" },
   },
   rejected: {
     label: "Từ chối",
-    theme: { light: "#1baf7a", dark: "#199e70" },
-  },
-  completed: {
-    label: "Hoàn tất",
-    theme: { light: "#eda100", dark: "#c98500" },
+    theme: { light: "#d03b3b", dark: "#d03b3b" },
   },
 } satisfies ChartConfig;
 
@@ -136,11 +140,11 @@ function KpiCard({
   );
 }
 
-const TASK_STATUS_LABEL: Record<string, string> = {
-  PENDING: "Chờ duyệt",
-  APPROVED: "Đã duyệt",
-  REJECTED: "Đã từ chối",
-  IN_PROGRESS: "Đang xử lý",
+const TASK_STATUS: Record<string, StatusDisplay> = {
+  PENDING: { label: "Chờ duyệt", tone: "warning" },
+  IN_PROGRESS: { label: "Đang xử lý", tone: "info" },
+  APPROVED: { label: "Đã duyệt", tone: "info" },
+  REJECTED: { label: "Đã từ chối", tone: "danger" },
 };
 
 function AdoptionTrendChart({ items }: { items: AdoptionTrendItem[] }) {
@@ -476,8 +480,11 @@ export function AdminDashboard() {
                     >
                       {task.title}
                     </Link>
-                    <Badge variant="outline" className="shrink-0">
-                      {TASK_STATUS_LABEL[task.status] ?? task.status}
+                    <Badge
+                      variant="outline"
+                      className={`shrink-0 ${STATUS_TONE_SOFT[statusDisplay(TASK_STATUS, task.status).tone]}`}
+                    >
+                      {statusDisplay(TASK_STATUS, task.status).label}
                     </Badge>
                   </li>
                 ))}

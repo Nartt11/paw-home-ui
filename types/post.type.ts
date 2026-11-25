@@ -71,6 +71,16 @@ export interface PostFeedFilters {
   hasOpenCase?: boolean;
 }
 
+/** GET /posts: a page of posts, filtered and sorted. */
+export interface PostListParams extends PostFeedFilters {
+  page?: number;
+  pageSize?: number;
+  /** Matches the content and the author's name. */
+  search?: string;
+  sortBy?: "createdAt" | "likeCount" | "commentCount";
+  sortOrder?: "asc" | "desc";
+}
+
 export interface PostFeedParams extends PostFeedFilters {
   pageSize: number;
   /** `nextCursor` of the previous page. */

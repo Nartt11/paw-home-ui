@@ -7,12 +7,13 @@ import {
   useReactTable,
   type ColumnDef,
 } from "@tanstack/react-table";
-import { EllipsisVerticalIcon } from "lucide-react";
+import { CheckIcon, EllipsisVerticalIcon } from "lucide-react";
 
 import {
   AdminTableEmptyRow,
   AdminTableSkeletonRows,
 } from "@/components/common/admin/AdminTableState";
+import { clickableRowProps } from "@/components/common/admin/clickable-row";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -30,6 +31,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  organizationStatusBadge,
+  organizationStatusLabel,
+  organizationTypeLabel,
+} from "@/lib/organization-display";
 import { OrganizationSummary } from "@/types/organization.type";
 
 export interface OrganizationListTableProps {
@@ -37,140 +43,100 @@ export interface OrganizationListTableProps {
   loading?: boolean;
   keyword?: string;
   onViewDetail: (organizationId: string) => void;
+  /** Queue action on a pending row. */
+  onApprove?: (organizationId: string) => void;
+  onReject?: (organizationId: string) => void;
   onEdit?: (organizationId: string) => void;
   onDelete?: (organizationId: string) => void;
   onCreateAccount?: (organizationId: string) => void;
 }
 
-function getStatusLabel(status?: string) {
-  switch ((status ?? "").toUpperCase()) {
-    case "ACTIVE":
-      return {
-        label: "Đang hoạt động",
-        className: "bg-emerald-50 text-emerald-700 hover:bg-emerald-50",
-      };
-    case "INACTIVE":
-      return {
-        label: "Ngừng hoạt động",
-        className: "bg-slate-100 text-slate-700 hover:bg-slate-100",
-      };
-    case "PENDING":
-      return {
-        label: "Chờ duyệt",
-        className: "bg-amber-50 text-amber-700 hover:bg-amber-50",
-      };
-    case "REJECTED":
-      return {
-        label: "Bị từ chối",
-        className: "bg-rose-50 text-rose-700 hover:bg-rose-50",
-      };
-    default:
-      return {
-        label: status || "—",
-        className: "bg-slate-100 text-slate-700 hover:bg-slate-100",
-      };
-  }
-}
+type Actions = Omit<OrganizationListTableProps, "data" | "loading" | "keyword" | "onViewDetail">;
 
-function getTypeLabel(type?: string) {
-  switch (type) {
-    case "SHELTER":
-      return "Mái ấm";
-    case "VET_CENTER":
-      return "Cơ sở thú y";
-    default:
-      return type || "—";
-  }
-}
-
-function getColumns(
-  onViewDetail: (organizationId: string) => void,
-  onEdit?: (organizationId: string) => void,
-  onDelete?: (organizationId: string) => void,
-  onCreateAccount?: (organizationId: string) => void,
-): ColumnDef<OrganizationSummary>[] {
+function getColumns({ onApprove, onReject, onEdit, onDelete, onCreateAccount }: Actions): ColumnDef<OrganizationSummary>[] {
   return [
     {
       accessorKey: "name",
       header: "Tổ chức",
       cell: ({ row }) => (
         <div className="min-w-56">
-          <div className="truncate font-medium text-slate-900">
+          <div className="truncate font-medium text-foreground">
             {row.original.name || "(Chưa có tên)"}
           </div>
+          {row.original.email ? (
+            <div className="truncate text-xs text-muted-foreground">{row.original.email}</div>
+          ) : null}
         </div>
       ),
     },
     {
       accessorKey: "type",
       header: "Loại",
-      cell: ({ row }) => (
-        <span className="text-slate-700">
-          {getTypeLabel(row.original.type)}
-        </span>
-      ),
+      cell: ({ row }) => <span>{organizationTypeLabel(row.original.type)}</span>,
     },
     {
       id: "address",
       header: "Địa chỉ",
       cell: ({ row }) => (
-        <div className="min-w-72 truncate text-slate-700">
-          {[row.original.wardName, row.original.provinceName]
-            .filter(Boolean)
-            .join(", ") || "—"}
+        <div className="min-w-56 truncate text-muted-foreground">
+          {[row.original.wardName, row.original.provinceName].filter(Boolean).join(", ") || "—"}
         </div>
       ),
     },
     {
       accessorKey: "status",
       header: "Trạng thái",
-      cell: ({ row }) => {
-        const status = getStatusLabel(row.original.status);
-        return (
-          <Badge className={status.className} variant="secondary">
-            {status.label}
-          </Badge>
-        );
-      },
+      cell: ({ row }) => (
+        <Badge variant="outline" className={organizationStatusBadge(row.original.status)}>
+          {organizationStatusLabel(row.original.status)}
+        </Badge>
+      ),
     },
     {
       id: "actions",
       header: "",
       cell: ({ row }) => {
         const id = row.original.organizationId;
+        const pending = (row.original.status ?? "").toUpperCase() === "PENDING";
+        const active = (row.original.status ?? "").toUpperCase() === "ACTIVE";
 
         return (
-          <div className="flex justify-end">
+          <div className="flex items-center justify-end gap-1">
+            {pending && onApprove ? (
+              <Button size="sm" onClick={() => onApprove(id)}>
+                <CheckIcon className="size-4" />
+                Duyệt
+              </Button>
+            ) : null}
+
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="size-8">
+                <Button variant="ghost" size="icon" className="size-8" aria-label="Thao tác khác">
                   <EllipsisVerticalIcon className="size-4" />
                 </Button>
               </DropdownMenuTrigger>
 
-              <DropdownMenuContent align="end" className="min-w-44">
-                <DropdownMenuItem onClick={() => onViewDetail(id)}>
-                  Xem chi tiết
-                </DropdownMenuItem>
+              <DropdownMenuContent align="end" className="min-w-48">
+                {/* the backend refuses edits while a registration waits for review */}
+                {onEdit && !pending ? <DropdownMenuItem onClick={() => onEdit(id)}>Chỉnh sửa</DropdownMenuItem> : null}
+                {onCreateAccount && active ? (
+                  <DropdownMenuItem onClick={() => onCreateAccount(id)}>Tạo tài khoản cho trạm</DropdownMenuItem>
+                ) : null}
 
-                <DropdownMenuItem onClick={() => onEdit?.(id)}>
-                  Chỉnh sửa
-                </DropdownMenuItem>
+                {((onEdit && !pending) || (onCreateAccount && active)) && ((pending && onReject) || (onDelete && active)) ? (
+                  <DropdownMenuSeparator />
+                ) : null}
 
-                {onCreateAccount && (
-                  <DropdownMenuItem onClick={() => onCreateAccount(id)}>
-                    Tạo tài khoản cho trạm
+                {pending && onReject ? (
+                  <DropdownMenuItem variant="destructive" onClick={() => onReject(id)}>
+                    Từ chối đăng ký
                   </DropdownMenuItem>
-                )}
-
-                <DropdownMenuSeparator />
-
-                <DropdownMenuItem
-                  className="text-rose-600 focus:text-rose-600"
-                  onClick={() => onDelete?.(id)}
-                >
-                  Xóa
-                </DropdownMenuItem>
+                ) : null}
+                {onDelete && active ? (
+                  <DropdownMenuItem variant="destructive" onClick={() => onDelete(id)}>
+                    Ngừng hoạt động
+                  </DropdownMenuItem>
+                ) : null}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -185,6 +151,8 @@ export function OrganizationListTable({
   loading = false,
   keyword = "",
   onViewDetail,
+  onApprove,
+  onReject,
   onEdit,
   onDelete,
   onCreateAccount,
@@ -193,21 +161,18 @@ export function OrganizationListTable({
     const q = keyword.trim().toLowerCase();
     if (!q) return data;
 
-    return data.filter((item) => {
-      return (
-        item.name?.toLowerCase().includes(q) ||
-        item.email?.toLowerCase().includes(q) ||
-        item.phone?.toLowerCase().includes(q) ||
-        item.provinceName?.toLowerCase().includes(q)
-      );
-    });
+    return data.filter((item) =>
+      [item.name, item.email, item.phone, item.provinceName].some((value) => value?.toLowerCase().includes(q)),
+    );
   }, [data, keyword]);
 
   const columns = React.useMemo(
-    () => getColumns(onViewDetail, onEdit, onDelete, onCreateAccount),
-    [onViewDetail, onEdit, onDelete, onCreateAccount],
+    () => getColumns({ onApprove, onReject, onEdit, onDelete, onCreateAccount }),
+    [onApprove, onReject, onEdit, onDelete, onCreateAccount],
   );
 
+  // TanStack Table uses function-returning APIs that React Compiler warns about.
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data: filteredData,
     columns,
@@ -225,10 +190,7 @@ export function OrganizationListTable({
                   <TableHead key={header.id}>
                     {header.isPlaceholder
                       ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
-                        )}
+                      : flexRender(header.column.columnDef.header, header.getContext())}
                   </TableHead>
                 ))}
               </TableRow>
@@ -246,19 +208,16 @@ export function OrganizationListTable({
             ) : table.getRowModel().rows.length === 0 ? (
               <AdminTableEmptyRow
                 colSpan={columns.length}
-                title="Chưa có tổ chức"
-                description="Danh sách tổ chức sẽ hiển thị tại đây khi có dữ liệu."
+                title="Không có trung tâm nào"
+                description="Thử đổi bộ lọc trạng thái hoặc từ khóa tìm kiếm."
                 cellClassName="px-3 py-12"
               />
             ) : (
               table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id} className="hover:bg-muted/50">
+                <TableRow key={row.id} {...clickableRowProps(() => onViewDetail(row.original.organizationId))}>
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                      )}
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   ))}
                 </TableRow>

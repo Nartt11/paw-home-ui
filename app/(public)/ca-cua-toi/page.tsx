@@ -15,15 +15,8 @@ import { APP_ROUTES } from "@/constants/routes";
 import { useMyRescueCases, useMyRescueClaims, useRescueCaseDetail } from "@/hooks/use-rescue-case";
 import { formatRelativeTime, formatTimeLeft } from "@/lib/datetime";
 import { speciesLabel } from "@/lib/pet-display";
-import { RESCUE_STATUS_LABEL, rescuePriorityLabel } from "@/lib/rescue-case-display";
+import { RESCUE_STATUS_LABEL, rescuePriorityLabel, rescueStatusBadge } from "@/lib/rescue-case-display";
 import type { RescueCaseStatus } from "@/types/rescue-case.type";
-
-const STATUS_TONE: Record<RescueCaseStatus, string> = {
-  REPORTED: "border-amber-200 bg-amber-50 text-amber-800",
-  IN_PROGRESS: "border-sky-200 bg-sky-50 text-sky-800",
-  RESCUED: "border-emerald-200 bg-emerald-50 text-emerald-800",
-  CLOSED: "border-slate-200 bg-slate-100 text-slate-700",
-};
 
 function EmptyState({ icon, title, text, action }: { icon: React.ReactNode; title: string; text: string; action: React.ReactNode }) {
   return (
@@ -133,7 +126,7 @@ function MyCases() {
                 <div className="min-w-0 flex-1 space-y-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="font-semibold">{speciesLabel({ species: item.species })}</span>
-                    <Badge variant="outline" className={STATUS_TONE[item.status]}>
+                    <Badge variant="outline" className={rescueStatusBadge(item.status)}>
                       {RESCUE_STATUS_LABEL[item.status]}
                     </Badge>
                     <span className="text-xs text-muted-foreground">{rescuePriorityLabel(item.priority)}</span>

@@ -1,10 +1,11 @@
 import http from "@/lib/http";
 import apiEndpoints from "@/services/endpoint";
-import type { PaginatedResponse, ListParams } from "@/types/api.type";
+import type { PaginatedResponse } from "@/types/api.type";
 import type {
   Post,
   PostCreatePayload,
   PostFeedParams,
+  PostListParams,
   PostSummary,
   PostUpdatePayload,
 } from "@/types/post.type";
@@ -19,7 +20,7 @@ export interface CursorPage<T> {
 
 const postService = {
   async getAllPosts(
-    params: ListParams,
+    params: PostListParams,
   ): Promise<PaginatedResponse<PostSummary>> {
     return await http.get<PaginatedResponse<PostSummary>>(
       apiEndpoints.posts.root,

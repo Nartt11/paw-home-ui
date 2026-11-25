@@ -1,13 +1,14 @@
 import {
+  keepPreviousData,
   useInfiniteQuery,
   useMutation,
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-import type { ListParams } from "@/types/api.type";
 import type {
   PostCreatePayload,
   PostFeedParams,
+  PostListParams,
   PostUpdatePayload,
 } from "@/types/post.type";
 import postService from "@/services/post";
@@ -16,7 +17,7 @@ export const postKeys = {
   all: ["posts"] as const,
 
   lists: () => [...postKeys.all, "list"] as const,
-  list: (params: ListParams) => [...postKeys.lists(), params] as const,
+  list: (params: PostListParams) => [...postKeys.lists(), params] as const,
 
   feeds: () => [...postKeys.all, "feed"] as const,
   feed: (params: PostFeedParams) => [...postKeys.feeds(), params] as const,
@@ -25,10 +26,12 @@ export const postKeys = {
   detail: (id: string) => [...postKeys.details(), id] as const,
 };
 
-export function usePosts(params: ListParams) {
+export function usePosts(params: PostListParams) {
   return useQuery({
     queryKey: postKeys.list(params),
     queryFn: () => postService.getAllPosts(params),
+    // keep the current page on screen while the next filter loads
+    placeholderData: keepPreviousData,
   });
 }
 

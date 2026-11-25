@@ -28,19 +28,11 @@ export const PET_STATUS_LABELS: Record<PetStatus, string> = PET_STATUS_LABEL;
 export const PET_STATUS_BADGE_CLASSNAMES: Record<PetStatus, string> =
   PET_STATUS_BADGE;
 
-export const PET_HEALTH_LABELS: Record<PetHealthStatus, string> = {
-  HEALTHY: "Khỏe mạnh",
-  UNDER_TREATMENT: "Đang điều trị",
-  RECOVERING: "Đang hồi phục",
-  SPECIAL_NEEDS: "Cần chăm sóc đặc biệt",
-};
-
-export const PET_HEALTH_BADGE_CLASSNAMES: Record<PetHealthStatus, string> = {
-  HEALTHY: "bg-emerald-50 text-emerald-700 hover:bg-emerald-50",
-  UNDER_TREATMENT: "bg-amber-50 text-amber-700 hover:bg-amber-50",
-  RECOVERING: "bg-sky-50 text-sky-700 hover:bg-sky-50",
-  SPECIAL_NEEDS: "bg-rose-50 text-rose-700 hover:bg-rose-50",
-};
+// One source for health labels and colours, shared with the pet list.
+export {
+  PET_HEALTH_LABEL as PET_HEALTH_LABELS,
+  PET_HEALTH_BADGE as PET_HEALTH_BADGE_CLASSNAMES,
+} from "@/lib/pet-display";
 
 export const PET_DETAIL_TABS: Array<{
   value: "medical" | "media" | "logs";

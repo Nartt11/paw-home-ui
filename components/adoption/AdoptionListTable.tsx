@@ -10,7 +10,7 @@ import {
   type ColumnDef,
   useReactTable,
 } from "@tanstack/react-table";
-import { Check, EllipsisVerticalIcon, X } from "lucide-react";
+import { Check, EllipsisVerticalIcon } from "lucide-react";
 
 import type { AdoptionSummary } from "@/types/adoption.type";
 
@@ -18,13 +18,13 @@ import {
   AdminTableEmptyRow,
   AdminTableSkeletonRows,
 } from "@/components/common/admin/AdminTableState";
+import { clickableRowProps } from "@/components/common/admin/clickable-row";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -58,7 +58,11 @@ function formatDateVi(value?: string) {
 }
 
 function statusBadge(status: AdoptionSummary["status"]) {
-  return <Badge className={adoptionStatusBadge(status)}>{adoptionStatusLabel(status)}</Badge>;
+  return (
+    <Badge variant="outline" className={adoptionStatusBadge(status)}>
+      {adoptionStatusLabel(status)}
+    </Badge>
+  );
 }
 
 const columns: ColumnDef<AdoptionSummary>[] = [
@@ -148,77 +152,38 @@ export function AdoptionListTable({
         ...column,
         cell: ({ row }) => {
           const applicationId = row.original.applicationId;
+          // A queue: the one decision people make most sits on the row; refusing waits in ⋮.
           const canDecide = row.original.status === "PENDING";
+          if (!canDecide || (!onApprove && !onReject)) return null;
 
           return (
-            <div
-              className="flex items-center justify-end gap-2"
-              onClick={(event) => event.stopPropagation()}
-            >
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                className="size-8"
-                onClick={() => onApprove?.(applicationId)}
-                disabled={!onApprove || !canDecide}
-                aria-label="Duyệt đơn"
-                title="Duyệt đơn"
-              >
-                <Check className="size-4" />
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                className="size-8"
-                onClick={() => onReject?.(applicationId)}
-                disabled={!onReject || !canDecide}
-                aria-label="Từ chối đơn"
-                title="Từ chối đơn"
-              >
-                <X className="size-4" />
-              </Button>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="size-8"
-                    aria-label="Thao tác khác"
-                    title="Thao tác khác"
-                  >
-                    <EllipsisVerticalIcon className="size-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem
-                    onClick={() => onViewDetail?.(applicationId)}
-                    disabled={!onViewDetail}
-                  >
-                    Xem chi tiết
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={() => onApprove?.(applicationId)}
-                    disabled={!onApprove || !canDecide}
-                  >
-                    Duyệt đơn
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => onReject?.(applicationId)}
-                    disabled={!onReject || !canDecide}
-                  >
-                    Từ chối
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+            <div className="flex items-center justify-end gap-1">
+              {onApprove ? (
+                <Button type="button" size="sm" onClick={() => onApprove(applicationId)}>
+                  <Check className="size-4" />
+                  Duyệt
+                </Button>
+              ) : null}
+              {onReject ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="size-8" aria-label="Thao tác khác">
+                      <EllipsisVerticalIcon className="size-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem variant="destructive" onClick={() => onReject(applicationId)}>
+                      Từ chối đơn
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : null}
             </div>
           );
         },
       } satisfies ColumnDef<AdoptionSummary>;
     });
-  }, [onApprove, onReject, onViewDetail]);
+  }, [onApprove, onReject]);
 
   // TanStack Table uses function-returning APIs that React Compiler warns about.
   // eslint-disable-next-line react-hooks/incompatible-library
@@ -268,8 +233,7 @@ export function AdoptionListTable({
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
-                  onClick={() => onViewDetail?.(row.original.applicationId)}
-                  className={onViewDetail ? "cursor-pointer hover:bg-muted/50" : ""}
+                  {...clickableRowProps(onViewDetail && (() => onViewDetail(row.original.applicationId)))}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>

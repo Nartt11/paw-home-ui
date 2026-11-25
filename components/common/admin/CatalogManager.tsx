@@ -3,7 +3,7 @@
 import * as React from "react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Trash2 } from "lucide-react";
+import { EllipsisVerticalIcon } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -15,6 +15,12 @@ import { DeleteModal } from "@/components/common/admin/DeleteModal";
 import TitlePerPage from "@/components/common/admin/TitlePerPage";
 import { PageControls } from "@/components/common/PageControl";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Dialog,
   DialogContent,
@@ -154,7 +160,7 @@ export function CatalogManager({ resource }: { resource: Resource }) {
             <TableRow>
               <TableHead>Mã</TableHead>
               <TableHead>Tên</TableHead>
-              <TableHead className="w-20 text-right">Thao tác</TableHead>
+              <TableHead className="w-12"><span className="sr-only">Thao tác</span></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -168,14 +174,18 @@ export function CatalogManager({ resource }: { resource: Resource }) {
                   <TableCell className="font-mono text-sm">{row.code}</TableCell>
                   <TableCell>{row.name}</TableCell>
                   <TableCell className="text-right">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      aria-label={`Xóa ${row.name}`}
-                      onClick={() => setDeleteId(row.id)}
-                    >
-                      <Trash2 className="size-4 text-destructive" />
-                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="size-8" aria-label={`Thao tác với ${row.name}`}>
+                          <EllipsisVerticalIcon className="size-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem variant="destructive" onClick={() => setDeleteId(row.id)}>
+                          Xóa {copy.noun}
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </TableCell>
                 </TableRow>
               ))

@@ -13,7 +13,6 @@ import {
   Building2,
   Calendar,
   ChevronRight,
-  Eye,
   History,
   Image as ImageIcon,
   Loader2,
@@ -21,7 +20,15 @@ import {
   RefreshCw,
   Star,
   Trash2,
+  MoreHorizontal,
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 import { useCurrentUser } from "@/hooks/use-current-user";
 import RequireAuth from "@/components/auth/RequireAuth";
@@ -68,6 +75,7 @@ import {
 } from "./constants";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { DeleteModal } from "@/components/common/admin/DeleteModal";
 import { parseApiDate, VN_TIME_ZONE } from "@/lib/datetime";
 
 function formatDateVi(value?: string) {
@@ -178,6 +186,8 @@ export default function PetDetailPage() {
     "medical" | "media" | "logs"
   >("medical");
   const [updateDialogOpen, setUpdateDialogOpen] = React.useState(false);
+  // What the confirmation dialog is about to delete, if anything.
+  const [pendingDelete, setPendingDelete] = React.useState<{ kind: "pet" } | { kind: "media"; mediaId: string } | null>(null);
 
   const coverUrl = getCoverUrl(pet ?? undefined, mediaItems);
   const images = pet?.imageUrls?.length ? pet.imageUrls : [coverUrl];
@@ -222,14 +232,10 @@ export default function PetDetailPage() {
     toast.success("Đang làm mới dữ liệu.");
   }, [mediaQuery, medicalRecordsQuery, ownershipsQuery, petQuery]);
 
-  const handleDeletePet = React.useCallback(async () => {
+  const handleDeletePet = React.useCallback(() => setPendingDelete({ kind: "pet" }), []);
+
+  const deletePet = React.useCallback(async () => {
     if (!petId) return;
-
-    const confirmed = window.confirm(
-      "Bạn có chắc muốn xóa hồ sơ thú cưng này không?",
-    );
-
-    if (!confirmed) return;
 
     try {
       await deletePetMutation.mutateAsync(petId);
@@ -243,11 +249,13 @@ export default function PetDetailPage() {
   }, [deletePetMutation, petId, router]);
 
   const handleDeleteMedia = React.useCallback(
+    (mediaId: string) => setPendingDelete({ kind: "media", mediaId }),
+    [],
+  );
+
+  const deleteMedia = React.useCallback(
     async (mediaId: string) => {
       if (!petId) return;
-
-      const confirmed = window.confirm("Bạn có chắc muốn xóa media này không?");
-      if (!confirmed) return;
 
       try {
         await deleteMediaMutation.mutateAsync({ petId, mediaId });
@@ -815,13 +823,28 @@ export default function PetDetailPage() {
                 onClick={handleRefreshDetail}
               />
               {canModify && (
-                <ActionButton
-                  icon={Trash2}
-                  label="Xóa hồ sơ"
-                  color="text-red-600 bg-red-50"
-                  onClick={() => void handleDeletePet()}
-                  disabled={deletePetMutation.isPending}
-                />
+                // Deleting sits behind a menu like everywhere else, then asks to confirm.
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="h-auto flex-col gap-2 rounded-2xl border-border bg-white py-4 text-foreground transition-all hover:border-primary/30"
+                    >
+                      <MoreHorizontal className="h-5 w-5" />
+                      <span className="text-[10px] font-bold uppercase tracking-widest">Khác</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem
+                      variant="destructive"
+                      disabled={deletePetMutation.isPending}
+                      onClick={handleDeletePet}
+                    >
+                      <Trash2 className="size-4" />
+                      Xóa hồ sơ
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               )}
             </div>
           </div>
@@ -931,6 +954,26 @@ export default function PetDetailPage() {
         mediaItems={mediaItems}
         submitting={updatePetMutation.isPending}
         onSubmit={(values) => void handleUpdatePet(values)}
+      />
+
+      <DeleteModal
+        open={!!pendingDelete}
+        onOpenChange={(open) => !open && setPendingDelete(null)}
+        title={pendingDelete?.kind === "media" ? "Xóa ảnh" : "Xóa hồ sơ thú cưng"}
+        description={
+          pendingDelete?.kind === "media"
+            ? "Ảnh sẽ bị gỡ khỏi hồ sơ và trang nhận nuôi."
+            : `Hồ sơ của ${pet.name || "thú cưng này"} sẽ bị xóa khỏi danh sách và trang nhận nuôi.`
+        }
+        confirmText={pendingDelete?.kind === "media" ? "Xóa ảnh" : "Xóa hồ sơ"}
+        confirming={deletePetMutation.isPending || deleteMediaMutation.isPending}
+        onConfirm={async () => {
+          const target = pendingDelete;
+          if (!target) return;
+          if (target.kind === "pet") await deletePet();
+          else await deleteMedia(target.mediaId);
+          setPendingDelete(null);
+        }}
       />
     </div>
       )}
@@ -1164,35 +1207,40 @@ function MediaCard({
           </Badge>
         ) : null}
       </div>
-      <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/45 opacity-0 transition-opacity group-hover:opacity-100">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-9 w-9 rounded-lg bg-white/20 text-white backdrop-blur-sm"
-          onClick={onPreview}
-        >
-          <Eye className="h-4 w-4" />
-        </Button>
-        {!media.primaryMedia ? (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-9 w-9 rounded-lg bg-white/20 text-white backdrop-blur-sm"
-            onClick={onSetPrimary}
-            disabled={busy}
-          >
-            <Star className="h-4 w-4" />
-          </Button>
-        ) : null}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-9 w-9 rounded-lg bg-white/20 text-white backdrop-blur-sm"
-          onClick={onDelete}
-          disabled={busy}
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
+      {/* Clicking the photo opens it large; the rest waits in the menu. */}
+      <button
+        type="button"
+        className="absolute inset-0 cursor-zoom-in focus-visible:outline-2 focus-visible:outline-primary"
+        onClick={onPreview}
+        aria-label="Xem ảnh lớn"
+      />
+      <div className="absolute right-2 top-2">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-8 rounded-lg bg-black/40 text-white backdrop-blur-sm hover:bg-black/60 hover:text-white"
+              aria-label="Thao tác với ảnh"
+              disabled={busy}
+            >
+              <MoreHorizontal className="size-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            {!media.primaryMedia ? (
+              <DropdownMenuItem onClick={onSetPrimary}>
+                <Star className="size-4" />
+                Đặt làm ảnh chính
+              </DropdownMenuItem>
+            ) : null}
+            {!media.primaryMedia ? <DropdownMenuSeparator /> : null}
+            <DropdownMenuItem variant="destructive" onClick={onDelete}>
+              <Trash2 className="size-4" />
+              Xóa ảnh
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
   );
